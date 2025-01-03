@@ -8,7 +8,7 @@
 import ProjectDescription
 
 let workspace = Workspace(
-    name: "Runpick",
+    name: "MemorySeal",
     projects: [
         "Projects/App"
     ]

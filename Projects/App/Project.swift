@@ -2,13 +2,13 @@ import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project(
-    name: "Runpick",
+    name: "MemorySeal",
     targets: [
         .target(
-            name: "Runpick",
+            name: "MemorySeal",
             destinations: .iOS,
             product: .app,
-            bundleId: "io.tuist.Runpick",
+            bundleId: "io.tuist.MemorySeal",
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchStoryboardName": "LaunchScreen.storyboard",
@@ -32,14 +32,14 @@ let project = Project(
             ]
         ),
         .target(
-            name: "RunpickTests",
+            name: "MemorySealTests",
             destinations: .iOS,
             product: .unitTests,
-            bundleId: "io.tuist.RunpickTests",
+            bundleId: "io.tuist.MemorySealTests",
             infoPlist: .default,
             sources: ["Tests/**"],
             resources: [],
-            dependencies: [.target(name: "Runpick")]
+            dependencies: [.target(name: "MemorySeal")]
         ),
     ]
 )
