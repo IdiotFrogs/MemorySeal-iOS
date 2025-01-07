@@ -20,18 +20,10 @@ final class OAuthButton: UIButton {
     }
     
     enum OAuthType: String {
-        case kakao
         case google
         
         var buttonStyle: ButtonStyle {
             switch self {
-            case .kakao:
-                return ButtonStyle(
-                    title: "카카오로 시작하기",
-                    symbolImage: DesignSystemAsset.kakaoSymbol.image,
-                    titleColor: .black.withAlphaComponent(0.85),
-                    backgroundColor: UIColor(hex: "FEE500") ?? .yellow
-                )
             case .google:
                 return ButtonStyle(
                     title: "구글로 시작하기",
@@ -42,6 +34,7 @@ final class OAuthButton: UIButton {
             }
         }
     }
+    
     private let oauthTitleLabel: UILabel = {
         let label = UILabel()
         label.font = DesignSystemFontFamily.Pretendard.semiBold.font(size: 16)
@@ -67,19 +60,15 @@ final class OAuthButton: UIButton {
 extension OAuthButton {
     
     private func setView(_ oauthType: OAuthType) {
-        self.oauthTitleLabel.text = oauthType.buttonStyle.title
-        self.oauthTitleLabel.tintColor = oauthType.buttonStyle.titleColor
-        self.oauthImageView.image = oauthType.buttonStyle.symbolImage
-        self.backgroundColor = oauthType.buttonStyle.backgroundColor
+        oauthTitleLabel.text = oauthType.buttonStyle.title
+        oauthTitleLabel.tintColor = oauthType.buttonStyle.titleColor
+        oauthImageView.image = oauthType.buttonStyle.symbolImage
+        backgroundColor = oauthType.buttonStyle.backgroundColor
     }
     
     private func addSubViews() {
-        [
-            oauthTitleLabel,
-            oauthImageView
-        ].forEach {
-            self.addSubview($0)
-        }
+        addSubview(oauthTitleLabel)
+        addSubview(oauthImageView)
     }
     
     private func setLayout() {

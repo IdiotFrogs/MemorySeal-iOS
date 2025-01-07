@@ -3,6 +3,10 @@ import ProjectDescriptionHelpers
 
 let project = Project(
     name: "MemorySeal",
+    options: .options(
+        defaultKnownRegions: ["ko"],
+        developmentRegion: "ko"
+    ),
     targets: [
         .target(
             name: "MemorySeal",
