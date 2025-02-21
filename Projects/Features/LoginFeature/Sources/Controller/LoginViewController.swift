@@ -15,6 +15,7 @@ import RxCocoa
 import DesignSystem
 
 public final class LoginViewController: UIViewController {
+    private let disposeBag: DisposeBag = DisposeBag()
     
     private let appleSignInButton: ASAuthorizationAppleIDButton = {
         let button = ASAuthorizationAppleIDButton(
@@ -35,6 +36,66 @@ public final class LoginViewController: UIViewController {
         
         self.addSubViews()
         self.setLayout()
+        
+        self.bindButtons()
+    }
+}
+
+extension LoginViewController {
+    private func bindButtons() {
+        appleSignInButton.rx.controlEvent(.touchUpInside)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                let appleIDProvider = ASAuthorizationAppleIDProvider()
+                let request = appleIDProvider.createRequest()
+                request.requestedScopes = [.fullName, .email]
+                
+                let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+                authorizationController.delegate = self
+                authorizationController.presentationContextProvider = self
+                authorizationController.performRequests()
+            })
+            .disposed(by: disposeBag)
+    }
+}
+
+extension LoginViewController: ASAuthorizationControllerDelegate {
+    public func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithAuthorization authorization: ASAuthorization
+    ) {
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let authorizationCode = appleIDCredential.authorizationCode,
+              let identityToken = appleIDCredential.identityToken,
+              let authorizationCodeString = String(data: authorizationCode, encoding: .utf8),
+              let tokenString = String(data: identityToken, encoding: .utf8) else { return }
+        
+        print("🧊 appleIDCredential.user \(appleIDCredential.user)")
+        print("🧊 tokenString \(tokenString)")
+        print("🧊 authorizationCodeString \(authorizationCodeString)")
+
+
+        // 유니크한 값
+//        LoginCheckManager.shared.userAppleIdentity = appleIDCredential.user
+//        LoginCheckManager.shared.userAppleIdentityToken = tokenString
+//        LoginCheckManager.shared.userAppleAuthorizationCode = authorizationCodeString
+        
+//        Task {
+//            do {
+//                try await LoginCheckManager.shared.requestAuthKeys(signinType: .apple, token: authorizationCodeString)
+//            } catch let error {
+//                DispatchQueue.main.async {
+//                    self.alertWith(message: error.localizedDescription)
+//                }
+//            }
+//        }
+        
+    }
+}
+
+extension LoginViewController: ASAuthorizationControllerPresentationContextProviding {
+    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        return self.view.window!
     }
 }
 
