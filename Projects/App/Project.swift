@@ -7,6 +7,13 @@ let project = Project(
         defaultKnownRegions: ["ko"],
         developmentRegion: "ko"
     ),
+    settings: .settings(
+        base: ["DEVELOPMENT_TEAM": "5GD5Q99952"],
+        configurations: [
+            .debug(name: .debug),
+            .release(name: .release)
+        ]
+    ),
     targets: [
         .target(
             name: "MemorySeal",

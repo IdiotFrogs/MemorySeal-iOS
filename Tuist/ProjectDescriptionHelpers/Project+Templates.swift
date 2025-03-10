@@ -5,7 +5,7 @@ public extension Project {
         name: String,
         destinations: Destinations = .iOS,
         product: Product,
-        organizationName: String = "MinSungJin",
+        organizationName: String = "MemorySeal",
         packages: [Package] = [],
         dependencies: [TargetDependency] = [],
         sources: SourceFilesList = ["Sources/**"],
@@ -14,11 +14,11 @@ public extension Project {
         resourceSynthesizers: [ResourceSynthesizer] = .default
     ) -> Project {
         let settings: Settings = .settings(
-            base: [:],
+            base: ["DEVELOPMENT_TEAM" : "5GD5Q99952"],
             configurations: [
                 .debug(name: .debug),
                 .release(name: .release)
-            ], defaultSettings: .recommended)
+            ])
 
         let appTarget: Target = .target(
             name: name,
