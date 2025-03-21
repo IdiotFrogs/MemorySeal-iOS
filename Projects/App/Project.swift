@@ -38,6 +38,7 @@ let project = Project(
             ),
             sources: ["Sources/**"],
             resources: ["Resources/**"],
+            entitlements: "Sources/Support/memorySeal.entitlements",
             dependencies: [
                 .DIContainer.BaseDIContainer
             ]

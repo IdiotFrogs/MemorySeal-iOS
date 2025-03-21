@@ -41,7 +41,10 @@ public extension Project {
             dependencies: [.target(name: name)]
         )
 
-        let schemes: [Scheme] = [.makeScheme(target: .debug, name: name)]
+        let schemes: [Scheme] = [
+            .makeScheme(target: .debug, name: name),
+            .makeScheme(target: .release, name: name)
+        ]
 
         let targets: [Target] = [appTarget, testTarget]
 
