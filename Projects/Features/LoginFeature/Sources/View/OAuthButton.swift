@@ -26,8 +26,8 @@ final class OAuthButton: UIButton {
             switch self {
             case .google:
                 return ButtonStyle(
-                    title: "구글로 시작하기",
-                    symbolImage: DesignSystemAsset.googleSymbol.image,
+                    title: "Google로 로그인",
+                    symbolImage: DesignSystemAsset.ImageAssets.googleSymbol.image,
                     titleColor: UIColor(hex: "#121212") ?? .black,
                     backgroundColor: .white
                 )
@@ -64,6 +64,9 @@ extension OAuthButton {
         oauthTitleLabel.tintColor = oauthType.buttonStyle.titleColor
         oauthImageView.image = oauthType.buttonStyle.symbolImage
         backgroundColor = oauthType.buttonStyle.backgroundColor
+        layer.cornerRadius = 24
+        layer.borderWidth = 1
+        layer.borderColor = UIColor.black.cgColor
     }
     
     private func addSubViews() {

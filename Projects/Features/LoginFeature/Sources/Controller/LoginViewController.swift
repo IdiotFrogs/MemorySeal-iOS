@@ -17,12 +17,36 @@ import DesignSystem
 public final class LoginViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "메실"
+        label.font = DesignSystemFontFamily.Hs산토끼체20.regular.font(size: 56)
+        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
+        return label
+    }()
+    
+    private let subTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "익을수록 달콤한 기억"
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 16)
+        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
+        return label
+    }()
+    
+    private let logoImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.loginPageLogo.image
+        return imageView
+    }()
+    
     private let appleSignInButton: ASAuthorizationAppleIDButton = {
         let button = ASAuthorizationAppleIDButton(
-            authorizationButtonType: .continue,
-            authorizationButtonStyle: .white
+            authorizationButtonType: .signIn,
+            authorizationButtonStyle: .black
         )
-        button.layer.cornerRadius = 10
+        button.layer.cornerRadius = 24
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.black.cgColor
         button.clipsToBounds = true
         return button
     }()
@@ -32,7 +56,7 @@ public final class LoginViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.view.backgroundColor = UIColor(hex: "#121212")
+        self.view.backgroundColor = UIColor(hex: "#F4F4CC")
         
         self.addSubViews()
         self.setLayout()
@@ -101,20 +125,39 @@ extension LoginViewController: ASAuthorizationControllerPresentationContextProvi
 
 extension LoginViewController {
     private func addSubViews() {
+        view.addSubview(titleLabel)
+        view.addSubview(subTitleLabel)
+        view.addSubview(logoImageView)
         view.addSubview(appleSignInButton)
         view.addSubview(googleSignInButton)
     }
     
     private func setLayout() {
+        titleLabel.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide.snp.top).offset(84)
+            $0.centerX.equalToSuperview()
+        }
+        
+        subTitleLabel.snp.makeConstraints {
+            $0.top.equalTo(titleLabel.snp.bottom).offset(32)
+            $0.centerX.equalToSuperview()
+        }
+        
+        logoImageView.snp.makeConstraints {
+            $0.top.equalTo(subTitleLabel.snp.bottom).offset(32)
+            $0.centerX.equalToSuperview()
+            $0.width.equalTo(335)
+            $0.height.equalTo(300)
+        }
         
         appleSignInButton.snp.makeConstraints {
-            $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-16)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-24)
             $0.left.right.equalToSuperview().inset(20)
             $0.height.equalTo(48)
         }
         
         googleSignInButton.snp.makeConstraints {
-            $0.bottom.equalTo(appleSignInButton.snp.top).offset(-12)
+            $0.bottom.equalTo(appleSignInButton.snp.top).offset(-16)
             $0.left.right.equalToSuperview().inset(20)
             $0.height.equalTo(48)
         }
