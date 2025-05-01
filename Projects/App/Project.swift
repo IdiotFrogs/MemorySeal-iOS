@@ -40,7 +40,7 @@ let project = Project(
             resources: ["Resources/**"],
             entitlements: "Sources/Support/memorySeal.entitlements",
             dependencies: [
-                .DIContainer.BaseDIContainer
+                .Feature.AppFeature
             ]
         ),
         .target(

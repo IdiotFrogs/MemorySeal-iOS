@@ -1,6 +1,6 @@
 import UIKit
 
-import BaseDIContainer
+import AppFeature
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     
@@ -15,7 +15,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.rootViewController = navigationController
 
         let appCoordinator: AppCoordinator = AppCoordinator(with: navigationController)
-        appCoordinator.start()
+        appCoordinator.moveToLoginCoordinator()
         
         window?.makeKeyAndVisible()
     }

@@ -10,7 +10,7 @@ import ProjectDescription
 extension TargetDependency {
     public enum Data {}
     public enum Domain {}
-    public enum DIContainer {}
+    public enum Presentation {}
     public enum Feature {}
     public enum ThridPartyLib {}
     public enum Shared {}
@@ -32,24 +32,39 @@ public extension TargetDependency.Domain {
     )
 }
 
-public extension TargetDependency.DIContainer {
-    //MARK: - DIContainer
-    static let BaseDIContainer = TargetDependency.project(
-        target: "BaseDIContainer",
-        path: .relativeToRoot("Projects/DIContainer/BaseDIContainer")
-    )
-}
-
 public extension TargetDependency.Feature {
     //MARK: - Feature
-    static let BaseFeature = TargetDependency.project(
-        target: "BaseFeature",
-        path: .relativeToRoot("Projects/Features/BaseFeature")
+    static let AppFeature = TargetDependency.project(
+        target: "AppFeature",
+        path: .relativeToRoot("Projects/Feature/AppFeature")
+    )
+    
+    static let SignUpFeature = TargetDependency.project(
+        target: "SignUpFeature",
+        path: .relativeToRoot("Projects/Feature/SignUpFeature")
     )
     
     static let LoginFeature = TargetDependency.project(
         target: "LoginFeature",
-        path: .relativeToRoot("Projects/Features/LoginFeature")
+        path: .relativeToRoot("Projects/Feature/LoginFeature")
+    )
+}
+
+public extension TargetDependency.Presentation {
+    //MARK: - Presentation
+    static let BasePresentation = TargetDependency.project(
+        target: "BasePresentation",
+        path: .relativeToRoot("Projects/Presentation/BasePresentation")
+    )
+    
+    static let LoginPresentation = TargetDependency.project(
+        target: "LoginPresentation",
+        path: .relativeToRoot("Projects/Presentation/LoginPresentation")
+    )
+    
+    static let SignUpPresentation = TargetDependency.project(
+        target: "SignUpPresentation",
+        path: .relativeToRoot("Projects/Presentation/SignUpPresentation")
     )
 }
 

@@ -2,16 +2,18 @@
 //  Project.swift
 //  ProjectDescriptionHelpers
 //
-//  Created by 선민재 on 9/26/24.
+//  Created by 선민재 on 10/28/24.
 //
 
 import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "BaseDIContainer",
+    name: "SignUpPresentation",
     product: .staticFramework,
     dependencies: [
-        .Feature.LoginFeature
-    ]
+        .ThridPartyLib.ThridPartyLib,
+        .Shared.DesignSystem
+    ],
+    resources: ["Resources/**"]
 )
