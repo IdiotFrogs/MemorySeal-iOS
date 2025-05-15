@@ -18,6 +18,9 @@ public final class SignUpCoordinator {
     
     public func start() {
         let signUpViewController: SignUpViewController = SignUpViewController()
-        self.navigationController.pushViewController(signUpViewController, animated: false)
+        self.navigationController.pushViewController(
+            signUpViewController,
+            animated: false
+        )
     }
 }

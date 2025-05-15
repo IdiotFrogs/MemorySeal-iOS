@@ -16,6 +16,7 @@ import DesignSystem
 
 public final class LoginViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
+    private let viewModel: LoginViewModel
     
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -53,6 +54,15 @@ public final class LoginViewController: UIViewController {
         
     private let googleSignInButton = OAuthButton(oauthType: .google)
     
+    public init(with viewModel: LoginViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     public override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -61,11 +71,17 @@ public final class LoginViewController: UIViewController {
         self.addSubViews()
         self.setLayout()
         
+        self.bindViewModel()
         self.bindButtons()
     }
 }
 
 extension LoginViewController {
+    private func bindViewModel() {
+        let input = LoginViewModel.Input(googleLoginButtonDidTap: googleSignInButton.rx.tap)
+        let _ = viewModel.translation(input)
+    }
+    
     private func bindButtons() {
         appleSignInButton.rx.controlEvent(.touchUpInside)
             .withUnretained(self)
@@ -78,6 +94,13 @@ extension LoginViewController {
                 authorizationController.delegate = self
                 authorizationController.presentationContextProvider = self
                 authorizationController.performRequests()
+            })
+            .disposed(by: disposeBag)
+        
+        googleSignInButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+//                let lo
             })
             .disposed(by: disposeBag)
     }
@@ -93,10 +116,6 @@ extension LoginViewController: ASAuthorizationControllerDelegate {
               let identityToken = appleIDCredential.identityToken,
               let authorizationCodeString = String(data: authorizationCode, encoding: .utf8),
               let tokenString = String(data: identityToken, encoding: .utf8) else { return }
-        
-        print("🧊 appleIDCredential.user \(appleIDCredential.user)")
-        print("🧊 tokenString \(tokenString)")
-        print("🧊 authorizationCodeString \(authorizationCodeString)")
 
 
         // 유니크한 값

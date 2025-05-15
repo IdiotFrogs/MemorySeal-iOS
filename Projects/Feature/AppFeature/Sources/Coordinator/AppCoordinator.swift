@@ -10,15 +10,22 @@ import UIKit
 import LoginFeature
 import SignUpFeature
 
+import LoginPresentation
+
 public final class AppCoordinator {
     private let navigationController: UINavigationController
     
-    public init(with navigationController: UINavigationController) {
+    public init(
+        with navigationController: UINavigationController
+    ) {
         self.navigationController = navigationController
     }
     
     public func moveToLoginCoordinator() {
-        let loginCoordinator: LoginCoordinator = LoginCoordinator(with: navigationController)
+        let loginCoordinator: LoginCoordinator = LoginCoordinator(
+            with: navigationController
+        )
+        loginCoordinator.delegate = self
         
         loginCoordinator.start()
     }
@@ -28,4 +35,12 @@ public final class AppCoordinator {
         
         signUpCoordinator.start()
     }
+}
+
+extension AppCoordinator: LoginCoordinatorDelegate {
+    public func startSignUp() {
+        self.moveToSignUpCoordinator()
+    }
+    
+    public func startHome() { }
 }

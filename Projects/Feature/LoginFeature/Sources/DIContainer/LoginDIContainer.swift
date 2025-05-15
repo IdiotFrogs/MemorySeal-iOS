@@ -10,12 +10,14 @@ import Foundation
 
 import LoginPresentation
 
-//public protocol LoginDIContainer {
-//    func makeLoginViewController() -> LoginViewController
-//}
-
 public final class LoginDIContainer {
-    func makeLoginViewController() -> LoginViewController {
-        return LoginViewController()
+    func makeLoginViewModel() -> LoginViewModel {
+        return LoginViewModel()
+    }
+    
+    func makeLoginViewController(
+        with viewModel: LoginViewModel
+    ) -> LoginViewController {
+        return LoginViewController(with: viewModel)
     }
 }
