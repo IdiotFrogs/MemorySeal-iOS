@@ -3,6 +3,17 @@ import ProjectDescriptionHelpers
 
 let project = Project(
     name: "MemorySeal",
+    options: .options(
+        defaultKnownRegions: ["ko"],
+        developmentRegion: "ko"
+    ),
+    settings: .settings(
+        base: ["DEVELOPMENT_TEAM": "5GD5Q99952"],
+        configurations: [
+            .debug(name: .debug),
+            .release(name: .release)
+        ]
+    ),
     targets: [
         .target(
             name: "MemorySeal",
@@ -27,8 +38,9 @@ let project = Project(
             ),
             sources: ["Sources/**"],
             resources: ["Resources/**"],
+            entitlements: "Sources/Support/memorySeal.entitlements",
             dependencies: [
-                .DIContainer.BaseDIContainer
+                .Feature.AppFeature
             ]
         ),
         .target(
