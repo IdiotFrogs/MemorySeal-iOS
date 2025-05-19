@@ -18,6 +18,8 @@ public final class SignUpCoordinator {
     
     public func start() {
         let signUpViewController: SignUpViewController = SignUpViewController()
+        
+        self.navigationController.navigationBar.isHidden = true
         self.navigationController.pushViewController(
             signUpViewController,
             animated: false
