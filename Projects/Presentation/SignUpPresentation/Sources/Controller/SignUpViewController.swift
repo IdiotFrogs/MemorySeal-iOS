@@ -93,12 +93,77 @@ public final class SignUpViewController: UIViewController {
         self.setLayout()
         
         self.bindButtons()
+        self.bindTextField()
+        self.observeKeyboardHeight()
+        
+    }
+    
+    public override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.view.endEditing(true)
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        self.view.endEditing(true)
     }
 }
 
 extension SignUpViewController {
     private func bindButtons() {
+        navigationBarBackButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func bindTextField() {
+        nickNameTextField.rx.text.changed
+            .distinctUntilChanged()
+            .distinctUntilChanged()
+            .scan("") { (text, changedText) in
+                let textMaxCount: Int = 200
+                let changedTextCount: Int = changedText?.filter { $0 != "\n" }.count ?? 0
+                                
+                guard changedTextCount <= textMaxCount else { return text }
+                
+                return changedText ?? ""
+            }
+            .withUnretained(self)
+            .bind { (self, text) in
+                self.nickNameTextField.text = text
+                
+                if text.isEmpty {
+                    self.nickNameTextField.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
+                } else {
+                    self.nickNameTextField.layer.borderColor = DesignSystemAsset.ColorAssests.grey5.color.cgColor
+                }
+//                self.commentInputView.setStatus(isCountEmpty: text.isEmpty)
+            }
+            .disposed(by: disposeBag)
+    }
+    
+    private func observeKeyboardHeight() {
+        NotificationCenter.default.rx.notification(UIResponder.keyboardWillShowNotification)
+            .compactMap { notification -> CGFloat? in
+                guard let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return nil }
+                return frame.height
+            }
+            .withUnretained(self)
+            .subscribe(onNext: { (self, keyboardHeight) in
+                self.keyboardWillShow(height: keyboardHeight)
+            })
+            .disposed(by: disposeBag)
         
+        NotificationCenter.default.rx.notification(UIResponder.keyboardWillHideNotification)
+            .map { _ in 0 }
+            .withUnretained(self)
+            .subscribe(onNext: { (self, keyboardHeight) in
+                self.keyboardWillHide()
+            })
+            .disposed(by: disposeBag)
     }
 }
 
@@ -153,5 +218,25 @@ extension SignUpViewController {
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(48)
         }
+    }
+    
+    private func keyboardWillShow(height: CGFloat) {
+        doneButton.snp.remakeConstraints {
+            $0.bottom.equalToSuperview().inset(height)
+            $0.leading.trailing.equalToSuperview()
+            $0.height.equalTo(48)
+        }
+        
+        doneButton.layer.cornerRadius = 0
+    }
+    
+    private func keyboardWillHide() {
+        doneButton.snp.remakeConstraints {
+            $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).inset(24)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(48)
+        }
+        
+        doneButton.layer.cornerRadius = 12
     }
 }
