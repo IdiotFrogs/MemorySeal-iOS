@@ -20,8 +20,9 @@ public final class HomeCoordinator {
     }
     
     public func start() {
-        let homeViewController: HomeViewController = homeDIContainer.makeHomeDIContainer()
+        let homeViewController: HomeTabmanViewController = homeDIContainer.makeHomeTabmanViewController()
         
+        self.navigationController.navigationBar.isHidden = true
         self.navigationController.setViewControllers(
             [homeViewController],
             animated: false

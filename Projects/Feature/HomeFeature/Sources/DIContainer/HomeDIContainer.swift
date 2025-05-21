@@ -11,7 +11,14 @@ import Foundation
 import HomePresentation
 
 public final class HomeDIContainer {
-    func makeHomeDIContainer() -> HomeViewController {
+    func makeHomeTabmanViewController() -> HomeTabmanViewController {
+        return HomeTabmanViewController(viewControllers: [
+            makeHomeViewController(),
+            makeHomeViewController()
+        ])
+    }
+    
+    func makeHomeViewController() -> HomeViewController {
         return HomeViewController()
     }
 }

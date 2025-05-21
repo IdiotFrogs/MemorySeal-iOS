@@ -17,6 +17,7 @@ let project = Project.makeModule(
         .SPM.Moya,
         .SPM.Kingfisher,
         .SPM.SnapKit,
-        .SPM.Lottie
+        .SPM.Lottie,
+        .SPM.Tabman
     ]
 )
