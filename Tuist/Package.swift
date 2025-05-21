@@ -8,6 +8,7 @@ let package = Package(
         .package(url: "https://github.com/SnapKit/SnapKit.git", from: "5.0.1"),
         .package(url: "https://github.com/Moya/Moya.git", from: "15.0.0"),
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "7.0.0"),
-        .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.4.3")
+        .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.4.3"),
+        .package(url: "https://github.com/uias/Tabman.git", from: "3.2.0")
     ]
 )
