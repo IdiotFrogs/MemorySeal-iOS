@@ -15,6 +15,23 @@ import RxCocoa
 import DesignSystem
 
 public final class SignUpViewController: UIViewController {
+    enum HelpTextType {
+        case enterNickName
+        case alreadyUsedNickName
+        case nickNameOutOfIndex
+        
+        var helpText: String {
+            switch self {
+            case .enterNickName:
+                return "별명을 입력하면 시작할 수 있습니다."
+            case .alreadyUsedNickName:
+                return "이미 사용 중인 별명입니다."
+            case .nickNameOutOfIndex:
+                return "최소 1글자에서 16글자까지 입력할 수 있습니다."
+            }
+        }
+    }
+    
     private let disposeBag: DisposeBag = DisposeBag()
     
     private let navigationBarBackButton: UIButton = {
@@ -80,9 +97,24 @@ public final class SignUpViewController: UIViewController {
         button.setTitle("이 프로필로 할게요!", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.grey5.color
+        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryDark.color
         button.layer.cornerRadius = 12
         return button
+    }()
+    
+    private let helpTextIcon: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.helpTextIcon.image
+        imageView.isHidden = true
+        return imageView
+    }()
+    
+    private let helpTextLabel: UILabel = {
+        let label = UILabel()
+        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
+        label.textColor = DesignSystemAsset.ColorAssests.systemRed.color
+        label.isHidden = true
+        return label
     }()
         
     public override func viewDidLoad() {
@@ -93,9 +125,8 @@ public final class SignUpViewController: UIViewController {
         self.setLayout()
         
         self.bindButtons()
-        self.bindTextField()
         self.observeKeyboardHeight()
-        
+        self.setTextFieldDelegate()
     }
     
     public override func viewDidDisappear(_ animated: Bool) {
@@ -117,31 +148,17 @@ extension SignUpViewController {
                 self.navigationController?.popViewController(animated: true)
             })
             .disposed(by: disposeBag)
-    }
-    
-    private func bindTextField() {
-        nickNameTextField.rx.text.changed
-            .distinctUntilChanged()
-            .distinctUntilChanged()
-            .scan("") { (text, changedText) in
-                let textMaxCount: Int = 200
-                let changedTextCount: Int = changedText?.filter { $0 != "\n" }.count ?? 0
-                                
-                guard changedTextCount <= textMaxCount else { return text }
-                
-                return changedText ?? ""
-            }
+        
+        doneButton.rx.tap
             .withUnretained(self)
-            .bind { (self, text) in
-                self.nickNameTextField.text = text
+            .subscribe(onNext: { (self, _) in
+                let element = self.checkHelpText(text: self.nickNameTextField.text)
                 
-                if text.isEmpty {
-                    self.nickNameTextField.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
-                } else {
-                    self.nickNameTextField.layer.borderColor = DesignSystemAsset.ColorAssests.grey5.color.cgColor
-                }
-//                self.commentInputView.setStatus(isCountEmpty: text.isEmpty)
-            }
+                self.helpTextIcon.isHidden = element.isPassed
+                self.helpTextLabel.isHidden = element.isPassed
+                self.helpTextLabel.text = element.helpText
+                
+            })
             .disposed(by: disposeBag)
     }
     
@@ -168,6 +185,25 @@ extension SignUpViewController {
 }
 
 extension SignUpViewController {
+    private func checkHelpText(text: String?) -> (isPassed: Bool, helpText: String?) {
+        guard let text = text,
+              text.isEmpty == false else { return (false, HelpTextType.enterNickName.helpText) }
+        
+        guard text.trimmingCharacters(in: .whitespaces).isEmpty == false,
+              text.count > 1,
+              text.count < 17,
+              text.last != " "
+        else { return (false, HelpTextType.nickNameOutOfIndex.helpText) }
+        
+        return (true, nil)
+    }
+    
+    private func setTextFieldDelegate() {
+        self.nickNameTextField.delegate = self
+    }
+}
+
+extension SignUpViewController {
     private func addSubViews() {
         view.addSubview(navigationBarBackButton)
         view.addSubview(titleLabel)
@@ -176,6 +212,9 @@ extension SignUpViewController {
         view.addSubview(nickNameLabel)
         view.addSubview(nickNameTextField)
         view.addSubview(doneButton)
+        
+        view.addSubview(helpTextIcon)
+        view.addSubview(helpTextLabel)
     }
     
     private func setLayout() {
@@ -218,6 +257,17 @@ extension SignUpViewController {
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(48)
         }
+        
+        helpTextIcon.snp.makeConstraints {
+            $0.top.equalTo(nickNameTextField.snp.bottom).offset(8)
+            $0.leading.equalToSuperview().inset(20)
+            $0.width.height.equalTo(16)
+        }
+        
+        helpTextLabel.snp.makeConstraints {
+            $0.top.equalTo(nickNameTextField.snp.bottom).offset(9)
+            $0.leading.equalTo(helpTextIcon.snp.trailing).offset(4)
+        }
     }
     
     private func keyboardWillShow(height: CGFloat) {
@@ -238,5 +288,39 @@ extension SignUpViewController {
         }
         
         doneButton.layer.cornerRadius = 12
+    }
+}
+
+extension SignUpViewController: UITextFieldDelegate {
+    public func textField(
+        _ textField: UITextField,
+        shouldChangeCharactersIn range: NSRange,
+        replacementString string: String
+    ) -> Bool {
+        let currentText = textField.text ?? ""
+        let updatedText = (currentText as NSString).replacingCharacters(
+            in: range,
+            with: string
+        )
+        
+        if currentText.isEmpty && updatedText == " " { return false }
+        
+        guard updatedText.contains("  ") == false else { return false }
+        
+        guard updatedText.count <= 16 else { return false }
+                
+        return true
+    }
+    
+    public func textFieldDidBeginEditing(
+        _ textField: UITextField
+    ) {
+        textField.layer.borderColor = DesignSystemAsset.ColorAssests.grey5.color.cgColor
+    }
+    
+    public func textFieldDidEndEditing(
+        _ textField: UITextField
+    ) {
+        textField.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
     }
 }
