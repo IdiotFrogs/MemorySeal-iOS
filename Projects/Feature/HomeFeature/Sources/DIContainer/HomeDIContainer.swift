@@ -18,7 +18,11 @@ public final class HomeDIContainer {
         ])
     }
     
+    private func makeHomeViewModel() -> HomeViewModel {
+        return HomeViewModel()
+    }
+    
     func makeHomeViewController() -> HomeViewController {
-        return HomeViewController()
+        return HomeViewController(with: makeHomeViewModel())
     }
 }

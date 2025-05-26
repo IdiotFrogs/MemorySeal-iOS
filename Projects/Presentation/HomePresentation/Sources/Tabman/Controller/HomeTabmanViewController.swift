@@ -84,6 +84,75 @@ public final class HomeTabmanViewController: TabmanViewController {
         return view
     }()
     
+    private let floatingButton: FloatingButton = {
+        let button = FloatingButton()
+        button.layer.cornerRadius = 28
+        return button
+    }()
+    
+    private let dimView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor(hex: "#444444")?.withAlphaComponent(0.24)
+        return view
+    }()
+    
+    private let createNewTicketButton: TextButton = {
+        let button = TextButton(titleInsets: .init(
+            top: 8.0,
+            left: 8.0,
+            bottom: -8.0,
+            right: -8.0
+        ))
+        button.setTitle("새 티켓 생성하기", for: .normal)
+        button.setTitleColor(.black, for: .normal)
+        button.setFont(DesignSystemFontFamily.Pretendard.bold.font(size: 16))
+        button.setTextAlignment(.left)
+        button.setBackgroundColor(
+            color: .white,
+            forState: .normal
+        )
+        button.setBackgroundColor(
+            color: DesignSystemAsset.ColorAssests.grey1.color,
+            forState: .highlighted
+        )
+        button.layer.cornerRadius = 4
+        return button
+    }()
+    
+    private let enterTickButton: TextButton = {
+        let button = TextButton(titleInsets: .init(
+            top: 8.0,
+            left: 8.0,
+            bottom: -8.0,
+            right: -8.0
+        ))
+        button.setTitle("참여코드로 합류하기", for: .normal)
+        button.setTitleColor(.black, for: .normal)
+        button.setFont(DesignSystemFontFamily.Pretendard.bold.font(size: 16))
+        button.setTextAlignment(.left)
+        button.setBackgroundColor(
+            color: .white,
+            forState: .normal
+        )
+        button.setBackgroundColor(
+            color: DesignSystemAsset.ColorAssests.grey1.color,
+            forState: .highlighted
+        )
+        button.layer.cornerRadius = 4
+        return button
+    }()
+    
+    private let stackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 4
+        stackView.backgroundColor = .white
+        stackView.layer.cornerRadius = 12
+        stackView.distribution = .fillEqually
+        stackView.alignment = .leading
+        return stackView
+    }()
+    
     public init(viewControllers: [UIViewController]) {
         self.viewControllers = viewControllers
         super.init(nibName: nil, bundle: nil)
@@ -97,6 +166,7 @@ public final class HomeTabmanViewController: TabmanViewController {
         super.viewDidLoad()
         
         self.dataSource = self
+        self.bounces = false
         
         self.addSubViews()
         self.setLayout()
@@ -113,17 +183,67 @@ public final class HomeTabmanViewController: TabmanViewController {
 
 extension HomeTabmanViewController {
     private func bindButtons() {
-        
+        floatingButton.rx.tap
+            .map { self.floatingButton.status }
+            .withUnretained(self)
+            .subscribe(onNext: { (self, status) in
+                if status == .closed {
+                    self.showDimView()
+                    self.showStackView()
+                    self.floatingButton.status = .opened
+                } else {
+                    self.floatingButton.status = .closed
+                    self.dimView.removeFromSuperview()
+                    self.stackView.removeFromSuperview()
+                }
+            })
+            .disposed(by: disposeBag)
     }
 }
 
 extension HomeTabmanViewController {
+    private func showDimView() {
+        view.addSubview(dimView)
+        view.bringSubviewToFront(floatingButton)
+        dimView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+    }
+    
+    private func showStackView() {
+        view.addSubview(stackView)
+        stackView.addSubview(createNewTicketButton)
+        stackView.addSubview(enterTickButton)
+        
+        createNewTicketButton.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(8)
+            $0.leading.trailing.equalToSuperview().inset(8)
+            $0.height.equalTo(35)
+        }
+        
+        enterTickButton.snp.makeConstraints {
+            $0.top.equalTo(createNewTicketButton.snp.bottom).offset(4)
+            $0.leading.trailing.equalToSuperview().inset(8)
+            $0.height.equalTo(35)
+            $0.bottom.equalToSuperview().inset(8)
+        }
+        
+        stackView.snp.makeConstraints {
+            $0.trailing.equalToSuperview().inset(20)
+            $0.bottom.equalTo(floatingButton.snp.top).offset(-16)
+            $0.width.equalTo(176)
+            $0.height.equalTo(90)
+        }
+    }
+    
     private func addSubViews() {
         view.addSubview(tabManBackgroundView)
         tabManBackgroundView.addSubview(underLineView)
         tabManBackgroundView.addSubview(titleLabel)
         tabManBackgroundView.addSubview(userProfileButton)
         tabManBackgroundView.addSubview(customContainerView)
+        
+        view.addSubview(floatingButton)
     }
     
     private func setLayout() {
@@ -153,6 +273,12 @@ extension HomeTabmanViewController {
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalTo(tabManBackgroundView.snp.bottom)
             $0.height.equalTo(40)
+        }
+        
+        floatingButton.snp.makeConstraints {
+            $0.trailing.equalToSuperview().inset(20)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).inset(24)
+            $0.width.height.equalTo(56)
         }
     }
 }
