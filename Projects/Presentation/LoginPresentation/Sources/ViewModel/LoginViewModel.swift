@@ -23,6 +23,7 @@ public final class LoginViewModel {
     
     struct Input {
         let googleLoginButtonDidTap: ControlEvent<Void>
+        let appleLoginButtonDidTap: PublishRelay<Void>
     }
     
     struct Output {
@@ -35,6 +36,13 @@ public final class LoginViewModel {
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.delegate?.moveToSignUp()
+            })
+            .disposed(by: disposeBag)
+        
+        input.appleLoginButtonDidTap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.delegate?.moveToHome()
             })
             .disposed(by: disposeBag)
         

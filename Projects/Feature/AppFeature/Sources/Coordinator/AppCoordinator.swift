@@ -9,8 +9,7 @@ import UIKit
 
 import LoginFeature
 import SignUpFeature
-
-import LoginPresentation
+import HomeFeature
 
 public final class AppCoordinator {
     private let navigationController: UINavigationController
@@ -35,6 +34,14 @@ public final class AppCoordinator {
         
         signUpCoordinator.start()
     }
+    
+    public func moveToHomeCoorinator() {
+        let homeCoordinator: HomeCoordinator = HomeCoordinator(
+            with: navigationController
+        )
+        
+        homeCoordinator.start()
+    }
 }
 
 extension AppCoordinator: LoginCoordinatorDelegate {
@@ -42,5 +49,7 @@ extension AppCoordinator: LoginCoordinatorDelegate {
         self.moveToSignUpCoordinator()
     }
     
-    public func startHome() { }
+    public func startHome() {
+        self.moveToHomeCoorinator()
+    }
 }

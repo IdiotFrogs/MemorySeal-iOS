@@ -18,6 +18,8 @@ public final class LoginViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let viewModel: LoginViewModel
     
+    private let appleLoginButtonDidTap: PublishRelay<Void> = .init()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "메실"
@@ -78,7 +80,10 @@ public final class LoginViewController: UIViewController {
 
 extension LoginViewController {
     private func bindViewModel() {
-        let input = LoginViewModel.Input(googleLoginButtonDidTap: googleSignInButton.rx.tap)
+        let input = LoginViewModel.Input(
+            googleLoginButtonDidTap: googleSignInButton.rx.tap,
+            appleLoginButtonDidTap: appleLoginButtonDidTap
+        )
         let _ = viewModel.translation(input)
     }
     
@@ -86,14 +91,15 @@ extension LoginViewController {
         appleSignInButton.rx.controlEvent(.touchUpInside)
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                let appleIDProvider = ASAuthorizationAppleIDProvider()
-                let request = appleIDProvider.createRequest()
-                request.requestedScopes = [.fullName, .email]
-                
-                let authorizationController = ASAuthorizationController(authorizationRequests: [request])
-                authorizationController.delegate = self
-                authorizationController.presentationContextProvider = self
-                authorizationController.performRequests()
+                self.appleLoginButtonDidTap.accept(())
+//                let appleIDProvider = ASAuthorizationAppleIDProvider()
+//                let request = appleIDProvider.createRequest()
+//                request.requestedScopes = [.fullName, .email]
+//                
+//                let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+//                authorizationController.delegate = self
+//                authorizationController.presentationContextProvider = self
+//                authorizationController.performRequests()
             })
             .disposed(by: disposeBag)
         
@@ -111,12 +117,11 @@ extension LoginViewController: ASAuthorizationControllerDelegate {
         controller: ASAuthorizationController,
         didCompleteWithAuthorization authorization: ASAuthorization
     ) {
-        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
-              let authorizationCode = appleIDCredential.authorizationCode,
-              let identityToken = appleIDCredential.identityToken,
-              let authorizationCodeString = String(data: authorizationCode, encoding: .utf8),
-              let tokenString = String(data: identityToken, encoding: .utf8) else { return }
-
+//        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+//              let authorizationCode = appleIDCredential.authorizationCode,
+//              let identityToken = appleIDCredential.identityToken,
+//              let authorizationCodeString = String(data: authorizationCode, encoding: .utf8),
+//              let tokenString = String(data: identityToken, encoding: .utf8) else { return }
 
         // 유니크한 값
 //        LoginCheckManager.shared.userAppleIdentity = appleIDCredential.user
