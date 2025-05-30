@@ -10,6 +10,7 @@ import UIKit
 import LoginFeature
 import SignUpFeature
 import HomeFeature
+import CreateTicketFeature
 
 public final class AppCoordinator {
     private let navigationController: UINavigationController
@@ -39,8 +40,16 @@ public final class AppCoordinator {
         let homeCoordinator: HomeCoordinator = HomeCoordinator(
             with: navigationController
         )
+        homeCoordinator.delegate = self
         
         homeCoordinator.start()
+    }
+    
+    public func moveToCreateTicketCoordinator() {
+        let createTicketCoordinator: CreateTicketCoordinator = CreateTicketCoordinator(
+            with: navigationController
+        )
+        createTicketCoordinator.start()
     }
 }
 
@@ -51,5 +60,11 @@ extension AppCoordinator: LoginCoordinatorDelegate {
     
     public func startHome() {
         self.moveToHomeCoorinator()
+    }
+}
+
+extension AppCoordinator: HomeCoordinatorDelegate {
+    public func moveToCreateTicket() {
+        self.moveToCreateTicketCoordinator()
     }
 }
