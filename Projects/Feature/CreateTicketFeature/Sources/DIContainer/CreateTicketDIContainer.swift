@@ -11,11 +11,13 @@ import Foundation
 import CreateTicketPresentation
 
 public final class CreateTicketDIContainer {
-    private func makeCreateTicketViewModel() -> CreateTicketViewModel {
+    func makeCreateTicketViewModel() -> CreateTicketViewModel {
         return CreateTicketViewModel()
     }
     
-    public func makeCreateTicketViewController() -> CreateTicketViewController {
-        return CreateTicketViewController(with: makeCreateTicketViewModel())
+    func makeCreateTicketViewController(
+        with viewModel: CreateTicketViewModel
+    ) -> CreateTicketViewController {
+        return CreateTicketViewController(with: viewModel)
     }
 }

@@ -89,6 +89,10 @@ public final class SignUpViewController: UIViewController {
         textField.leftViewMode = .always
         textField.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
         textField.rightViewMode = .always
+        textField.setPlaceholder(
+            color: DesignSystemAsset.ColorAssests.grey3.color,
+            font: DesignSystemFontFamily.Pretendard.regular.font(size: 16)
+        )
         return textField
     }()
     
