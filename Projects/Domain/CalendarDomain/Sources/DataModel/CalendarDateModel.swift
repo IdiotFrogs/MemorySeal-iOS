@@ -9,6 +9,17 @@
 import Foundation
 
 public struct CalendarDateModel {
-    let date: Date
-    let isInCurrentMonth: Bool
+    public let date: Date
+    public let isInCurrentMonth: Bool
+    public let isToday: Bool
+    
+    init(
+        date: Date,
+        isInCurrentMonth: Bool,
+        isToday: Bool = false
+    ) {
+        self.date = date
+        self.isInCurrentMonth = isInCurrentMonth
+        self.isToday = isToday
+    }
 }

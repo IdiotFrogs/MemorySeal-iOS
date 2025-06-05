@@ -11,6 +11,7 @@ import RxSwift
 import RxCocoa
 
 import CalendarDomain
+import DesignSystem
 
 public protocol CreateTicketViewModelDelegate: AnyObject {
     func popViewController()
@@ -21,7 +22,9 @@ public final class CreateTicketViewModel {
     private let calendarUseCase: CalendarUseCase
     
     public var delegate: CreateTicketViewModelDelegate?
+//    private var currentMonth: Date = Date().kstNow
     
+    private let currentMonth: BehaviorRelay<Date> = .init(value: Date().kstNow)
     private let calendarDates: PublishRelay<[CalendarDateModel]> = .init()
     
     public init(
@@ -33,9 +36,12 @@ public final class CreateTicketViewModel {
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
         let navigationViewBackButtonDidTap: ControlEvent<Void>
+        let previousMonthButtonDidTap: ControlEvent<Void>
+        let nextMonthButtonDidTap: ControlEvent<Void>
     }
     
     struct Output {
+        let currentMonth: BehaviorRelay<Date>
         let calendarDates: PublishRelay<[CalendarDateModel]>
     }
     
@@ -44,7 +50,7 @@ public final class CreateTicketViewModel {
         input.rxViewDidLoad
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.requestCalendarDates()
+                self.requestCalendarDates(date: Date().kstNow)
             })
             .disposed(by: disposeBag)
         
@@ -55,16 +61,42 @@ public final class CreateTicketViewModel {
             })
             .disposed(by: disposeBag)
         
+        input.previousMonthButtonDidTap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                var calendar = Calendar(identifier: .gregorian)
+                calendar.locale = Locale(identifier: "en_US")
+                calendar.timeZone = TimeZone(abbreviation: "UTC") ?? .current
+                if let previousMonth = calendar.date(byAdding: .month, value: -1, to: self.currentMonth.value) {
+                    self.requestCalendarDates(date: previousMonth)
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        input.nextMonthButtonDidTap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                var calendar = Calendar(identifier: .gregorian)
+                calendar.locale = Locale(identifier: "en_US")
+                calendar.timeZone = TimeZone(abbreviation: "UTC") ?? .current
+                if let nextMonth = calendar.date(byAdding: .month, value: 1, to: self.currentMonth.value) {
+                    self.requestCalendarDates(date: nextMonth)
+                }
+            })
+            .disposed(by: disposeBag)
+        
         return Output(
+            currentMonth: currentMonth,
             calendarDates: calendarDates
         )
     }
 }
 
 extension CreateTicketViewModel {
-    private func requestCalendarDates() {
-        let calendarDates: [CalendarDateModel] = calendarUseCase.generateCalendarDates(for: Date().kstNow)
+    private func requestCalendarDates(date: Date) {
+        let calendarDates: [CalendarDateModel] = calendarUseCase.generateCalendarDates(for: date)
         
         self.calendarDates.accept(calendarDates)
+        self.currentMonth.accept(date)
     }
 }
