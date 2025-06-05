@@ -143,9 +143,7 @@ public final class CreateTicketViewController: UIViewController {
         self.addSubviews()
         self.setLayout()
         self.addLeftPaddingView()
-        
-        self.setCalendarView()
-        
+                
         self.bindViewModel()
         self.bindScrollView()
         self.bindTextView()
@@ -164,18 +162,41 @@ extension CreateTicketViewController {
     private func bindViewModel() {
         let input = CreateTicketViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
-            navigationViewBackButtonDidTap: navigationView.backButtonDidTap
+            navigationViewBackButtonDidTap: navigationView.backButtonDidTap,
+            previousMonthButtonDidTap: calendarView.previousMonthButtonDidTap,
+            nextMonthButtonDidTap: calendarView.nextMonthButtonDidTap
         )
         let output = viewModel.transform(input)
         
-//        output.calendarDates
-//            .bind(to: calendarView.collectionView.rx.items(
-//                cellIdentifier: <#T##String#>,
-//                cellType: <#T##UICollectionViewCell.Type#>
-//            )) { (index, item, cell) in
-//                
-//            }
-//            .disposed(by: disposeBag)
+        output.currentMonth
+            .withUnretained(self)
+            .subscribe(onNext: { (self, date) in
+                self.calendarView.setTitleLabel(date: date)
+            })
+            .disposed(by: disposeBag)
+        
+        output.calendarDates
+            .bind(to: calendarView.collectionView.rx.items(
+                cellIdentifier: MemorySealCalendarCollectionViewCell.reuseIdentifier,
+                cellType: MemorySealCalendarCollectionViewCell.self
+            )) { (index, item, cell) in
+                let dateFormatter = DateFormatter()
+                dateFormatter.locale = Locale(identifier: "en_US")
+                dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
+                dateFormatter.dateFormat = "d"
+                let dateText: String = dateFormatter.string(from: item.date)
+                
+                cell.configure(
+                    dateText: dateText,
+                    isCurrentMonth: item.isInCurrentMonth,
+                    isToday: item.isToday
+                )
+            
+                if index > 30 {
+                    self.calendarView.remakeCollectionViewLayout()
+                }
+            }
+            .disposed(by: disposeBag)
     }
     
     private func bindScrollView() {
@@ -196,14 +217,6 @@ extension CreateTicketViewController {
                 self.descriptionPlaceholderLabel.isHidden = text.isEmpty == false
             })
             .disposed(by: disposeBag)
-    }
-}
-
-extension CreateTicketViewController {
-    private func setCalendarView() {
-        guard let layout: UICollectionViewFlowLayout = calendarView.collectionView.collectionViewLayout as? UICollectionViewFlowLayout else { return }
-        let size: CGFloat = (view.frame.width - 64) / 7
-        layout.itemSize = .init(width: size, height: size)
     }
 }
 

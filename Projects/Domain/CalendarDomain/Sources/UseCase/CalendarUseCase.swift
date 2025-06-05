@@ -8,6 +8,8 @@
 
 import Foundation
 
+import DesignSystem
+
 public protocol CalendarUseCase {
     func generateCalendarDates(for date: Date) -> [CalendarDateModel]
 }
@@ -54,7 +56,8 @@ public final class DefaultCalendarUseCase: CalendarUseCase {
                 value: day,
                 to: startOfMonth
             ) {
-                dates.append(CalendarDateModel(date: date, isInCurrentMonth: true))
+                let isToday = calendar.isDate(Date().kstNow, inSameDayAs: date)
+                dates.append(CalendarDateModel(date: date, isInCurrentMonth: true, isToday: isToday))
             }
         }
         

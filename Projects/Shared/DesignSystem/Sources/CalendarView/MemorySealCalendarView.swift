@@ -6,6 +6,7 @@
 //  Copyright © 2025 MemorySeal. All rights reserved.
 //
 
+import Foundation
 import UIKit
 import SnapKit
 import RxSwift
@@ -40,13 +41,16 @@ final public class MemorySealCalendarView: UIView {
         return stackView
     }()
     
-    public let collectionView: UICollectionView = {
-        let flowLayout = UICollectionViewFlowLayout()
-        flowLayout.scrollDirection = .horizontal
+    public lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(
             frame: .zero,
-            collectionViewLayout: flowLayout
+            collectionViewLayout: createCalendarLayout()
         )
+        collectionView.register(
+            MemorySealCalendarCollectionViewCell.self,
+            forCellWithReuseIdentifier: MemorySealCalendarCollectionViewCell.reuseIdentifier
+        )
+        collectionView.isScrollEnabled = false
         return collectionView
     }()
     
@@ -61,6 +65,26 @@ final public class MemorySealCalendarView: UIView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    public var nextMonthButtonDidTap: ControlEvent<Void> {
+        return nextMonthButton.rx.tap
+    }
+    
+    public var previousMonthButtonDidTap: ControlEvent<Void> {
+        return previousMonthButton.rx.tap
+    }
+}
+
+extension MemorySealCalendarView {
+    public func setTitleLabel(date: Date) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy년 MM월"
+        dateFormatter.locale = Locale(identifier: "en_US")
+        dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
+        
+        let titleLabelText: String = dateFormatter.string(from: date)
+        titleLabel.text = titleLabelText
     }
 }
 
@@ -81,9 +105,49 @@ extension MemorySealCalendarView {
             weekStackView.addArrangedSubview(dayLabel)
         }
     }
-}
+    
+    private func createCalendarLayout() -> UICollectionViewLayout {
+        let sectionProvider = { (sectionIndex: Int, layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
+            return self.getCalendarLayout()
+        }
+        let layout = UICollectionViewCompositionalLayout(sectionProvider: sectionProvider)
+        return layout
+    }
+    
+    private func getCalendarLayout() -> NSCollectionLayoutSection {
+        let itemSize = NSCollectionLayoutSize(
+            widthDimension: .fractionalWidth(1.0 / 7.0),
+            heightDimension: .fractionalWidth(1.0 / 7.0)
+        )
+        let item = NSCollectionLayoutItem(
+            layoutSize: itemSize
+        )
+        item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
+        let groupSize = NSCollectionLayoutSize(
+            widthDimension: .fractionalWidth(1.0),
+            heightDimension: .fractionalWidth(1.0 / 7.0)
+        )
+        let group = NSCollectionLayoutGroup.horizontal(
+            layoutSize: groupSize,
+            repeatingSubitem: item,
+            count: 7
+        )
+        let section = NSCollectionLayoutSection(group: group)
+        section.interGroupSpacing = 0
+        section.contentInsets = .zero
 
-extension MemorySealCalendarView {
+        return section
+    }
+    
+    public func remakeCollectionViewLayout() {
+        collectionView.snp.remakeConstraints {
+            $0.top.equalTo(weekStackView.snp.bottom)
+            $0.leading.trailing.equalToSuperview().inset(12)
+            $0.height.equalTo(collectionView.contentSize.height)
+            $0.bottom.equalToSuperview().inset(12)
+        }
+    }
+    
     private func addSubviews() {
         addSubview(titleLabel)
         addSubview(nextMonthButton)
@@ -118,6 +182,7 @@ extension MemorySealCalendarView {
         collectionView.snp.makeConstraints {
             $0.top.equalTo(weekStackView.snp.bottom)
             $0.leading.trailing.equalToSuperview().inset(12)
+            $0.height.greaterThanOrEqualTo(200)
             $0.bottom.equalToSuperview().inset(12)
         }
     }
