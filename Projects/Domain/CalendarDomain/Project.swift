@@ -1,18 +1,17 @@
 //
 //  Project.swift
-//  Manifests
+//  ProjectDescriptionHelpers
 //
-//  Created by 선민재 on 5/30/25.
+//  Created by 선민재 on 6/05/25.
 //
 
 import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "CreateTicketFeature",
+    name: "CalendarDomain",
     product: .staticFramework,
     dependencies: [
-        .Domain.CalendarDomain,
-        .Presentation.CreateTicketPresentation
+        .ThridPartyLib.ThridPartyLib
     ]
 )

@@ -12,7 +12,7 @@ let project = Project.makeModule(
     name: "CreateTicketPresentation",
     product: .staticFramework,
     dependencies: [
-        .Domain.BaseDomain,
+        .Domain.CalendarDomain,
         .ThridPartyLib.ThridPartyLib,
         .Shared.DesignSystem
     ],

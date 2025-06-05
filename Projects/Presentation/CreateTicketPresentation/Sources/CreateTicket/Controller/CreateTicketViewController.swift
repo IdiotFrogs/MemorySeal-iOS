@@ -109,16 +109,11 @@ public final class CreateTicketViewController: UIViewController {
         return label
     }()
     
-    private lazy var calendarView: UICalendarView = {
-        let singleSelectDate = UICalendarSelectionSingleDate(delegate: self)
-        let view = UICalendarView()
-        view.fontDesign = .rounded
-        view.tintColor = DesignSystemAsset.ColorAssests.primaryNormal.color
+    private let calendarView: MemorySealCalendarView = {
+        let view = MemorySealCalendarView()
         view.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
         view.layer.borderWidth = 1
         view.layer.cornerRadius = 12
-        view.selectionBehavior = singleSelectDate
-        view.wantsDateDecorations = true
         return view
     }()
     
@@ -149,6 +144,8 @@ public final class CreateTicketViewController: UIViewController {
         self.setLayout()
         self.addLeftPaddingView()
         
+        self.setCalendarView()
+        
         self.bindViewModel()
         self.bindScrollView()
         self.bindTextView()
@@ -169,7 +166,16 @@ extension CreateTicketViewController {
             rxViewDidLoad: rxViewDidLoad,
             navigationViewBackButtonDidTap: navigationView.backButtonDidTap
         )
-        let _ = viewModel.transform(input)
+        let output = viewModel.transform(input)
+        
+//        output.calendarDates
+//            .bind(to: calendarView.collectionView.rx.items(
+//                cellIdentifier: <#T##String#>,
+//                cellType: <#T##UICollectionViewCell.Type#>
+//            )) { (index, item, cell) in
+//                
+//            }
+//            .disposed(by: disposeBag)
     }
     
     private func bindScrollView() {
@@ -190,6 +196,14 @@ extension CreateTicketViewController {
                 self.descriptionPlaceholderLabel.isHidden = text.isEmpty == false
             })
             .disposed(by: disposeBag)
+    }
+}
+
+extension CreateTicketViewController {
+    private func setCalendarView() {
+        guard let layout: UICollectionViewFlowLayout = calendarView.collectionView.collectionViewLayout as? UICollectionViewFlowLayout else { return }
+        let size: CGFloat = (view.frame.width - 64) / 7
+        layout.itemSize = .init(width: size, height: size)
     }
 }
 
@@ -302,18 +316,5 @@ extension CreateTicketViewController {
             $0.bottom.equalTo(scrollView.snp.bottom).inset(24)
             $0.height.equalTo(48)
         }
-    }
-}
-
-extension CreateTicketViewController: UICalendarSelectionSingleDateDelegate {
-    public func dateSelection(
-        _ selection: UICalendarSelectionSingleDate,
-        didSelectDate dateComponents: DateComponents?
-    ) {
-        guard let date = dateComponents else { return }
-        calendarView.reloadDecorations(
-            forDateComponents: [date],
-            animated: true
-        )
     }
 }

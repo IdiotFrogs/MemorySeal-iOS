@@ -30,6 +30,11 @@ public extension TargetDependency.Domain {
         target: "BaseDomain",
         path: .relativeToRoot("Projects/Domain/BaseDomain")
     )
+    
+    static let CalendarDomain = TargetDependency.project(
+        target: "CalendarDomain",
+        path: .relativeToRoot("Projects/Domain/CalendarDomain")
+    )
 }
 
 public extension TargetDependency.Feature {
