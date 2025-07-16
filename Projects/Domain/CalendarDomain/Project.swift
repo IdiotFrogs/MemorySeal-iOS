@@ -2,19 +2,17 @@
 //  Project.swift
 //  ProjectDescriptionHelpers
 //
-//  Created by 선민재 on 9/26/24.
+//  Created by 선민재 on 6/05/25.
 //
 
 import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "AppFeature",
+    name: "CalendarDomain",
     product: .staticFramework,
     dependencies: [
-        .Feature.SignUpFeature,
-        .Feature.LoginFeature,
-        .Feature.HomeFeature,
-        .Feature.CreateTicketFeature
+        .ThridPartyLib.ThridPartyLib,
+        .Shared.DesignSystem
     ]
 )

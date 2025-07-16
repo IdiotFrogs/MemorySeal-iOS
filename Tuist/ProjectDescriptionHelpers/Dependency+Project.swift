@@ -30,6 +30,11 @@ public extension TargetDependency.Domain {
         target: "BaseDomain",
         path: .relativeToRoot("Projects/Domain/BaseDomain")
     )
+    
+    static let CalendarDomain = TargetDependency.project(
+        target: "CalendarDomain",
+        path: .relativeToRoot("Projects/Domain/CalendarDomain")
+    )
 }
 
 public extension TargetDependency.Feature {
@@ -53,6 +58,11 @@ public extension TargetDependency.Feature {
         target: "HomeFeature",
         path: .relativeToRoot("Projects/Feature/HomeFeature")
     )
+    
+    static let CreateTicketFeature = TargetDependency.project(
+        target: "CreateTicketFeature",
+        path: .relativeToRoot("Projects/Feature/CreateTicketFeature")
+    )
 }
 
 public extension TargetDependency.Presentation {
@@ -75,6 +85,11 @@ public extension TargetDependency.Presentation {
     static let HomePresentation = TargetDependency.project(
         target: "HomePresentation",
         path: .relativeToRoot("Projects/Presentation/HomePresentation")
+    )
+    
+    static let CreateTicketPresentation = TargetDependency.project(
+        target: "CreateTicketPresentation",
+        path: .relativeToRoot("Projects/Presentation/CreateTicketPresentation")
     )
 }
 

@@ -31,6 +31,7 @@ enum HomeTabMenu: Int, CaseIterable {
 
 public final class HomeTabmanViewController: TabmanViewController {
     private let disposeBag: DisposeBag = DisposeBag()
+    private let viewModel: HomeTabmanViewModel
     
     private var viewControllers: [UIViewController] = []
     
@@ -153,8 +154,12 @@ public final class HomeTabmanViewController: TabmanViewController {
         return stackView
     }()
     
-    public init(viewControllers: [UIViewController]) {
+    public init(
+        viewControllers: [UIViewController],
+        with viewModel: HomeTabmanViewModel
+    ) {
         self.viewControllers = viewControllers
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -171,6 +176,7 @@ public final class HomeTabmanViewController: TabmanViewController {
         self.addSubViews()
         self.setLayout()
         
+        self.bindViewModel()
         self.bindButtons()
         
         self.addBar(
@@ -182,6 +188,11 @@ public final class HomeTabmanViewController: TabmanViewController {
 }
 
 extension HomeTabmanViewController {
+    private func bindViewModel() {
+        let input = HomeTabmanViewModel.Input(createTicketButtonDidTap: createNewTicketButton.rx.tap)
+        let _ = viewModel.transform(input)
+    }
+    
     private func bindButtons() {
         floatingButton.rx.tap
             .map { self.floatingButton.status }
