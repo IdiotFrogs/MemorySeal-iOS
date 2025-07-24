@@ -11,6 +11,7 @@ import ProfilePresentation
 
 public final class ProfileCoordinator {
     private let navigationController: UINavigationController
+    private let profileDIContainer: ProfileDIContainer = .init()
     
     public init(
         with navigationController: UINavigationController
@@ -19,6 +20,10 @@ public final class ProfileCoordinator {
     }
     
     public func start() {
-        
+        let profileViewController = profileDIContainer.makeProfileViewController()
+        self.navigationController.pushViewController(
+            profileViewController,
+            animated: true
+        )
     }
 }

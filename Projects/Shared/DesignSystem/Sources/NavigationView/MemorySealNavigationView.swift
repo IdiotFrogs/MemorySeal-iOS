@@ -28,12 +28,23 @@ public final class MemorySealNavigationView: UIView {
         return button
     }()
     
+    private let buttonStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .horizontal
+        stackView.alignment = .center
+        return stackView
+    }()
+    
     public var backButtonDidTap: ControlEvent<Void> {
         return backButton.rx.tap
     }
     
     public func setTitle(_ text: String?) {
         titleLabel.text = text
+    }
+    
+    public func addButton(_ button: UIButton) {
+        buttonStackView.addArrangedSubview(button)
     }
     
     public init() {
@@ -52,6 +63,7 @@ extension MemorySealNavigationView {
     private func addSubviews() {
         addSubview(titleLabel)
         addSubview(backButton)
+        addSubview(buttonStackView)
     }
     
     private func setLayout() {
@@ -63,6 +75,11 @@ extension MemorySealNavigationView {
             $0.centerY.equalToSuperview()
             $0.leading.equalToSuperview().offset(20)
             $0.width.height.equalTo(24)
+        }
+        
+        buttonStackView.snp.makeConstraints {
+            $0.trailing.equalToSuperview().inset(20)
+            $0.centerY.equalToSuperview()
         }
     }
 }

@@ -7,5 +7,10 @@
 //
 
 import Foundation
+import ProfilePresentation
 
-public final class ProfileDIContainer {}
+public final class ProfileDIContainer {
+    func makeProfileViewController() -> ProfileViewController {
+        return ProfileViewController()
+    }
+}

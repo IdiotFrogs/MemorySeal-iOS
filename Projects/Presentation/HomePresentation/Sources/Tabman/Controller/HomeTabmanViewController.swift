@@ -189,7 +189,10 @@ public final class HomeTabmanViewController: TabmanViewController {
 
 extension HomeTabmanViewController {
     private func bindViewModel() {
-        let input = HomeTabmanViewModel.Input(createTicketButtonDidTap: createNewTicketButton.rx.tap)
+        let input = HomeTabmanViewModel.Input(
+            createTicketButtonDidTap: createNewTicketButton.rx.tap,
+            profileButtonDidTap: userProfileButton.rx.tap
+        )
         let _ = viewModel.transform(input)
     }
     

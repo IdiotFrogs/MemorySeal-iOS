@@ -11,6 +11,7 @@ import LoginFeature
 import SignUpFeature
 import HomeFeature
 import CreateTicketFeature
+import ProfileFeature
 
 public final class AppCoordinator {
     private let navigationController: UINavigationController
@@ -51,6 +52,13 @@ public final class AppCoordinator {
         )
         createTicketCoordinator.start()
     }
+    
+    public func moveToProfileCoordinator() {
+        let profileCoordinator: ProfileCoordinator = ProfileCoordinator(
+            with: navigationController
+        )
+        profileCoordinator.start()
+    }
 }
 
 extension AppCoordinator: LoginCoordinatorDelegate {
@@ -64,6 +72,10 @@ extension AppCoordinator: LoginCoordinatorDelegate {
 }
 
 extension AppCoordinator: HomeCoordinatorDelegate {
+    public func moveToProfile() {
+        self.moveToProfileCoordinator()
+    }
+    
     public func moveToCreateTicket() {
         self.moveToCreateTicketCoordinator()
     }
