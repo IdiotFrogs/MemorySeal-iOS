@@ -11,6 +11,7 @@ import HomePresentation
 
 public protocol HomeCoordinatorDelegate: AnyObject {
     func moveToCreateTicket()
+    func moveToProfile()
 }
 
 public final class HomeCoordinator {
@@ -39,6 +40,10 @@ public final class HomeCoordinator {
 }
 
 extension HomeCoordinator: HomeTabmanViewModelDelegate {
+    public func moveToProfile() {
+        delegate?.moveToProfile()
+    }
+    
     public func moveToCreateTicket() {
         delegate?.moveToCreateTicket()
     }
