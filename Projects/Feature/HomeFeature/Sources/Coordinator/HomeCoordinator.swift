@@ -12,6 +12,7 @@ import HomePresentation
 public protocol HomeCoordinatorDelegate: AnyObject {
     func moveToCreateTicket()
     func moveToProfile()
+    func moveToMemory()
 }
 
 public final class HomeCoordinator {
@@ -29,11 +30,27 @@ public final class HomeCoordinator {
     public func start() {
         let homeTabmanViewModel = homeDIContainer.makeHomeTabmanViewModel()
         homeTabmanViewModel.delegate = self
-        let homeViewController: HomeTabmanViewController = homeDIContainer.makeHomeTabmanViewController(with: homeTabmanViewModel)
+        let homeViewModel1 = homeDIContainer.makeHomeViewModel()
+        let homeViewController1 = homeDIContainer.makeHomeViewController(
+            viewModel: homeViewModel1
+        )
+        homeViewModel1.delegate = self
+        let homeViewModel2 = homeDIContainer.makeHomeViewModel()
+        let homeViewController2 = homeDIContainer.makeHomeViewController(
+            viewModel: homeViewModel2
+        )
+        homeViewModel2.delegate = self
+        let homeTabManViewController: HomeTabmanViewController = homeDIContainer.makeHomeTabmanViewController(
+            with: homeTabmanViewModel,
+            viewControllers: [
+                homeViewController1,
+                homeViewController2
+            ]
+        )
         
         self.navigationController.navigationBar.isHidden = true
         self.navigationController.setViewControllers(
-            [homeViewController],
+            [homeTabManViewController],
             animated: false
         )
     }
@@ -46,5 +63,11 @@ extension HomeCoordinator: HomeTabmanViewModelDelegate {
     
     public func moveToCreateTicket() {
         delegate?.moveToCreateTicket()
+    }
+}
+
+extension HomeCoordinator: HomeViewModelDelegate {
+    public func moveToMemory() {
+        delegate?.moveToMemory()
     }
 }

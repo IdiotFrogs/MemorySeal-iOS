@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+import UIKit
 import HomePresentation
 
 public final class HomeDIContainer {
@@ -15,21 +15,21 @@ public final class HomeDIContainer {
         return HomeTabmanViewModel()
     }
     
-    func makeHomeTabmanViewController(with viewModel: HomeTabmanViewModel) -> HomeTabmanViewController {
+    func makeHomeTabmanViewController(
+        with viewModel: HomeTabmanViewModel,
+        viewControllers: [UIViewController]
+    ) -> HomeTabmanViewController {
         return HomeTabmanViewController(
-            viewControllers: [
-                makeHomeViewController(),
-                makeHomeViewController()
-            ],
+            viewControllers: viewControllers,
             with: viewModel
         )
     }
     
-    private func makeHomeViewModel() -> HomeViewModel {
+    func makeHomeViewModel() -> HomeViewModel {
         return HomeViewModel()
     }
     
-    func makeHomeViewController() -> HomeViewController {
-        return HomeViewController(with: makeHomeViewModel())
+    func makeHomeViewController(viewModel: HomeViewModel) -> HomeViewController {
+        return HomeViewController(with: viewModel)
     }
 }
