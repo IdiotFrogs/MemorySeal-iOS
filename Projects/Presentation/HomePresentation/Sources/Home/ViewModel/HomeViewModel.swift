@@ -6,20 +6,27 @@
 //  Copyright © 2025 MemorySeal. All rights reserved.
 //
 
+import Foundation
 import RxSwift
 import RxCocoa
 
+public protocol HomeViewModelDelegate: AnyObject {
+    func moveToMemory()
+}
+
 public final class HomeViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
+    public var delegate: HomeViewModelDelegate?
     
-    private let ticketList: PublishRelay<[String]> = .init()
+    private let memoryList: PublishRelay<[String]> = .init()
     
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
+        let didTapMemoryList: ControlEvent<IndexPath>
     }
     
     struct Output {
-        let ticketList: PublishRelay<[String]>
+        let memoryList: PublishRelay<[String]>
     }
     
     func transform(_ input: Input) -> Output {
@@ -27,14 +34,21 @@ public final class HomeViewModel {
         input.rxViewDidLoad
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.ticketList.accept([
+                self.memoryList.accept([
                     "dummy1",
                     "dummy2"
                 ])
             })
             .disposed(by: disposeBag)
         
-        return Output(ticketList: ticketList)
+        input.didTapMemoryList
+            .withUnretained(self)
+            .subscribe(onNext: { (self, indexPath) in
+                self.delegate?.moveToMemory()
+            })
+            .disposed(by: disposeBag)
+        
+        return Output(memoryList: memoryList)
     }
     public init() {}
 }

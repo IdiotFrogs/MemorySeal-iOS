@@ -17,6 +17,7 @@ let project = Project.makeModule(
         .Feature.HomeFeature,
         .Feature.CreateTicketFeature,
         .Feature.ProfileFeature,
-        .Feature.MessageListFeature
+        .Feature.MessageListFeature,
+        .Feature.MemoryFeature
     ]
 )

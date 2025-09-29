@@ -6,6 +6,7 @@
 //  Copyright © 2025 MemorySeal. All rights reserved.
 //
 
+import Foundation
 import UIKit
 
 protocol ReusableProtocol: AnyObject {
