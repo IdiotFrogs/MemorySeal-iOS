@@ -68,6 +68,11 @@ public extension TargetDependency.Feature {
         target: "ProfileFeature",
         path: .relativeToRoot("Projects/Feature/ProfileFeature")
     )
+    
+    static let MemoryFeature = TargetDependency.project(
+        target: "MemoryFeature",
+        path: .relativeToRoot("Projects/Feature/MemoryFeature")
+    )
 }
 
 public extension TargetDependency.Presentation {
@@ -100,6 +105,11 @@ public extension TargetDependency.Presentation {
     static let ProfilePresentation = TargetDependency.project(
         target: "ProfilePresentation",
         path: .relativeToRoot("Projects/Presentation/ProfilePresentation")
+    )
+    
+    static let MemoryPresentation = TargetDependency.project(
+        target: "MemoryPresentation",
+        path: .relativeToRoot("Projects/Presentation/MemoryPresentation")
     )
 }
 

@@ -59,10 +59,13 @@ public final class HomeViewController: UIViewController {
 
 extension HomeViewController {
     private func bindViewModel() {
-        let input = HomeViewModel.Input(rxViewDidLoad: rxViewDidLoad)
+        let input = HomeViewModel.Input(
+            rxViewDidLoad: rxViewDidLoad,
+            didTapMemoryList: collectionView.rx.itemSelected
+        )
         let output = viewModel.transform(input)
         
-        output.ticketList
+        output.memoryList
             .bind(to: collectionView.rx.items(
                 cellIdentifier: TicketCollectionViewCell.reuseIdentifier,
                 cellType: TicketCollectionViewCell.self

@@ -12,6 +12,7 @@ import SignUpFeature
 import HomeFeature
 import CreateTicketFeature
 import ProfileFeature
+import MemoryFeature
 
 public final class AppCoordinator {
     private let navigationController: UINavigationController
@@ -59,6 +60,13 @@ public final class AppCoordinator {
         )
         profileCoordinator.start()
     }
+    
+    public func moveToMemoryCoordinator() {
+        let memoryCoordinator: MemoryCoordinator = MemoryCoordinator(
+            with: navigationController
+        )
+        memoryCoordinator.start()
+    }
 }
 
 extension AppCoordinator: LoginCoordinatorDelegate {
@@ -72,6 +80,10 @@ extension AppCoordinator: LoginCoordinatorDelegate {
 }
 
 extension AppCoordinator: HomeCoordinatorDelegate {
+    public func moveToMemory() {
+        self.moveToMemoryCoordinator()
+    }
+    
     public func moveToProfile() {
         self.moveToProfileCoordinator()
     }
