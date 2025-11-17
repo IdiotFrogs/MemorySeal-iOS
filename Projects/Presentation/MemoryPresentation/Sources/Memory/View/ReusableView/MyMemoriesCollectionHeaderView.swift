@@ -8,6 +8,8 @@
 
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 import DesignSystem
 
@@ -26,6 +28,8 @@ final class MyMemoriesCollectionHeaderView: UICollectionReusableView {
         }
     }
     
+    var disposeBag = DisposeBag()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = DesignSystemAsset.ColorAssests.grey4.color
@@ -41,11 +45,15 @@ final class MyMemoriesCollectionHeaderView: UICollectionReusableView {
         return label
     }()
     
-    private let seeOtherMemoryMessageButton: UIButton = {
+    private let seeOtherButton: UIButton = {
         let button = UIButton()
         button.setImage(DesignSystemAsset.ImageAssets.rightArrowImage.image, for: .normal)
         return button
     }()
+    
+    var didTapSeeOtherButton: ControlEvent<Void> {
+        return seeOtherButton.rx.tap
+    }
     
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -57,6 +65,11 @@ final class MyMemoriesCollectionHeaderView: UICollectionReusableView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.disposeBag = DisposeBag()
     }
 }
 
@@ -75,7 +88,7 @@ extension MyMemoriesCollectionHeaderView {
 extension MyMemoriesCollectionHeaderView {
     private func addSubviews() {
         addSubview(titleLabel)
-        addSubview(seeOtherMemoryMessageButton)
+        addSubview(seeOtherButton)
     }
     
     private func showMemberCountLabel() {
@@ -95,7 +108,7 @@ extension MyMemoriesCollectionHeaderView {
             $0.bottom.equalToSuperview().inset(24)
         }
         
-        seeOtherMemoryMessageButton.snp.makeConstraints {
+        seeOtherButton.snp.makeConstraints {
             $0.centerY.equalTo(titleLabel.snp.centerY)
             $0.trailing.equalToSuperview().inset(20)
             $0.width.height.equalTo(16)

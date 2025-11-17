@@ -20,10 +20,24 @@ public final class MemoryCoordinator {
     }
     
     public func start() {
-        let memoryViewController = memoryDIContainer.makeMemoryViewController()
+        let memoryViewModel = memoryDIContainer.makeMemoryViewModel()
+        memoryViewModel.delegate = self
+        let memoryViewController = memoryDIContainer.makeMemoryViewController(
+            viewModel: memoryViewModel
+        )
         
         self.navigationController.pushViewController(
             memoryViewController,
+            animated: true
+        )
+    }
+}
+
+extension MemoryCoordinator: MemoryViewModelDelegate {
+    public func moveToAddMemeber() {
+        let viewController = memoryDIContainer.makeAddMemberViewController()
+        self.navigationController.pushViewController(
+            viewController,
             animated: true
         )
     }

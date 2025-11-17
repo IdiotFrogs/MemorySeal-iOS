@@ -9,13 +9,20 @@
 import RxSwift
 import RxCocoa
 
+public protocol MemoryViewModelDelegate: AnyObject {
+    func moveToAddMemeber()
+}
+
 public final class MemoryViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
+    
+    public var delegate: MemoryViewModelDelegate?
     
     public init() {}
     
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
+        let didTapAddMemberButton: PublishRelay<Void>
     }
     
     struct Output {
@@ -28,6 +35,13 @@ public final class MemoryViewModel {
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 
+            })
+            .disposed(by: disposeBag)
+        
+        input.didTapAddMemberButton
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.delegate?.moveToAddMemeber()
             })
             .disposed(by: disposeBag)
         
