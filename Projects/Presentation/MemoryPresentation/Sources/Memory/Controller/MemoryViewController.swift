@@ -14,6 +14,9 @@ import RxCocoa
 import DesignSystem
 
 public final class MemoryViewController: UIViewController {
+    private let rxViewDidLoad: PublishRelay<Void> = .init()
+    private let didTapAddMemberButton: PublishRelay<Void> = .init()
+    
     enum MemorySection: Int, CaseIterable {
         case memoryImage
         case memoryDescription
@@ -78,6 +81,9 @@ public final class MemoryViewController: UIViewController {
         
         self.addSubViews()
         self.setLayout()
+        self.bindViewModel()
+        
+        self.rxViewDidLoad.accept(())
     }
     
     public init(with viewModel: MemoryViewModel) {
@@ -265,6 +271,16 @@ extension MemoryViewController {
 }
 
 extension MemoryViewController {
+    private func bindViewModel() {
+        let input = MemoryViewModel.Input(
+            rxViewDidLoad: rxViewDidLoad,
+            didTapAddMemberButton: didTapAddMemberButton
+        )
+        let _ = viewModel.transform(input)
+    }
+}
+
+extension MemoryViewController {
     private func setDelegate() {
         collectionView.delegate = self
         collectionView.dataSource = self
@@ -415,6 +431,13 @@ extension MemoryViewController: UICollectionViewDelegate {
             ) as? MyMemoriesCollectionHeaderView else { return .init() }
             
             headerView.setStatus(.member)
+            
+            headerView.didTapSeeOtherButton
+                .withUnretained(self)
+                .subscribe(onNext: { (self, _) in
+                    self.didTapAddMemberButton.accept(())
+                })
+                .disposed(by: headerView.disposeBag)
             
             return headerView
         default:

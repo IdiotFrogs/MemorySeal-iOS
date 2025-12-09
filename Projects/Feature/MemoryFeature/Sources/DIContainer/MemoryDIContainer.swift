@@ -11,11 +11,21 @@ import Foundation
 import MemoryPresentation
 
 public final class MemoryDIContainer {
-    private func makeMemoryViewModel() -> MemoryViewModel {
+    func makeMemoryViewModel() -> MemoryViewModel {
         return MemoryViewModel()
     }
     
-    func makeMemoryViewController() -> MemoryViewController {
-        return MemoryViewController(with: makeMemoryViewModel())
+    func makeMemoryViewController(
+        viewModel: MemoryViewModel
+    ) -> MemoryViewController {
+        return MemoryViewController(with: viewModel)
+    }
+    
+    func makeAddMemberViewController() -> AddMemberViewController {
+        return AddMemberViewController(with: makeAddMemberViewModel())
+    }
+    
+    private func makeAddMemberViewModel() -> AddMemberViewModel {
+        return AddMemberViewModel()
     }
 }
