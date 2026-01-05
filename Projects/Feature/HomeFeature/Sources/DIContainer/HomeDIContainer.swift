@@ -32,4 +32,12 @@ public final class HomeDIContainer {
     func makeHomeViewController(viewModel: HomeViewModel) -> HomeViewController {
         return HomeViewController(with: viewModel)
     }
+    
+    func makeEnterTicketViewModel() -> EnterTicketViewModel {
+        return EnterTicketViewModel()
+    }
+    
+    func makeEnterTicketViewController(viewModel: EnterTicketViewModel) -> EnterTicketViewController {
+        return EnterTicketViewController(with: viewModel)
+    }
 }
