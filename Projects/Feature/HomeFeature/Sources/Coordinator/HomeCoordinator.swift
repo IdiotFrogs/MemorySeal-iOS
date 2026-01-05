@@ -57,6 +57,18 @@ public final class HomeCoordinator {
 }
 
 extension HomeCoordinator: HomeTabmanViewModelDelegate {
+    public func moveToEnterTicket() {
+        let enterTicketViewModel = homeDIContainer.makeEnterTicketViewModel()
+        let enterTicketViewController = homeDIContainer.makeEnterTicketViewController(
+            viewModel: enterTicketViewModel
+        )
+        enterTicketViewController.modalPresentationStyle = .overFullScreen
+        self.navigationController.present(
+            enterTicketViewController,
+            animated: true
+        )
+    }
+    
     public func moveToProfile() {
         delegate?.moveToProfile()
     }
