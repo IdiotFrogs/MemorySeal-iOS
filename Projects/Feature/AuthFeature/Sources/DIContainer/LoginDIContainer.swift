@@ -8,11 +8,25 @@
 
 import Foundation
 
-import LoginPresentation
+import AuthPresentation
+import AuthData
+import AuthDomain
 
 public final class LoginDIContainer {
+    private func makeAuthRepository() -> AuthRepository {
+        return DefaultAuthRepository()
+    }
+    
+    private func makeAuthUseCase() -> AuthUseCase {
+        return DefaultAuthUseCase(
+            authRepository: makeAuthRepository()
+        )
+    }
+    
     func makeLoginViewModel() -> LoginViewModel {
-        return LoginViewModel()
+        return LoginViewModel(
+            authUseCase: makeAuthUseCase()
+        )
     }
     
     func makeLoginViewController(

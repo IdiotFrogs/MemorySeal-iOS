@@ -9,11 +9,10 @@ import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "LoginPresentation",
+    name: "AuthPresentation",
     product: .staticFramework,
     dependencies: [
-        .ThridPartyLib.ThridPartyLib,
-        .Shared.DesignSystem
+        .Domain.AuthDomain
     ],
     resources: ["Resources/**"]
 )

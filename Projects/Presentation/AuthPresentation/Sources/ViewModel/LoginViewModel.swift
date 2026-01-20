@@ -9,6 +9,8 @@
 import RxSwift
 import RxCocoa
 
+import AuthDomain
+
 public protocol LoginViewModelDelegate: AnyObject {
     func moveToHome()
     func moveToSignUp()
@@ -16,13 +18,17 @@ public protocol LoginViewModelDelegate: AnyObject {
 
 public final class LoginViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
+    private let authUseCase: AuthUseCase
     
     public var delegate: LoginViewModelDelegate?
     
-    public init() { }
+    public init(authUseCase: AuthUseCase) {
+        self.authUseCase = authUseCase
+    }
     
     struct Input {
         let appleLoginButtonDidTap: PublishRelay<Void>
+        let oauthAuthorizationCompleted: PublishRelay<String>
     }
     
     struct Output {
@@ -38,6 +44,20 @@ public final class LoginViewModel {
             })
             .disposed(by: disposeBag)
         
+        input.oauthAuthorizationCompleted
+            .subscribe(with: self, onNext: { (self, idToken) in
+                self.requestSignIn(idToken)
+            })
+            .disposed(by: disposeBag)
+        
         return Output()
+    }
+}
+
+extension LoginViewModel {
+    private func requestSignIn(_ idToken: String) {
+        Task {
+            try await self.authUseCase.executeSignIn(idToken)
+        }
     }
 }

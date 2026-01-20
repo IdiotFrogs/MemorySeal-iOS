@@ -38,6 +38,14 @@ let project = Project(
                         ]
                     ],
                     "GIDClientID": "502710482304-3l8hdi5q9917det47g5i8e4fjj53fr5o.apps.googleusercontent.com",
+                    "NSAppTransportSecurity": [
+                        "NSExceptionDomains": [
+                            "43.201.236.253": [
+                                "NSExceptionAllowsInsecureHTTPLoads": true,
+                                "NSIncludesSubdomains": true
+                            ]
+                        ]
+                    ],
                     "CFBundleURLTypes": [
                         [
                             "CFBundleURLName": "GoogleSignIn",

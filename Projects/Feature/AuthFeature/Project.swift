@@ -9,9 +9,10 @@ import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "BaseData",
+    name: "AuthFeature",
     product: .staticFramework,
     dependencies: [
-        .Domain.BaseDomain
+        .Presentation.AuthPresentation,
+        .Data.AuthData
     ]
 )

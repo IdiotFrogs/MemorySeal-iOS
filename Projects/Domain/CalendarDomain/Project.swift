@@ -12,7 +12,6 @@ let project = Project.makeModule(
     name: "CalendarDomain",
     product: .staticFramework,
     dependencies: [
-        .ThridPartyLib.ThridPartyLib,
-        .Shared.DesignSystem
+        .Domain.BaseDomain
     ]
 )

@@ -20,6 +20,7 @@ public final class LoginViewController: UIViewController {
     private let viewModel: LoginViewModel
     
     private let appleLoginButtonDidTap: PublishRelay<Void> = .init()
+    private let oauthAuthorizationCompleted: PublishRelay<String> = .init()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -82,7 +83,8 @@ public final class LoginViewController: UIViewController {
 extension LoginViewController {
     private func bindViewModel() {
         let input = LoginViewModel.Input(
-            appleLoginButtonDidTap: appleLoginButtonDidTap
+            appleLoginButtonDidTap: appleLoginButtonDidTap,
+            oauthAuthorizationCompleted: oauthAuthorizationCompleted
         )
         let _ = viewModel.translation(input)
     }
@@ -108,19 +110,11 @@ extension LoginViewController {
             .subscribe(onNext: { (self, _) in
                 GIDSignIn.sharedInstance.signIn(
                     withPresenting: self
-                ) { signInResult, error in
-                    guard error == nil else { return }
+                ) { result, error in
+                    guard error == nil,
+                          let idToken = result?.user.idToken?.tokenString else { return }
                     
-                    let email = signInResult?.user.profile?.email ?? ""
-                    let name = signInResult?.user.profile?.name ?? ""
-                    
-                    let user = signInResult?.user
-                    let idToken = user?.idToken?.tokenString
-                    let accessToken = user?.accessToken.tokenString
-                    let refreshToken = user?.refreshToken.tokenString
-                    
-                    print(email)
-                    print(name)
+                    self.oauthAuthorizationCompleted.accept(idToken)
                 }
             })
             .disposed(by: disposeBag)
