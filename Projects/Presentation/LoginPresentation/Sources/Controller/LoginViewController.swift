@@ -11,6 +11,7 @@ import SnapKit
 import AuthenticationServices
 import RxSwift
 import RxCocoa
+import GoogleSignIn
 
 import DesignSystem
 
@@ -81,7 +82,6 @@ public final class LoginViewController: UIViewController {
 extension LoginViewController {
     private func bindViewModel() {
         let input = LoginViewModel.Input(
-            googleLoginButtonDidTap: googleSignInButton.rx.tap,
             appleLoginButtonDidTap: appleLoginButtonDidTap
         )
         let _ = viewModel.translation(input)
@@ -106,7 +106,22 @@ extension LoginViewController {
         googleSignInButton.rx.tap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-//                let lo
+                GIDSignIn.sharedInstance.signIn(
+                    withPresenting: self
+                ) { signInResult, error in
+                    guard error == nil else { return }
+                    
+                    let email = signInResult?.user.profile?.email ?? ""
+                    let name = signInResult?.user.profile?.name ?? ""
+                    
+                    let user = signInResult?.user
+                    let idToken = user?.idToken?.tokenString
+                    let accessToken = user?.accessToken.tokenString
+                    let refreshToken = user?.refreshToken.tokenString
+                    
+                    print(email)
+                    print(name)
+                }
             })
             .disposed(by: disposeBag)
     }

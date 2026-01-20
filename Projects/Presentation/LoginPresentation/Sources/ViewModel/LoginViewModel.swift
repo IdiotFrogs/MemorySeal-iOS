@@ -22,7 +22,6 @@ public final class LoginViewModel {
     public init() { }
     
     struct Input {
-        let googleLoginButtonDidTap: ControlEvent<Void>
         let appleLoginButtonDidTap: PublishRelay<Void>
     }
     
@@ -31,13 +30,6 @@ public final class LoginViewModel {
     }
     
     func translation(_ input: Input) -> Output {
-        
-        input.googleLoginButtonDidTap
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToSignUp()
-            })
-            .disposed(by: disposeBag)
         
         input.appleLoginButtonDidTap
             .withUnretained(self)
