@@ -23,7 +23,7 @@ public final class ResultHandler {
             case 200..<300:
                 return try response.map(responseType, using: JSONDecoder())
             default:
-                throw Error.init()
+                throw Error.init(statusCode: response.statusCode)
             }
         case .failure(let error):
             throw error
@@ -40,7 +40,7 @@ public final class ResultHandler {
             case 200..<300:
                 return
             default:
-                throw Error.init()
+                throw Error.init(statusCode: response.statusCode)
             }
         case .failure(let error):
             throw error
