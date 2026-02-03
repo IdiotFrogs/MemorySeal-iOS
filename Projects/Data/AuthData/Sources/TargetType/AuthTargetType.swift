@@ -11,40 +11,40 @@ import Moya
 
 import BaseData
 
-enum AuthTargetType {
+public enum AuthTargetType {
     case signIn(_ requestDTO: SignInRequestDTO)
 }
 
 extension AuthTargetType: BaseTargetType {
-    var path: String {
+    public var path: String {
         switch self {
         case .signIn:
             return "/auth/login/google"
         }
     }
     
-    var method: Moya.Method {
+    public var method: Moya.Method {
         switch self {
         case .signIn:
             return .post
         }
     }
     
-    var task: Moya.Task {
+    public var task: Moya.Task {
         switch self {
         case let .signIn(requestDTO):
             return .requestJSONEncodable(requestDTO)
         }
     }
     
-    var headers: [String : String]? {
+    public var headers: [String : String]? {
         switch self {
         case .signIn:
             return nil
         }
     }
     
-    var isNeededAccessToken: Bool {
+    public var isNeededAccessToken: Bool {
         switch self {
         case .signIn:
             return false

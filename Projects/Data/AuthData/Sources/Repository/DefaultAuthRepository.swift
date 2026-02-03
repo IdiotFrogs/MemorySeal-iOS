@@ -12,19 +12,36 @@ import AuthDomain
 import BaseData
 
 public final class DefaultAuthRepository: AuthRepository {
-    private let authProvider: MoyaProvider<AuthTargetType> = .init()
+    private let authProvider: MoyaProvider<AuthTargetType>
+    private let keyChainStorage: KeyChainStorage
     
-    public init() {}
+    public init(
+        authProvider: MoyaProvider<AuthTargetType>,
+        keyChainStorage: KeyChainStorage
+    ) {
+        self.authProvider = authProvider
+        self.keyChainStorage = keyChainStorage
+    }
     
     public func fetchSignIn(_ idToken: String) async throws {
         let requestDTO: SignInRequestDTO = .init(idToken: idToken)
         
         let result = await authProvider.request(.signIn(requestDTO))
         
-        let _ = try ResultHandler.handleResult(
+        let responseDTO = try ResultHandler.handleResult(
             result: result,
             responseType: SignInResponseDTO.self,
             errorType: AuthError.self
+        )
+        
+        keyChainStorage.add(
+            value: responseDTO.accessToken,
+            forKey: .accessToken
+        )
+        
+        keyChainStorage.add(
+            value: responseDTO.refreshToken,
+            forKey: .refreshToken
         )
     }
 }

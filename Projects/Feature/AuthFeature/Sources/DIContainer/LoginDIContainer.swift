@@ -7,14 +7,27 @@
 //
 
 import Foundation
+import Moya
 
 import AuthPresentation
 import AuthData
 import AuthDomain
+import BaseData
 
 public final class LoginDIContainer {
+    private func makeAuthProvdier() -> MoyaProvider<AuthTargetType> {
+        return MoyaProvider<AuthTargetType>()
+    }
+    
+    private func makeKeyChainStorage() -> KeyChainStorage {
+        return DefaultKeyChainStorage()
+    }
+    
     private func makeAuthRepository() -> AuthRepository {
-        return DefaultAuthRepository()
+        return DefaultAuthRepository(
+            authProvider: makeAuthProvdier(),
+            keyChainStorage: makeKeyChainStorage()
+        )
     }
     
     private func makeAuthUseCase() -> AuthUseCase {
