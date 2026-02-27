@@ -57,7 +57,15 @@ public final class LoginViewModel {
 extension LoginViewModel {
     private func requestSignIn(_ idToken: String) {
         Task {
-            try await self.authUseCase.executeSignIn(idToken)
+            let isOnboardingFinished: Bool = try await authUseCase.executeSignIn(idToken)
+
+            await MainActor.run {
+                if isOnboardingFinished {
+                    delegate?.moveToHome()
+                } else {
+                    delegate?.moveToSignUp()
+                }
+            }
         }
     }
 }

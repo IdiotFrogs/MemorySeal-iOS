@@ -9,11 +9,11 @@
 import Foundation
 
 public struct UserInfoEntity {
-    let id: Int
-    let nickname: String
-    let profileImageUrl: String
-    let email: String
-    let isOnboarding: Bool
+    public let id: Int
+    public let nickname: String
+    public let profileImageUrl: String
+    public let email: String
+    public let isOnboarding: Bool
     
     public init(
         id: Int,
