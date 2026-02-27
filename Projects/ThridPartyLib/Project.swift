@@ -18,6 +18,7 @@ let project = Project.makeModule(
         .SPM.Kingfisher,
         .SPM.SnapKit,
         .SPM.Lottie,
-        .SPM.Tabman
+        .SPM.Tabman,
+        .SPM.GoogleSignIn
     ]
 )

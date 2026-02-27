@@ -8,7 +8,7 @@
 
 import Foundation
 
-import LoginFeature
+import AuthFeature
 
 public final class AppDIContainer {
     

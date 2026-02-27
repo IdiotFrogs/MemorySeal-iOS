@@ -8,7 +8,10 @@ let project = Project(
         developmentRegion: "ko"
     ),
     settings: .settings(
-        base: ["DEVELOPMENT_TEAM": "5GD5Q99952"],
+        base: [
+            "DEVELOPMENT_TEAM": "5GD5Q99952",
+            "OTHER_LDFLAGS": "-ObjC"
+        ],
         configurations: [
             .debug(name: .debug),
             .release(name: .release)
@@ -31,6 +34,23 @@ let project = Project(
                                     "UISceneConfigurationName": "Default Configuration",
                                     "UISceneDelegateClassName": "$(PRODUCT_MODULE_NAME).SceneDelegate"
                                 ],
+                            ]
+                        ]
+                    ],
+                    "GIDClientID": "502710482304-3l8hdi5q9917det47g5i8e4fjj53fr5o.apps.googleusercontent.com",
+                    "NSAppTransportSecurity": [
+                        "NSExceptionDomains": [
+                            "43.201.236.253": [
+                                "NSExceptionAllowsInsecureHTTPLoads": true,
+                                "NSIncludesSubdomains": true
+                            ]
+                        ]
+                    ],
+                    "CFBundleURLTypes": [
+                        [
+                            "CFBundleURLName": "GoogleSignIn",
+                            "CFBundleURLSchemes": [
+                                "com.googleusercontent.apps.502710482304-3l8hdi5q9917det47g5i8e4fjj53fr5o"
                             ]
                         ]
                     ],

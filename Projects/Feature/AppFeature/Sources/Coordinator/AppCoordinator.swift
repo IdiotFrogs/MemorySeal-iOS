@@ -7,7 +7,7 @@
 
 import UIKit
 
-import LoginFeature
+import AuthFeature
 import SignUpFeature
 import HomeFeature
 import CreateTicketFeature

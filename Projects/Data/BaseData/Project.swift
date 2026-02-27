@@ -12,7 +12,6 @@ let project = Project.makeModule(
     name: "BaseData",
     product: .staticFramework,
     dependencies: [
-        .Domain.BaseDomain,
-        .ThridPartyLib.ThridPartyLib
+        .Domain.BaseDomain
     ]
 )
