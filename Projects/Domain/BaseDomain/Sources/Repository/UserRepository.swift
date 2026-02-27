@@ -10,4 +10,5 @@ import Foundation
 
 public protocol UserRepository {
     func fetchUserInfo() async throws -> UserInfoEntity
+    func uploadProfileImage(file: String) async throws -> String
 }
