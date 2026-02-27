@@ -8,6 +8,6 @@
 
 import Foundation
 
-struct SignInRequestDTO: Encodable {
+public struct SignInRequestDTO: Encodable {
     let idToken: String
 }

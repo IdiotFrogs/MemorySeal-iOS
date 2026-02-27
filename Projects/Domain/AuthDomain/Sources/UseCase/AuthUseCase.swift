@@ -6,18 +6,27 @@
 //  Copyright © 2026 MemorySeal. All rights reserved.
 //
 
+import BaseDomain
+
 public protocol AuthUseCase {
     func executeSignIn(_ idToken: String) async throws
 }
 
 public final class DefaultAuthUseCase: AuthUseCase {
     private let authRepository: AuthRepository
+    private let userRepository: UserRepository
     
-    public init(authRepository: AuthRepository) {
+    public init(
+        authRepository: AuthRepository,
+        userRepository: UserRepository
+    ) {
         self.authRepository = authRepository
+        self.userRepository = userRepository
     }
     
     public func executeSignIn(_ idToken: String) async throws {
         try await authRepository.fetchSignIn(idToken)
+        
+        let userInfo = try await userRepository.fetchUserInfo()
     }
 }

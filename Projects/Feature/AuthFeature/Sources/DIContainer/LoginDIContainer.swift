@@ -13,10 +13,15 @@ import AuthPresentation
 import AuthData
 import AuthDomain
 import BaseData
+import BaseDomain
 
 public final class LoginDIContainer {
     private func makeAuthProvdier() -> MoyaProvider<AuthTargetType> {
         return MoyaProvider<AuthTargetType>()
+    }
+    
+    private func makeUserProvdier() -> DefaultProvider<UserTargetType> {
+        return DefaultProvider<UserTargetType>()
     }
     
     private func makeKeyChainStorage() -> KeyChainStorage {
@@ -30,9 +35,16 @@ public final class LoginDIContainer {
         )
     }
     
+    private func makeUserRepository() -> UserRepository {
+        return DefaultUserRepository(
+            provider: makeUserProvdier()
+        )
+    }
+    
     private func makeAuthUseCase() -> AuthUseCase {
         return DefaultAuthUseCase(
-            authRepository: makeAuthRepository()
+            authRepository: makeAuthRepository(),
+            userRepository: makeUserRepository()
         )
     }
     
