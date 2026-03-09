@@ -6,6 +6,8 @@
 //  Copyright © 2026 MemorySeal. All rights reserved.
 //
 
+import Foundation
+
 import BaseData
 import SignUpDomain
 
@@ -17,7 +19,7 @@ public final class DefaultSignUpRepository: SignUpRepository {
         self.provider = provider
     }
 
-    public func signUp(nickname: String, profileImage: String) async throws {
+    public func signUp(nickname: String, profileImage: Data) async throws {
         let result = await provider.request(.signUp(nickname: nickname, profileImage: profileImage))
 
         try ResultHandler.handleResult(

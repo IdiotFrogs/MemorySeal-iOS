@@ -6,6 +6,8 @@
 //  Copyright © 2026 MemorySeal. All rights reserved.
 //
 
+import Foundation
+
 public protocol SignUpRepository {
-    func signUp(nickname: String, profileImage: String) async throws
+    func signUp(nickname: String, profileImage: Data) async throws
 }
