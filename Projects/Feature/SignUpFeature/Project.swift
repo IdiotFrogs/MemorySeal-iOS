@@ -12,6 +12,7 @@ let project = Project.makeModule(
     name: "SignUpFeature",
     product: .staticFramework,
     dependencies: [
-        .Presentation.SignUpPresentation
+        .Presentation.SignUpPresentation,
+        .Data.SignUpData
     ]
 )

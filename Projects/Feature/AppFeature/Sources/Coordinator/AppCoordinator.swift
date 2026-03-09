@@ -33,7 +33,11 @@ public final class AppCoordinator {
     }
     
     public func moveToSignUpCoordinator() {
-        let signUpCoordinator: SignUpCoordinator = SignUpCoordinator(with: navigationController)
+        let signUpCoordinator: SignUpCoordinator = SignUpCoordinator(
+            with: navigationController
+        )
+        
+        signUpCoordinator.delegate = self
         
         signUpCoordinator.start()
     }
@@ -69,7 +73,7 @@ public final class AppCoordinator {
     }
 }
 
-extension AppCoordinator: LoginCoordinatorDelegate {
+extension AppCoordinator: LoginCoordinatorDelegate, SignUpCoordinatorDelegate {
     public func startSignUp() {
         self.moveToSignUpCoordinator()
     }
