@@ -10,16 +10,22 @@ import Foundation
 import Moya
 
 import BaseData
+import AuthDomain
 
 public enum AuthTargetType {
-    case signIn(_ requestDTO: SignInRequestDTO)
+    case signIn(_ requestDTO: SignInRequestDTO, type: SignInType)
 }
 
 extension AuthTargetType: BaseTargetType {
     public var path: String {
         switch self {
-        case .signIn:
-            return "/auth/login/google"
+        case let .signIn(_, type):
+            switch type {
+            case .apple:
+                return "/auth/login/apple"
+            case .google:
+                return "/auth/login/google"
+            }
         }
     }
     
@@ -32,7 +38,7 @@ extension AuthTargetType: BaseTargetType {
     
     public var task: Moya.Task {
         switch self {
-        case let .signIn(requestDTO):
+        case let .signIn(requestDTO, _):
             return .requestJSONEncodable(requestDTO)
         }
     }

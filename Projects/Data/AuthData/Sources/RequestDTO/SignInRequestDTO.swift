@@ -10,4 +10,13 @@ import Foundation
 
 public struct SignInRequestDTO: Encodable {
     let idToken: String
+    let authorizationCode: String?
+    
+    public init(
+        idToken: String,
+        authorizationCode: String? = nil
+    ) {
+        self.idToken = idToken
+        self.authorizationCode = authorizationCode
+    }
 }
