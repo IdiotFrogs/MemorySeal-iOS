@@ -27,8 +27,8 @@ public final class LoginViewModel {
     }
     
     struct Input {
-        let appleLoginButtonDidTap: PublishRelay<Void>
-        let oauthAuthorizationCompleted: PublishRelay<String>
+        let appleAuthorizationCompleted: PublishRelay<(idToken: String, authorizationCode: String)>
+        let googleAuthorizationCompleted: PublishRelay<String>
     }
     
     struct Output {
@@ -37,16 +37,24 @@ public final class LoginViewModel {
     
     func translation(_ input: Input) -> Output {
         
-        input.appleLoginButtonDidTap
+        input.appleAuthorizationCompleted
             .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToHome()
+            .subscribe(onNext: { (self, element) in
+                self.requestSignIn(
+                    idToken: element.idToken,
+                    authorizationCode: element.authorizationCode,
+                    type: .apple
+                )
             })
             .disposed(by: disposeBag)
         
-        input.oauthAuthorizationCompleted
+        input.googleAuthorizationCompleted
             .subscribe(with: self, onNext: { (self, idToken) in
-                self.requestSignIn(idToken)
+                self.requestSignIn(
+                    idToken: idToken,
+                    authorizationCode: nil,
+                    type: .google
+                )
             })
             .disposed(by: disposeBag)
         
@@ -55,9 +63,13 @@ public final class LoginViewModel {
 }
 
 extension LoginViewModel {
-    private func requestSignIn(_ idToken: String) {
+    private func requestSignIn(idToken: String, authorizationCode: String?, type: SignInType) {
         Task {
-            let isOnboardingFinished: Bool = try await authUseCase.executeSignIn(idToken)
+            let isOnboardingFinished: Bool = try await authUseCase.executeSignIn(
+                idToken: idToken,
+                authorizationCode: authorizationCode,
+                type: type
+            )
 
             await MainActor.run {
                 if isOnboardingFinished {

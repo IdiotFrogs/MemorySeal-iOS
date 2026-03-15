@@ -7,5 +7,5 @@
 //
 
 public protocol AuthRepository {
-    func fetchSignIn(_ idToken: String) async throws
+    func fetchSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws
 }

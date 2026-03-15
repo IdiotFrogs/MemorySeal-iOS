@@ -19,8 +19,11 @@ public final class LoginViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let viewModel: LoginViewModel
     
-    private let appleLoginButtonDidTap: PublishRelay<Void> = .init()
-    private let oauthAuthorizationCompleted: PublishRelay<String> = .init()
+    private let appleAuthorizationCompleted: PublishRelay<(
+        idToken: String,
+        authorizationCode: String
+    )> = .init()
+    private let googleAuthorizationCompleted: PublishRelay<String> = .init()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -83,8 +86,8 @@ public final class LoginViewController: UIViewController {
 extension LoginViewController {
     private func bindViewModel() {
         let input = LoginViewModel.Input(
-            appleLoginButtonDidTap: appleLoginButtonDidTap,
-            oauthAuthorizationCompleted: oauthAuthorizationCompleted
+            appleAuthorizationCompleted: appleAuthorizationCompleted,
+            googleAuthorizationCompleted: googleAuthorizationCompleted
         )
         let _ = viewModel.translation(input)
     }
@@ -93,15 +96,16 @@ extension LoginViewController {
         appleSignInButton.rx.controlEvent(.touchUpInside)
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.appleLoginButtonDidTap.accept(())
-//                let appleIDProvider = ASAuthorizationAppleIDProvider()
-//                let request = appleIDProvider.createRequest()
-//                request.requestedScopes = [.fullName, .email]
-//                
-//                let authorizationController = ASAuthorizationController(authorizationRequests: [request])
-//                authorizationController.delegate = self
-//                authorizationController.presentationContextProvider = self
-//                authorizationController.performRequests()
+                let appleIDProvider = ASAuthorizationAppleIDProvider()
+                let request = appleIDProvider.createRequest()
+                request.requestedScopes = [.fullName, .email]
+                
+                let authorizationController = ASAuthorizationController(
+                    authorizationRequests: [request]
+                )
+                authorizationController.delegate = self
+                authorizationController.presentationContextProvider = self
+                authorizationController.performRequests()
             })
             .disposed(by: disposeBag)
         
@@ -114,7 +118,7 @@ extension LoginViewController {
                     guard error == nil,
                           let idToken = result?.user.idToken?.tokenString else { return }
                     
-                    self.oauthAuthorizationCompleted.accept(idToken)
+                    self.googleAuthorizationCompleted.accept(idToken)
                 }
             })
             .disposed(by: disposeBag)
@@ -126,27 +130,16 @@ extension LoginViewController: ASAuthorizationControllerDelegate {
         controller: ASAuthorizationController,
         didCompleteWithAuthorization authorization: ASAuthorization
     ) {
-//        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
-//              let authorizationCode = appleIDCredential.authorizationCode,
-//              let identityToken = appleIDCredential.identityToken,
-//              let authorizationCodeString = String(data: authorizationCode, encoding: .utf8),
-//              let tokenString = String(data: identityToken, encoding: .utf8) else { return }
-
-        // 유니크한 값
-//        LoginCheckManager.shared.userAppleIdentity = appleIDCredential.user
-//        LoginCheckManager.shared.userAppleIdentityToken = tokenString
-//        LoginCheckManager.shared.userAppleAuthorizationCode = authorizationCodeString
+        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let authorizationCode = appleIDCredential.authorizationCode,
+              let identityToken = appleIDCredential.identityToken,
+              let authorizationCodeString = String(data: authorizationCode, encoding: .utf8),
+              let tokenString = String(data: identityToken, encoding: .utf8) else { return }
         
-//        Task {
-//            do {
-//                try await LoginCheckManager.shared.requestAuthKeys(signinType: .apple, token: authorizationCodeString)
-//            } catch let error {
-//                DispatchQueue.main.async {
-//                    self.alertWith(message: error.localizedDescription)
-//                }
-//            }
-//        }
-        
+        appleAuthorizationCompleted.accept((
+            idToken: tokenString,
+            authorizationCode: authorizationCodeString
+        ))
     }
 }
 

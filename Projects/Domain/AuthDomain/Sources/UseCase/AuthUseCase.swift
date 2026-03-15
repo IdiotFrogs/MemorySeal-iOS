@@ -9,7 +9,7 @@
 import BaseDomain
 
 public protocol AuthUseCase {
-    func executeSignIn(_ idToken: String) async throws -> Bool
+    func executeSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws -> Bool
 }
 
 public final class DefaultAuthUseCase: AuthUseCase {
@@ -24,8 +24,8 @@ public final class DefaultAuthUseCase: AuthUseCase {
         self.userRepository = userRepository
     }
     
-    public func executeSignIn(_ idToken: String) async throws -> Bool {
-        try await authRepository.fetchSignIn(idToken)
+    public func executeSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws -> Bool {
+        try await authRepository.fetchSignIn(idToken: idToken, authorizationCode: authorizationCode, type: type)
         
         let userInfo = try await userRepository.fetchUserInfo()
         

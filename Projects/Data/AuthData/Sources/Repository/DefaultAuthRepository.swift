@@ -23,10 +23,13 @@ public final class DefaultAuthRepository: AuthRepository {
         self.keyChainStorage = keyChainStorage
     }
     
-    public func fetchSignIn(_ idToken: String) async throws {
-        let requestDTO: SignInRequestDTO = .init(idToken: idToken)
+    public func fetchSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws {
         
-        let result = await authProvider.request(.signIn(requestDTO))
+        let requestDTO: SignInRequestDTO = .init(idToken: idToken, authorizationCode: authorizationCode)
+        
+        let result = await authProvider.request(.signIn(requestDTO, type: type))
+        
+        print(requestDTO)
         
         let responseDTO = try ResultHandler.handleResult(
             result: result,
