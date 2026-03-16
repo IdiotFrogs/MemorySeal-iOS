@@ -16,7 +16,8 @@ import MemoryFeature
 
 public final class AppCoordinator {
     private let navigationController: UINavigationController
-    
+    private var profileCoordinator: ProfileCoordinator?
+
     public init(
         with navigationController: UINavigationController
     ) {
@@ -59,10 +60,10 @@ public final class AppCoordinator {
     }
     
     public func moveToProfileCoordinator() {
-        let profileCoordinator: ProfileCoordinator = ProfileCoordinator(
-            with: navigationController
-        )
-        profileCoordinator.start()
+        let coordinator = ProfileCoordinator(with: navigationController)
+        coordinator.delegate = self
+        profileCoordinator = coordinator
+        coordinator.start()
     }
     
     public func moveToMemoryCoordinator() {
@@ -80,6 +81,13 @@ extension AppCoordinator: LoginCoordinatorDelegate, SignUpCoordinatorDelegate {
     
     public func startHome() {
         self.moveToHomeCoorinator()
+    }
+}
+
+extension AppCoordinator: ProfileCoordinatorDelegate {
+    public func moveToBack() {
+        navigationController.popViewController(animated: true)
+        profileCoordinator = nil
     }
 }
 
