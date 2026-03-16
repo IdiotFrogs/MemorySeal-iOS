@@ -24,7 +24,7 @@ public final class SettingsViewModel {
     struct Input {
         let backButtonDidTap: ControlEvent<Void>
         let termsOfServiceDidTap: ControlEvent<Void>
-        let logoutDidTap: ControlEvent<Void>
+        let logoutButtonDidTap: Observable<Void>
         let withdrawalDidTap: ControlEvent<Void>
     }
 
@@ -45,7 +45,7 @@ public final class SettingsViewModel {
             })
             .disposed(by: disposeBag)
 
-        input.logoutDidTap
+        input.logoutButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.delegate?.moveToLogout()
