@@ -1,5 +1,5 @@
 //
-//  ProfileViewModel.swift
+//  SettingsViewModel.swift
 //  ProfilePresentation
 //
 //  Created by 선민재 on 3/16/26.
@@ -9,23 +9,23 @@
 import RxSwift
 import RxCocoa
 
-public protocol ProfileViewModelDelegate: AnyObject {
+public protocol SettingsViewModelDelegate: AnyObject {
     func moveToBack()
-    func moveToEditProfile()
-    func moveToSettings()
+    func moveToTermsOfService()
+    func moveToLogout()
+    func moveToWithdrawal()
 }
 
-public final class ProfileViewModel {
+public final class SettingsViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
-
-    public weak var delegate: ProfileViewModelDelegate?
-
+    public weak var delegate: SettingsViewModelDelegate?
     public init() {}
 
     struct Input {
         let backButtonDidTap: ControlEvent<Void>
-        let editProfileButtonDidTap: ControlEvent<Void>
-        let settingButtonDidTap: ControlEvent<Void>
+        let termsOfServiceDidTap: ControlEvent<Void>
+        let logoutDidTap: ControlEvent<Void>
+        let withdrawalDidTap: ControlEvent<Void>
     }
 
     struct Output {}
@@ -38,17 +38,24 @@ public final class ProfileViewModel {
             })
             .disposed(by: disposeBag)
 
-        input.editProfileButtonDidTap
+        input.termsOfServiceDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToEditProfile()
+                self.delegate?.moveToTermsOfService()
             })
             .disposed(by: disposeBag)
 
-        input.settingButtonDidTap
+        input.logoutDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToSettings()
+                self.delegate?.moveToLogout()
+            })
+            .disposed(by: disposeBag)
+
+        input.withdrawalDidTap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.delegate?.moveToWithdrawal()
             })
             .disposed(by: disposeBag)
 

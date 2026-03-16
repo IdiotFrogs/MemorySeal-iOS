@@ -29,8 +29,6 @@ public final class DefaultAuthRepository: AuthRepository {
         
         let result = await authProvider.request(.signIn(requestDTO, type: type))
         
-        print(requestDTO)
-        
         let responseDTO = try ResultHandler.handleResult(
             result: result,
             responseType: SignInResponseDTO.self,

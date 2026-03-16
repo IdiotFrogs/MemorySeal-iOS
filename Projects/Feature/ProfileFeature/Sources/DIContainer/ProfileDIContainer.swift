@@ -32,4 +32,14 @@ public final class ProfileDIContainer {
     ) -> EditProfileViewController {
         return EditProfileViewController(with: viewModel)
     }
+
+    public func makeSettingsViewModel() -> SettingsViewModel {
+        return SettingsViewModel()
+    }
+
+    public func makeSettingsViewController(
+        with viewModel: SettingsViewModel
+    ) -> SettingsViewController {
+        return SettingsViewController(with: viewModel)
+    }
 }

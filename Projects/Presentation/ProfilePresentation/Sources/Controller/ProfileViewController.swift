@@ -141,7 +141,8 @@ extension ProfileViewController {
     private func bindViewModel() {
         let input = ProfileViewModel.Input(
             backButtonDidTap: navigationView.backButtonDidTap,
-            editProfileButtonDidTap: editProfileButton.rx.tap
+            editProfileButtonDidTap: editProfileButton.rx.tap,
+            settingButtonDidTap: settingButton.rx.tap
         )
         let _ = viewModel.translation(input)
     }

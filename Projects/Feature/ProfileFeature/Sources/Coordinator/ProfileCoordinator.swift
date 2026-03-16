@@ -39,7 +39,7 @@ public final class ProfileCoordinator {
     }
 }
 
-extension ProfileCoordinator: ProfileViewModelDelegate, EditProfileViewModelDelegate {
+extension ProfileCoordinator: ProfileViewModelDelegate, EditProfileViewModelDelegate, SettingsViewModelDelegate {
     public func moveToBack() {
         self.navigationController.popViewController(animated: true)
     }
@@ -54,5 +54,29 @@ extension ProfileCoordinator: ProfileViewModelDelegate, EditProfileViewModelDele
             editProfileViewController,
             animated: true
         )
+    }
+
+    public func moveToSettings() {
+        let settingsViewModel = profileDIContainer.makeSettingsViewModel()
+        settingsViewModel.delegate = self
+        let settingsViewController = profileDIContainer.makeSettingsViewController(
+            with: settingsViewModel
+        )
+        self.navigationController.pushViewController(
+            settingsViewController,
+            animated: true
+        )
+    }
+
+    public func moveToTermsOfService() {
+        // TODO: Navigate to Terms of Service
+    }
+
+    public func moveToLogout() {
+        // TODO: Handle logout
+    }
+
+    public func moveToWithdrawal() {
+        // TODO: Handle withdrawal
     }
 }
