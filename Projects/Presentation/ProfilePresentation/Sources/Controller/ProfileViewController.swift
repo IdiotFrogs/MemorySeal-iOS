@@ -8,10 +8,17 @@
 
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 import DesignSystem
 
 public final class ProfileViewController: UIViewController {
+    private let disposeBag: DisposeBag = DisposeBag()
+    private let viewModel: ProfileViewModel
+
+    private let editProfileButtonDidTap: PublishRelay<Void> = .init()
+
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
         view.setTitle("프로필")
@@ -106,15 +113,37 @@ public final class ProfileViewController: UIViewController {
         return collectionView
     }()
     
+    public init(with viewModel: ProfileViewModel) {
+        self.viewModel = viewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+        
+        bindViewModel()
+        
         addSubviews()
         setLayout()
     }
 
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         view.endEditing(true)
+    }
+}
+
+extension ProfileViewController {
+    private func bindViewModel() {
+        let input = ProfileViewModel.Input(
+            backButtonDidTap: navigationView.backButtonDidTap,
+            editProfileButtonDidTap: editProfileButton.rx.tap
+        )
+        let _ = viewModel.translation(input)
     }
 }
 
