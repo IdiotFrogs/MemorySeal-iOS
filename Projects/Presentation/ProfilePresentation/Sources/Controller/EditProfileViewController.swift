@@ -17,8 +17,6 @@ public final class EditProfileViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let viewModel: EditProfileViewModel
 
-    // MARK: - Header
-
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
         view.setTitle("프로필")
@@ -32,8 +30,6 @@ public final class EditProfileViewController: UIViewController {
         button.setTitleColor(DesignSystemAsset.ColorAssests.grey2.color, for: .normal)
         return button
     }()
-
-    // MARK: - Profile Image Section
 
     private let profileContainerView = UIView()
 
@@ -58,8 +54,6 @@ public final class EditProfileViewController: UIViewController {
         return button
     }()
 
-    // MARK: - Nickname Section
-
     private let nicknameTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "닉네임"
@@ -81,8 +75,6 @@ public final class EditProfileViewController: UIViewController {
         return textField
     }()
 
-    // MARK: - Init
-
     public init(with viewModel: EditProfileViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -92,14 +84,14 @@ public final class EditProfileViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Lifecycle
-
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+        
+        bindViewModel()
+        
         addSubviews()
         setLayout()
-        bindViewModel()
     }
 
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {

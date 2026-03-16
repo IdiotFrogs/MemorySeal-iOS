@@ -17,18 +17,12 @@ public final class SettingsViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let viewModel: SettingsViewModel
 
-    // MARK: - Header
-
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
         return view
     }()
 
-    // MARK: - Rows Container
-
     private let rowsContainerView = UIView()
-
-    // MARK: - Row 1: 앱 버전
 
     private let appVersionRowView = UIView()
 
@@ -48,8 +42,6 @@ public final class SettingsViewController: UIViewController {
         return label
     }()
 
-    // MARK: - Row 2: 이용 약관
-
     private let termsOfServiceButton: DisclosureButton = {
         let button = DisclosureButton(
             title: "이용 약관",
@@ -57,8 +49,6 @@ public final class SettingsViewController: UIViewController {
         )
         return button
     }()
-
-    // MARK: - Row 3: 로그아웃
 
     private let logoutButton: DisclosureButton = {
         let button = DisclosureButton(
@@ -68,8 +58,6 @@ public final class SettingsViewController: UIViewController {
         return button
     }()
 
-    // MARK: - Row 4: 회원탈퇴
-
     private let withdrawalButton: DisclosureButton = {
         let button = DisclosureButton(
             title: "회원탈퇴",
@@ -77,8 +65,6 @@ public final class SettingsViewController: UIViewController {
         )
         return button
     }()
-
-    // MARK: - Init
 
     public init(with viewModel: SettingsViewModel) {
         self.viewModel = viewModel
@@ -89,14 +75,14 @@ public final class SettingsViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
-    // MARK: - Lifecycle
-
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
+        
+        bindViewModel()
+        
         addSubviews()
         setLayout()
-        bindViewModel()
     }
 }
 
