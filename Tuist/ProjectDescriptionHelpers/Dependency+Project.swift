@@ -37,6 +37,11 @@ public extension TargetDependency.Data {
         target: "SignUpData",
         path: .relativeToRoot("Projects/Data/SignUpData")
     )
+
+    static let CreateTicketData = TargetDependency.project(
+        target: "CreateTicketData",
+        path: .relativeToRoot("Projects/Data/CreateTicketData")
+    )
 }
 
 public extension TargetDependency.Domain {
@@ -64,6 +69,11 @@ public extension TargetDependency.Domain {
     static let SignUpDomain = TargetDependency.project(
         target: "SignUpDomain",
         path: .relativeToRoot("Projects/Domain/SignUpDomain")
+    )
+
+    static let CreateTicketDomain = TargetDependency.project(
+        target: "CreateTicketDomain",
+        path: .relativeToRoot("Projects/Domain/CreateTicketDomain")
     )
 }
 
