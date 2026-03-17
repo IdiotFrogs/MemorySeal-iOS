@@ -7,31 +7,36 @@
 //
 
 import UIKit
+import PhotosUI
 import SnapKit
 import RxSwift
 import RxCocoa
 
+import CalendarDomain
 import DesignSystem
 
 public final class CreateTicketViewController: UIViewController {
     private let viewModel: CreateTicketViewModel
     private let disposeBag: DisposeBag = DisposeBag()
-    
+
     private let rxViewDidLoad: PublishRelay<Void> = .init()
-    
+    private let imageSelectedRelay: PublishRelay<UIImage> = .init()
+    private let selectedDateRelay: PublishRelay<Date> = .init()
+    private var currentCalendarDates: [CalendarDateModel] = []
+
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
         view.setTitle("타임 티켓 생성하기")
         return view
     }()
-    
+
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.backgroundColor = .clear
         scrollView.showsHorizontalScrollIndicator = false
         return scrollView
     }()
-    
+
     private let photoTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "사진"
@@ -39,7 +44,7 @@ public final class CreateTicketViewController: UIViewController {
         label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
         return label
     }()
-    
+
     private let ticketImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = DesignSystemAsset.ImageAssets.ticketNoneImage.image
@@ -47,9 +52,10 @@ public final class CreateTicketViewController: UIViewController {
         imageView.layer.borderWidth = 1
         imageView.layer.cornerRadius = 12
         imageView.layer.masksToBounds = true
+        imageView.isUserInteractionEnabled = true
         return imageView
     }()
-    
+
     private let ticketTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "제목"
@@ -57,7 +63,7 @@ public final class CreateTicketViewController: UIViewController {
         label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
         return label
     }()
-    
+
     private let ticketTitleTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "제목을 입력해주세요."
@@ -72,7 +78,7 @@ public final class CreateTicketViewController: UIViewController {
         textField.layer.cornerRadius = 12
         return textField
     }()
-    
+
     private let descriptionTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "간단한 설명"
@@ -80,7 +86,7 @@ public final class CreateTicketViewController: UIViewController {
         label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
         return label
     }()
-    
+
     private let descriptionTextView: UITextView = {
         let textView = UITextView()
         textView.textColor = DesignSystemAsset.ColorAssests.grey5.color
@@ -92,7 +98,7 @@ public final class CreateTicketViewController: UIViewController {
         textView.isScrollEnabled = false
         return textView
     }()
-    
+
     private let descriptionPlaceholderLabel: UILabel = {
         let label = UILabel()
         label.text = "설명을 입력해주세요."
@@ -100,7 +106,7 @@ public final class CreateTicketViewController: UIViewController {
         label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
         return label
     }()
-    
+
     private let calendarTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "오픈 날짜"
@@ -108,7 +114,7 @@ public final class CreateTicketViewController: UIViewController {
         label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
         return label
     }()
-    
+
     private let calendarView: MemorySealCalendarView = {
         let view = MemorySealCalendarView()
         view.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
@@ -116,7 +122,7 @@ public final class CreateTicketViewController: UIViewController {
         view.layer.cornerRadius = 12
         return view
     }()
-    
+
     private let createButton: UIButton = {
         let button = UIButton()
         button.setTitle("생성", for: .normal)
@@ -126,30 +132,31 @@ public final class CreateTicketViewController: UIViewController {
         button.layer.cornerRadius = 12
         return button
     }()
-    
+
     public init(with viewModel: CreateTicketViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     public override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
-        
+
         self.addSubviews()
         self.setLayout()
         self.addLeftPaddingView()
-                
+
         self.bindViewModel()
         self.bindScrollView()
         self.bindTextView()
+        self.bindImagePicker()
         self.rxViewDidLoad.accept(())
     }
-    
+
     public override func touchesBegan(
         _ touches: Set<UITouch>,
         with event: UIEvent?
@@ -164,17 +171,29 @@ extension CreateTicketViewController {
             rxViewDidLoad: rxViewDidLoad,
             navigationViewBackButtonDidTap: navigationView.backButtonDidTap,
             previousMonthButtonDidTap: calendarView.previousMonthButtonDidTap,
-            nextMonthButtonDidTap: calendarView.nextMonthButtonDidTap
+            nextMonthButtonDidTap: calendarView.nextMonthButtonDidTap,
+            createButtonDidTap: createButton.rx.tap,
+            titleText: ticketTitleTextField.rx.text,
+            descriptionText: descriptionTextView.rx.text,
+            selectedImage: imageSelectedRelay,
+            selectedDate: selectedDateRelay
         )
         let output = viewModel.transform(input)
-        
+
         output.currentMonth
             .withUnretained(self)
             .subscribe(onNext: { (self, date) in
                 self.calendarView.setTitleLabel(date: date)
             })
             .disposed(by: disposeBag)
-        
+
+        output.calendarDates
+            .withUnretained(self)
+            .subscribe(onNext: { (self, dates) in
+                self.currentCalendarDates = dates
+            })
+            .disposed(by: disposeBag)
+
         output.calendarDates
             .bind(to: calendarView.collectionView.rx.items(
                 cellIdentifier: MemorySealCalendarCollectionViewCell.reuseIdentifier,
@@ -185,20 +204,37 @@ extension CreateTicketViewController {
                 dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
                 dateFormatter.dateFormat = "d"
                 let dateText: String = dateFormatter.string(from: item.date)
-                
+
                 cell.configure(
                     dateText: dateText,
                     isCurrentMonth: item.isInCurrentMonth,
                     isToday: item.isToday
                 )
-            
+
                 if index > 30 {
                     self.calendarView.remakeCollectionViewLayout()
                 }
             }
             .disposed(by: disposeBag)
+
+        calendarView.collectionView.rx.itemSelected
+            .withUnretained(self)
+            .subscribe(onNext: { (self, indexPath) in
+                guard indexPath.item < self.currentCalendarDates.count else { return }
+                let date = self.currentCalendarDates[indexPath.item].date
+                self.selectedDateRelay.accept(date)
+            })
+            .disposed(by: disposeBag)
+
+        output.isLoading
+            .observe(on: MainScheduler.instance)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, isLoading) in
+                self.createButton.isEnabled = !isLoading
+            })
+            .disposed(by: disposeBag)
     }
-    
+
     private func bindScrollView() {
         scrollView.rx.contentOffset
             .withUnretained(self)
@@ -207,7 +243,7 @@ extension CreateTicketViewController {
             })
             .disposed(by: disposeBag)
     }
-    
+
     private func bindTextView() {
         descriptionTextView.rx.text
             .orEmpty
@@ -217,6 +253,53 @@ extension CreateTicketViewController {
                 self.descriptionPlaceholderLabel.isHidden = text.isEmpty == false
             })
             .disposed(by: disposeBag)
+    }
+
+    private func bindImagePicker() {
+        let tapGesture = UITapGestureRecognizer()
+        ticketImageView.addGestureRecognizer(tapGesture)
+
+        tapGesture.rx.event
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.presentImagePicker()
+            })
+            .disposed(by: disposeBag)
+
+        imageSelectedRelay
+            .observe(on: MainScheduler.instance)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, image) in
+                self.ticketImageView.image = image
+                self.ticketImageView.contentMode = .scaleAspectFill
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func presentImagePicker() {
+        var config = PHPickerConfiguration()
+        config.selectionLimit = 1
+        config.filter = .images
+
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+}
+
+extension CreateTicketViewController: PHPickerViewControllerDelegate {
+    public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
+
+        guard let provider = results.first?.itemProvider,
+              provider.canLoadObject(ofClass: UIImage.self) else { return }
+
+        provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
+            guard let self, let image = object as? UIImage else { return }
+            DispatchQueue.main.async {
+                self.imageSelectedRelay.accept(image)
+            }
+        }
     }
 }
 
@@ -231,34 +314,34 @@ extension CreateTicketViewController {
         ticketTitleTextField.leftView = paddingView
         ticketTitleTextField.leftViewMode = .always
     }
-    
+
     private func addSubviews() {
         view.addSubview(navigationView)
         view.addSubview(scrollView)
-        
+
         scrollView.addSubview(photoTitleLabel)
         scrollView.addSubview(ticketImageView)
-        
+
         scrollView.addSubview(ticketTitleLabel)
         scrollView.addSubview(ticketTitleTextField)
-        
+
         scrollView.addSubview(descriptionTitleLabel)
         scrollView.addSubview(descriptionTextView)
         scrollView.addSubview(descriptionPlaceholderLabel)
-        
+
         scrollView.addSubview(calendarTitleLabel)
         scrollView.addSubview(calendarView)
-        
+
         scrollView.addSubview(createButton)
     }
-    
+
     private func setLayout() {
         navigationView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide.snp.top)
             $0.leading.trailing.equalToSuperview()
             $0.height.equalTo(56)
         }
-        
+
         scrollView.snp.makeConstraints {
             $0.top.equalTo(navigationView.snp.bottom)
             $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom)
@@ -266,62 +349,62 @@ extension CreateTicketViewController {
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing)
             $0.width.equalTo(view.frame.width)
         }
-        
+
         photoTitleLabel.snp.makeConstraints {
             $0.top.equalToSuperview().offset(24)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
         }
-        
+
         ticketImageView.snp.makeConstraints {
             $0.top.equalTo(photoTitleLabel.snp.bottom).offset(8)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.width.height.equalTo(120)
         }
-        
+
         ticketTitleLabel.snp.makeConstraints {
             $0.top.equalTo(ticketImageView.snp.bottom).offset(16)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
         }
-        
+
         ticketTitleTextField.snp.makeConstraints {
             $0.top.equalTo(ticketTitleLabel.snp.bottom).offset(8)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
             $0.height.equalTo(48)
         }
-        
+
         descriptionTitleLabel.snp.makeConstraints {
             $0.top.equalTo(ticketTitleTextField.snp.bottom).offset(16)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
         }
-        
+
         descriptionTextView.snp.makeConstraints {
             $0.top.equalTo(descriptionTitleLabel.snp.bottom).offset(8)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
             $0.height.greaterThanOrEqualTo(48)
         }
-        
+
         descriptionPlaceholderLabel.snp.makeConstraints {
             $0.top.equalTo(descriptionTextView.snp.top).offset(14)
             $0.leading.equalTo(descriptionTextView.snp.leading).offset(15)
         }
-        
+
         calendarTitleLabel.snp.makeConstraints {
             $0.top.equalTo(descriptionTextView.snp.bottom).offset(16)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
         }
-        
+
         calendarView.snp.makeConstraints {
             $0.top.equalTo(calendarTitleLabel.snp.bottom).offset(8)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
         }
-        
+
         createButton.snp.makeConstraints {
             $0.top.equalTo(calendarView.snp.bottom).offset(24)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)

@@ -35,8 +35,9 @@ public final class DefaultCreateTicketRepository: CreateTicketRepository {
 
         let result = await provider.request(.createTicket(requestDTO, mainImage: mainImage))
 
-        try ResultHandler.handleResult(
+        _ = try ResultHandler.handleResult(
             result: result,
+            responseType: CreateTicketResponseDTO.self,
             errorType: CreateTicketError.self
         )
     }
