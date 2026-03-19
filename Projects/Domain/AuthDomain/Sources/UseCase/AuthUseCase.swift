@@ -8,14 +8,19 @@
 
 import BaseDomain
 
+public enum AutoSignInError: Error {
+    case noToken
+}
+
 public protocol AuthUseCase {
     func executeSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws -> Bool
+    func executeAutoSignIn() async throws -> Bool
 }
 
 public final class DefaultAuthUseCase: AuthUseCase {
     private let authRepository: AuthRepository
     private let userRepository: UserRepository
-    
+
     public init(
         authRepository: AuthRepository,
         userRepository: UserRepository
@@ -23,12 +28,23 @@ public final class DefaultAuthUseCase: AuthUseCase {
         self.authRepository = authRepository
         self.userRepository = userRepository
     }
-    
+
     public func executeSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws -> Bool {
         try await authRepository.fetchSignIn(idToken: idToken, authorizationCode: authorizationCode, type: type)
-        
+
         let userInfo = try await userRepository.fetchUserInfo()
-        
+
+        return userInfo.isOnboarding
+    }
+
+    public func executeAutoSignIn() async throws -> Bool {
+                
+        guard authRepository.hasAccessToken() else {
+            throw AutoSignInError.noToken
+        }
+
+        let userInfo = try await userRepository.fetchUserInfo()
+
         return userInfo.isOnboarding
     }
 }

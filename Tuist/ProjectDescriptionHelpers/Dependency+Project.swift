@@ -103,6 +103,11 @@ public extension TargetDependency.Feature {
         target: "MemoryFeature",
         path: .relativeToRoot("Projects/Feature/MemoryFeature")
     )
+
+    static let SplashFeature = TargetDependency.project(
+        target: "SplashFeature",
+        path: .relativeToRoot("Projects/Feature/SplashFeature")
+    )
 }
 
 public extension TargetDependency.Presentation {
@@ -140,6 +145,11 @@ public extension TargetDependency.Presentation {
     static let MemoryPresentation = TargetDependency.project(
         target: "MemoryPresentation",
         path: .relativeToRoot("Projects/Presentation/MemoryPresentation")
+    )
+
+    static let SplashPresentation = TargetDependency.project(
+        target: "SplashPresentation",
+        path: .relativeToRoot("Projects/Presentation/SplashPresentation")
     )
 }
 
