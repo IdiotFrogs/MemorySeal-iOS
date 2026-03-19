@@ -12,6 +12,7 @@ let project = Project.makeModule(
     name: "AppFeature",
     product: .staticFramework,
     dependencies: [
+        .Feature.SplashFeature,
         .Feature.SignUpFeature,
         .Feature.AuthFeature,
         .Feature.HomeFeature,

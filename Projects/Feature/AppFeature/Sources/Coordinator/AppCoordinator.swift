@@ -7,6 +7,7 @@
 
 import UIKit
 
+import SplashFeature
 import AuthFeature
 import SignUpFeature
 import HomeFeature
@@ -16,6 +17,7 @@ import MemoryFeature
 
 public final class AppCoordinator {
     private let navigationController: UINavigationController
+    private var splashCoordinator: SplashCoordinator?
     private var profileCoordinator: ProfileCoordinator?
 
     public init(
@@ -23,7 +25,14 @@ public final class AppCoordinator {
     ) {
         self.navigationController = navigationController
     }
-    
+
+    public func start() {
+        let coordinator = SplashCoordinator(with: navigationController)
+        coordinator.delegate = self
+        splashCoordinator = coordinator
+        coordinator.start()
+    }
+
     public func moveToLoginCoordinator() {
         let loginCoordinator: LoginCoordinator = LoginCoordinator(
             with: navigationController
@@ -71,6 +80,23 @@ public final class AppCoordinator {
             with: navigationController
         )
         memoryCoordinator.start()
+    }
+}
+
+extension AppCoordinator: SplashCoordinatorDelegate {
+    public func splashCoordinatorMoveToLogin() {
+        splashCoordinator = nil
+        moveToLoginCoordinator()
+    }
+
+    public func splashCoordinatorMoveToHome() {
+        splashCoordinator = nil
+        moveToHomeCoorinator()
+    }
+
+    public func splashCoordinatorMoveToSignUp() {
+        splashCoordinator = nil
+        moveToSignUpCoordinator()
     }
 }
 
