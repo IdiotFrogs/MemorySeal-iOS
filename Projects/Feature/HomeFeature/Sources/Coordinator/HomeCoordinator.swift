@@ -8,6 +8,7 @@
 import UIKit
 
 import HomePresentation
+import BaseDomain
 
 public protocol HomeCoordinatorDelegate: AnyObject {
     func moveToCreateTicket()
@@ -30,21 +31,24 @@ public final class HomeCoordinator {
     public func start() {
         let homeTabmanViewModel = homeDIContainer.makeHomeTabmanViewModel()
         homeTabmanViewModel.delegate = self
-        let homeViewModel1 = homeDIContainer.makeHomeViewModel()
-        let homeViewController1 = homeDIContainer.makeHomeViewController(
-            viewModel: homeViewModel1
+        
+        let hostHomeViewModel = homeDIContainer.makeHomeViewModel(role: .host)
+        let hostHomeViewController = homeDIContainer.makeHomeViewController(
+            viewModel: hostHomeViewModel
         )
-        homeViewModel1.delegate = self
-        let homeViewModel2 = homeDIContainer.makeHomeViewModel()
-        let homeViewController2 = homeDIContainer.makeHomeViewController(
-            viewModel: homeViewModel2
+        hostHomeViewModel.delegate = self
+        
+        let contributorHomeViewModel = homeDIContainer.makeHomeViewModel(role: .contributor)
+        let contributorHomeViewController = homeDIContainer.makeHomeViewController(
+            viewModel: contributorHomeViewModel
         )
-        homeViewModel2.delegate = self
+        contributorHomeViewModel.delegate = self
+        
         let homeTabManViewController: HomeTabmanViewController = homeDIContainer.makeHomeTabmanViewController(
             with: homeTabmanViewModel,
             viewControllers: [
-                homeViewController1,
-                homeViewController2
+                hostHomeViewController,
+                contributorHomeViewController
             ]
         )
         
