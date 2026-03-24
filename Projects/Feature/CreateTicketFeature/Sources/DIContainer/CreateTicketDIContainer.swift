@@ -9,17 +9,35 @@
 import Foundation
 
 import CalendarDomain
+import CreateTicketDomain
+import CreateTicketData
+import BaseData
 import CreateTicketPresentation
 
 public final class CreateTicketDIContainer {
     private func makeCalendarUseCase() -> CalendarUseCase {
         return DefaultCalendarUseCase()
     }
-    
-    func makeCreateTicketViewModel() -> CreateTicketViewModel {
-        return CreateTicketViewModel(calendarUseCase: makeCalendarUseCase())
+
+    private func makeCreateTicketProvider() -> DefaultProvider<CreateTicketTargetType> {
+        return DefaultProvider<CreateTicketTargetType>()
     }
-    
+
+    private func makeCreateTicketRepository() -> CreateTicketRepository {
+        return DefaultCreateTicketRepository(provider: makeCreateTicketProvider())
+    }
+
+    private func makeCreateTicketUseCase() -> CreateTicketUseCase {
+        return DefaultCreateTicketUseCase(createTicketRepository: makeCreateTicketRepository())
+    }
+
+    func makeCreateTicketViewModel() -> CreateTicketViewModel {
+        return CreateTicketViewModel(
+            calendarUseCase: makeCalendarUseCase(),
+            createTicketUseCase: makeCreateTicketUseCase()
+        )
+    }
+
     func makeCreateTicketViewController(
         with viewModel: CreateTicketViewModel
     ) -> CreateTicketViewController {
