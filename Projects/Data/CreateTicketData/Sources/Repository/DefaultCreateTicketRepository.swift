@@ -27,7 +27,7 @@ public final class DefaultCreateTicketRepository: CreateTicketRepository {
     ) async throws {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
 
         let requestDTO = CreateTicketRequestDTO(
             title: title,
@@ -39,9 +39,8 @@ public final class DefaultCreateTicketRepository: CreateTicketRepository {
 
         let result = await provider.request(.createTicket(requestDTO, mainImage: mainImage))
 
-        _ = try ResultHandler.handleResult(
+        try ResultHandler.handleResult(
             result: result,
-            responseType: CreateTicketResponseDTO.self,
             errorType: CreateTicketError.self
         )
     }
