@@ -12,6 +12,7 @@ import RxSwift
 import RxCocoa
 
 import DesignSystem
+import BaseDomain
 
 public final class HomeViewController: UIViewController {
     private let viewModel: HomeViewModel
@@ -69,8 +70,8 @@ extension HomeViewController {
             .bind(to: collectionView.rx.items(
                 cellIdentifier: TicketCollectionViewCell.reuseIdentifier,
                 cellType: TicketCollectionViewCell.self
-            )) { (index, cell, item) in
-                
+            )) { (index, entity, cell) in
+                cell.configure(with: entity)
             }
             .disposed(by: disposeBag)
         
