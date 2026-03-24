@@ -12,6 +12,7 @@ import RxSwift
 import RxCocoa
 
 import DesignSystem
+import BaseDomain
 
 final class TicketCollectionViewCell: UICollectionViewCell {
     private let ticketHeaderView: UIView = {
@@ -84,6 +85,29 @@ final class TicketCollectionViewCell: UICollectionViewCell {
             view: dotLineView,
             color: DesignSystemAsset.ColorAssests.grey2.color
         )
+    }
+}
+
+extension TicketCollectionViewCell {
+    func configure(with entity: TimeCapsuleEntity) {
+        ticketTitleLabel.text = entity.title
+
+        let calendar = Calendar.current
+        let now = calendar.startOfDay(for: Date())
+        let target = calendar.startOfDay(for: entity.openedAt)
+        let days = calendar.dateComponents([.day], from: now, to: target).day ?? 0
+
+        if days > 0 {
+            endDateLabel.text = "D-\(days)"
+        } else if days == 0 {
+            endDateLabel.text = "D-Day"
+        } else {
+            endDateLabel.text = "D+\(abs(days))"
+        }
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy.MM.dd"
+        ticketCreatedAtLabel.text = dateFormatter.string(from: entity.openedAt)
     }
 }
 
