@@ -9,19 +9,33 @@
 import RxSwift
 import RxCocoa
 
+import BaseDomain
+import Foundation
+
 public protocol EditProfileViewModelDelegate: AnyObject {
     func moveToBack()
 }
 
 public final class EditProfileViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
+    private let userUseCase: UserUseCase
+
+    let nickname: String
+    let profileImageUrl: String
 
     public weak var delegate: EditProfileViewModelDelegate?
 
-    public init() {}
+    public init(userUseCase: UserUseCase, nickname: String, profileImageUrl: String) {
+        self.userUseCase = userUseCase
+        self.nickname = nickname
+        self.profileImageUrl = profileImageUrl
+    }
 
     struct Input {
         let backButtonDidTap: ControlEvent<Void>
+        let saveButtonDidTap: ControlEvent<Void>
+        let nicknameText: ControlProperty<String?>
+        let selectedProfileImage: BehaviorRelay<Data?>
     }
 
     struct Output {}
@@ -34,6 +48,35 @@ public final class EditProfileViewModel {
             })
             .disposed(by: disposeBag)
 
+        input.saveButtonDidTap
+            .withLatestFrom(Observable.combineLatest(
+                input.nicknameText.map { $0 ?? "" },
+                input.selectedProfileImage.asObservable()
+            ))
+            .withUnretained(self)
+            .subscribe(onNext: { (self, args) in
+                let (nickname, imageData) = args
+                
+                self.editUserProfileInfo(nickname: nickname, profileImage: imageData)
+            })
+            .disposed(by: disposeBag)
+
         return Output()
+    }
+}
+
+extension EditProfileViewModel {
+    private func editUserProfileInfo(nickname: String, profileImage: Data?) {
+        Task {
+            do {
+                try await self.userUseCase.editProfile(
+                    nickname: nickname,
+                    profileImage: profileImage
+                )
+                await MainActor.run {
+                    self.delegate?.moveToBack()
+                }
+            } catch {}
+        }
     }
 }

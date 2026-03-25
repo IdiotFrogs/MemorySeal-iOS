@@ -13,7 +13,7 @@ import BaseDomain
 
 public protocol ProfileViewModelDelegate: AnyObject {
     func moveToBack()
-    func moveToEditProfile()
+    func moveToEditProfile(nickname: String, profileImageUrl: String)
     func moveToSettings()
 }
 
@@ -23,7 +23,7 @@ public final class ProfileViewModel {
 
     public weak var delegate: ProfileViewModelDelegate?
 
-    private let userInfo: PublishRelay<UserInfoEntity> = .init()
+    private let userInfo: BehaviorRelay<UserInfoEntity?> = .init(value: nil)
 
     struct Input {
         let viewDidLoad: PublishRelay<Void>
@@ -33,7 +33,7 @@ public final class ProfileViewModel {
     }
 
     struct Output {
-        let userInfo: Driver<UserInfoEntity>
+        let userInfo: Driver<UserInfoEntity?>
     }
 
     public init(userUseCase: UserUseCase) {
@@ -47,7 +47,9 @@ public final class ProfileViewModel {
                 Task {
                     do {
                         let user = try await self.userUseCase.fetchUserInfo()
-                        self.userInfo.accept(user)
+                        await MainActor.run {
+                            self.userInfo.accept(user)
+                        }
                     } catch {}
                 }
             })
@@ -61,9 +63,11 @@ public final class ProfileViewModel {
             .disposed(by: disposeBag)
 
         input.editProfileButtonDidTap
+            .withLatestFrom(userInfo.asObservable())
+            .compactMap { $0 }
             .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToEditProfile()
+            .subscribe(onNext: { (self, user) in
+                self.delegate?.moveToEditProfile(nickname: user.nickname, profileImageUrl: user.profileImageUrl)
             })
             .disposed(by: disposeBag)
 
@@ -74,6 +78,6 @@ public final class ProfileViewModel {
             })
             .disposed(by: disposeBag)
 
-        return Output(userInfo: userInfo.asDriver(onErrorDriveWith: .empty()))
+        return Output(userInfo: userInfo.asDriver())
     }
 }

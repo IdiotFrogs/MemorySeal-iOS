@@ -44,8 +44,15 @@ public final class ProfileDIContainer {
         return ProfileViewController(with: viewModel)
     }
 
-    public func makeEditProfileViewModel() -> EditProfileViewModel {
-        return EditProfileViewModel()
+    public func makeEditProfileViewModel(
+        nickname: String,
+        profileImageUrl: String
+    ) -> EditProfileViewModel {
+        return EditProfileViewModel(
+            userUseCase: makeUserUseCase(),
+            nickname: nickname,
+            profileImageUrl: profileImageUrl
+        )
     }
 
     public func makeEditProfileViewController(

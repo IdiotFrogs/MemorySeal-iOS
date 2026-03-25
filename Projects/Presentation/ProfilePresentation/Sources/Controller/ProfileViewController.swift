@@ -152,8 +152,9 @@ extension ProfileViewController {
 
         output.userInfo
             .drive(with: self, onNext: { (self, user) in
+                guard let user = user else { return }
                 self.nickNameLabel.text = user.nickname
-                
+
                 if let url = URL(string: user.profileImageUrl) {
                     self.userProfileImageView.kf.setImage(with: url)
                 }

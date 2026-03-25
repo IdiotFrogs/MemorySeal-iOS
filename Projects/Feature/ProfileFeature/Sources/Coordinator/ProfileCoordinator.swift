@@ -44,8 +44,11 @@ extension ProfileCoordinator: ProfileViewModelDelegate, EditProfileViewModelDele
         self.navigationController.popViewController(animated: true)
     }
 
-    public func moveToEditProfile() {
-        let editProfileViewModel = profileDIContainer.makeEditProfileViewModel()
+    public func moveToEditProfile(nickname: String, profileImageUrl: String) {
+        let editProfileViewModel = profileDIContainer.makeEditProfileViewModel(
+            nickname: nickname,
+            profileImageUrl: profileImageUrl
+        )
         editProfileViewModel.delegate = self
         let editProfileViewController = profileDIContainer.makeEditProfileViewController(
             with: editProfileViewModel

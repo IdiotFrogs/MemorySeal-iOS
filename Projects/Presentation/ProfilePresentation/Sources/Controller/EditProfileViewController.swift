@@ -10,12 +10,17 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
+import Kingfisher
 
 import DesignSystem
 
 public final class EditProfileViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let viewModel: EditProfileViewModel
+
+    private let selectedProfileImage: BehaviorRelay<Data?> = .init(value: nil)
+
+    // MARK: - Navigation
 
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
@@ -30,6 +35,8 @@ public final class EditProfileViewController: UIViewController {
         button.setTitleColor(DesignSystemAsset.ColorAssests.grey2.color, for: .normal)
         return button
     }()
+
+    // MARK: - Profile Image
 
     private let profileContainerView = UIView()
 
@@ -54,6 +61,8 @@ public final class EditProfileViewController: UIViewController {
         return button
     }()
 
+    // MARK: - Nickname
+
     private let nicknameTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "닉네임"
@@ -75,6 +84,46 @@ public final class EditProfileViewController: UIViewController {
         return textField
     }()
 
+    // MARK: - Bottom Sheet
+
+    private let dimmingView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        view.alpha = 0
+        view.isUserInteractionEnabled = true
+        return view
+    }()
+
+    private let bottomSheetView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.layer.cornerRadius = 16
+        view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        return view
+    }()
+
+    private let selectFromAlbumButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("앨범에서 이미지 선택", for: .normal)
+        button.setTitleColor(DesignSystemAsset.ColorAssests.grey5.color, for: .normal)
+        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.medium.font(size: 16)
+        button.contentHorizontalAlignment = .left
+        return button
+    }()
+
+    private let dashedSeparator = DashedLineView()
+
+    private let applyDefaultImageButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("기본 이미지 적용", for: .normal)
+        button.setTitleColor(DesignSystemAsset.ColorAssests.grey5.color, for: .normal)
+        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.medium.font(size: 16)
+        button.contentHorizontalAlignment = .left
+        return button
+    }()
+
+    private let bottomSheetHeight: CGFloat = 152
+
     public init(with viewModel: EditProfileViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -87,15 +136,24 @@ public final class EditProfileViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        
-        bindViewModel()
-        
+
+        setInitialValues()
         addSubviews()
         setLayout()
+        bindViewModel()
+
+        bottomSheetView.transform = CGAffineTransform(translationX: 0, y: bottomSheetHeight)
     }
 
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         view.endEditing(true)
+    }
+
+    private func setInitialValues() {
+        nicknameTextField.text = viewModel.nickname
+        if let url = URL(string: viewModel.profileImageUrl) {
+            userProfileImageView.kf.setImage(with: url)
+        }
     }
 }
 
@@ -104,9 +162,94 @@ public final class EditProfileViewController: UIViewController {
 extension EditProfileViewController {
     private func bindViewModel() {
         let input = EditProfileViewModel.Input(
-            backButtonDidTap: navigationView.backButtonDidTap
+            backButtonDidTap: navigationView.backButtonDidTap,
+            saveButtonDidTap: saveButton.rx.tap,
+            nicknameText: nicknameTextField.rx.text,
+            selectedProfileImage: selectedProfileImage
         )
         let _ = viewModel.translation(input)
+
+        editImageButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.showBottomSheet()
+            })
+            .disposed(by: disposeBag)
+
+        selectFromAlbumButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.hideBottomSheet {
+                    self.presentImagePicker()
+                }
+            })
+            .disposed(by: disposeBag)
+
+        applyDefaultImageButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.hideBottomSheet {
+                    self.userProfileImageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+                    self.selectedProfileImage.accept(nil)
+                }
+            })
+            .disposed(by: disposeBag)
+
+        let tapDimming = UITapGestureRecognizer()
+        dimmingView.addGestureRecognizer(tapDimming)
+        tapDimming.rx.event
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.hideBottomSheet(completion: nil)
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func showBottomSheet() {
+        bottomSheetView.transform = CGAffineTransform(translationX: 0, y: bottomSheetHeight)
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+            self.dimmingView.alpha = 1
+            self.bottomSheetView.transform = .identity
+        }
+    }
+
+    private func hideBottomSheet(completion: (() -> Void)?) {
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseIn, animations: {
+            self.dimmingView.alpha = 0
+            self.bottomSheetView.transform = CGAffineTransform(translationX: 0, y: self.bottomSheetHeight)
+        }, completion: { _ in
+            completion?()
+        })
+    }
+
+    private func presentImagePicker() {
+        let picker = UIImagePickerController()
+        picker.sourceType = .photoLibrary
+        picker.allowsEditing = true
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+}
+
+// MARK: - UIImagePickerControllerDelegate
+
+extension EditProfileViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    public func imagePickerController(
+        _ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
+    ) {
+        picker.dismiss(animated: true)
+
+        let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage
+        guard let image,
+              let imageData = image.jpegData(compressionQuality: 0.8) else { return }
+
+        userProfileImageView.image = image
+        selectedProfileImage.accept(imageData)
+    }
+
+    public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
     }
 }
 
@@ -123,6 +266,12 @@ extension EditProfileViewController {
 
         view.addSubview(nicknameTitleLabel)
         view.addSubview(nicknameTextField)
+
+        view.addSubview(dimmingView)
+        view.addSubview(bottomSheetView)
+        bottomSheetView.addSubview(selectFromAlbumButton)
+        bottomSheetView.addSubview(dashedSeparator)
+        bottomSheetView.addSubview(applyDefaultImageButton)
     }
 
     private func setLayout() {
@@ -164,6 +313,33 @@ extension EditProfileViewController {
             $0.top.equalTo(nicknameTitleLabel.snp.bottom).offset(8)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(48)
+        }
+
+        dimmingView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
+        bottomSheetView.snp.makeConstraints {
+            $0.leading.trailing.bottom.equalToSuperview()
+            $0.height.equalTo(bottomSheetHeight)
+        }
+
+        selectFromAlbumButton.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(20)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(52)
+        }
+
+        dashedSeparator.snp.makeConstraints {
+            $0.top.equalTo(selectFromAlbumButton.snp.bottom)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(1)
+        }
+
+        applyDefaultImageButton.snp.makeConstraints {
+            $0.top.equalTo(dashedSeparator.snp.bottom)
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(52)
         }
     }
 }
