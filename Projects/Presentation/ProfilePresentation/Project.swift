@@ -13,7 +13,8 @@ let project = Project.makeModule(
     product: .staticFramework,
     dependencies: [
         .ThridPartyLib.ThridPartyLib,
-        .Shared.DesignSystem
+        .Shared.DesignSystem,
+        .Domain.BaseDomain
     ],
     resources: ["Resources/**"]
 )

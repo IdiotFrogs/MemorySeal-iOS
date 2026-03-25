@@ -10,6 +10,7 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
+import Kingfisher
 
 import DesignSystem
 
@@ -17,6 +18,7 @@ public final class ProfileViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let viewModel: ProfileViewModel
 
+    private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let editProfileButtonDidTap: PublishRelay<Void> = .init()
 
     private let navigationView: MemorySealNavigationView = {
@@ -125,9 +127,10 @@ public final class ProfileViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
-        
+
         bindViewModel()
-        
+        rxViewDidLoad.accept(())
+
         addSubviews()
         setLayout()
     }
@@ -140,11 +143,22 @@ public final class ProfileViewController: UIViewController {
 extension ProfileViewController {
     private func bindViewModel() {
         let input = ProfileViewModel.Input(
+            viewDidLoad: rxViewDidLoad,
             backButtonDidTap: navigationView.backButtonDidTap,
             editProfileButtonDidTap: editProfileButton.rx.tap,
             settingButtonDidTap: settingButton.rx.tap
         )
-        let _ = viewModel.translation(input)
+        let output = viewModel.translation(input)
+
+        output.userInfo
+            .drive(with: self, onNext: { (self, user) in
+                self.nickNameLabel.text = user.nickname
+                
+                if let url = URL(string: user.profileImageUrl) {
+                    self.userProfileImageView.kf.setImage(with: url)
+                }
+            })
+            .disposed(by: disposeBag)
     }
 }
 

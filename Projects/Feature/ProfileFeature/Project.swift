@@ -12,6 +12,8 @@ let project = Project.makeModule(
     name: "ProfileFeature",
     product: .staticFramework,
     dependencies: [
-        .Presentation.ProfilePresentation
+        .Presentation.ProfilePresentation,
+        .Data.BaseData,
+        .Domain.BaseDomain
     ]
 )
