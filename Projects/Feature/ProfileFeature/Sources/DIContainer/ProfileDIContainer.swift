@@ -9,12 +9,33 @@
 import Foundation
 
 import ProfilePresentation
+import BaseData
+import BaseDomain
 
 public final class ProfileDIContainer {
     public init() {}
 
+    private func makeUserProvider() -> DefaultProvider<UserTargetType> {
+        return DefaultProvider<UserTargetType>()
+    }
+
+    private func makeUserDefaultStorage() -> UserDefaultStorage {
+        return DefaultUserDefaultStorage()
+    }
+
+    private func makeUserRepository() -> UserRepository {
+        return DefaultUserRepository(
+            provider: makeUserProvider(),
+            userDefaultStorage: makeUserDefaultStorage()
+        )
+    }
+
+    private func makeUserUseCase() -> UserUseCase {
+        return DefaultUserUseCase(userRepository: makeUserRepository())
+    }
+
     public func makeProfileViewModel() -> ProfileViewModel {
-        return ProfileViewModel()
+        return ProfileViewModel(userUseCase: makeUserUseCase())
     }
 
     public func makeProfileViewController(

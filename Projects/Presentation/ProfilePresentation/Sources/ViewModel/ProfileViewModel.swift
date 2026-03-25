@@ -9,6 +9,8 @@
 import RxSwift
 import RxCocoa
 
+import BaseDomain
+
 public protocol ProfileViewModelDelegate: AnyObject {
     func moveToBack()
     func moveToEditProfile()
@@ -17,20 +19,40 @@ public protocol ProfileViewModelDelegate: AnyObject {
 
 public final class ProfileViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
+    private let userUseCase: UserUseCase
 
     public weak var delegate: ProfileViewModelDelegate?
 
-    public init() {}
+    private let userInfo: PublishRelay<UserInfoEntity> = .init()
 
     struct Input {
+        let viewDidLoad: PublishRelay<Void>
         let backButtonDidTap: ControlEvent<Void>
         let editProfileButtonDidTap: ControlEvent<Void>
         let settingButtonDidTap: ControlEvent<Void>
     }
 
-    struct Output {}
+    struct Output {
+        let userInfo: Driver<UserInfoEntity>
+    }
+
+    public init(userUseCase: UserUseCase) {
+        self.userUseCase = userUseCase
+    }
 
     func translation(_ input: Input) -> Output {
+        input.viewDidLoad
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                Task {
+                    do {
+                        let user = try await self.userUseCase.fetchUserInfo()
+                        self.userInfo.accept(user)
+                    } catch {}
+                }
+            })
+            .disposed(by: disposeBag)
+
         input.backButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
@@ -52,6 +74,6 @@ public final class ProfileViewModel {
             })
             .disposed(by: disposeBag)
 
-        return Output()
+        return Output(userInfo: userInfo.asDriver(onErrorDriveWith: .empty()))
     }
 }
