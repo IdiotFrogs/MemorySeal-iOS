@@ -32,7 +32,15 @@ public final class EditProfileViewController: UIViewController {
         let button = UIButton()
         button.setTitle("저장", for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-        button.setTitleColor(DesignSystemAsset.ColorAssests.grey2.color, for: .normal)
+        button.setTitleColor(
+            DesignSystemAsset.ColorAssests.grey2.color,
+            for: .disabled
+        )
+        button.setTitleColor(
+            DesignSystemAsset.ColorAssests.primaryNormal.color,
+            for: .normal
+        )
+        button.isEnabled = false
         return button
     }()
 
@@ -82,6 +90,29 @@ public final class EditProfileViewController: UIViewController {
         textField.leftView = paddingView
         textField.leftViewMode = .always
         return textField
+    }()
+
+    private let nicknameHelperLabel: UILabel = {
+        let label = UILabel()
+        label.isHidden = true
+
+        let attachment = NSTextAttachment()
+        let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .medium)
+        attachment.image = UIImage(systemName: "exclamationmark.circle.fill", withConfiguration: config)?
+            .withTintColor(.red, renderingMode: .alwaysOriginal)
+        let imageString = NSAttributedString(attachment: attachment)
+        let textString = NSAttributedString(
+            string: " 최소 1글자에서 16글자까지 입력할 수 있습니다.",
+            attributes: [
+                .foregroundColor: UIColor.red,
+                .font: DesignSystemFontFamily.Pretendard.regular.font(size: 12)
+            ]
+        )
+        let result = NSMutableAttributedString()
+        result.append(imageString)
+        result.append(textString)
+        label.attributedText = result
+        return label
     }()
 
     // MARK: - Bottom Sheet
@@ -203,6 +234,26 @@ extension EditProfileViewController {
                 self.hideBottomSheet(completion: nil)
             })
             .disposed(by: disposeBag)
+
+        nicknameTextField.rx.controlEvent(.editingChanged)
+            .withLatestFrom(nicknameTextField.rx.text.orEmpty)
+            .distinctUntilChanged()
+            .scan((validatedText: "", isLimitExceeded: false)) { previous, newText in
+                guard newText.count <= 16 else {
+                    return (previous.validatedText, true)
+                }
+                return (newText, false)
+            }
+            .withUnretained(self)
+            .bind { (self, result) in
+                let isInvalid = result.validatedText.isEmpty || result.isLimitExceeded
+                let saveButtonIsInvalid = result.validatedText.isEmpty
+                self.nicknameHelperLabel.isHidden = !isInvalid
+                self.saveButton.isEnabled = !saveButtonIsInvalid
+                
+                self.nicknameTextField.text = result.validatedText
+            }
+            .disposed(by: disposeBag)
     }
 
     private func showBottomSheet() {
@@ -266,6 +317,7 @@ extension EditProfileViewController {
 
         view.addSubview(nicknameTitleLabel)
         view.addSubview(nicknameTextField)
+        view.addSubview(nicknameHelperLabel)
 
         view.addSubview(dimmingView)
         view.addSubview(bottomSheetView)
@@ -313,6 +365,11 @@ extension EditProfileViewController {
             $0.top.equalTo(nicknameTitleLabel.snp.bottom).offset(8)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(48)
+        }
+
+        nicknameHelperLabel.snp.makeConstraints {
+            $0.top.equalTo(nicknameTextField.snp.bottom).offset(6)
+            $0.leading.trailing.equalToSuperview().inset(20)
         }
 
         dimmingView.snp.makeConstraints {

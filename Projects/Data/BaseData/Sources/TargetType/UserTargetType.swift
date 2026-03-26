@@ -47,18 +47,20 @@ extension UserTargetType: BaseTargetType {
                 urlParameters: ["userId": userId]
             )
         case .editProfile(let nickname, let profileImage):
-            var multipartData: [MultipartFormData] = []
             if let imageData = profileImage {
-                multipartData.append(
-                    MultipartFormData(
-                        provider: .data(imageData),
-                        name: "profileImage",
-                        fileName: "profile.jpg",
-                        mimeType: "image/jpeg"
-                    )
+                let multipartData = [MultipartFormData(
+                    provider: .data(imageData),
+                    name: "profileImage",
+                    fileName: "profile.jpg",
+                    mimeType: "image/jpeg"
+                )]
+                return .uploadCompositeMultipart(multipartData, urlParameters: ["nickname": nickname])
+            } else {
+                return .requestParameters(
+                    parameters: ["nickname": nickname],
+                    encoding: URLEncoding.queryString
                 )
             }
-            return .uploadCompositeMultipart(multipartData, urlParameters: ["nickname": nickname])
         }
     }
 
