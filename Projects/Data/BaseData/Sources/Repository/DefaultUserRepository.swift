@@ -9,6 +9,7 @@
 import Moya
 
 import BaseDomain
+import Foundation
 
 public final class DefaultUserRepository: UserRepository {
     
@@ -39,7 +40,7 @@ public final class DefaultUserRepository: UserRepository {
 
     public func uploadProfileImage(file: String) async throws -> String {
         guard let userId: Int = userDefaultStorage.get(forKey: .userId) as? Int else { throw UploadProfileImageError.defaultError }
-        
+
         let result = await provider.request(.uploadProfileImage(userId: userId, file: file))
 
         let responseDTO = try ResultHandler.handleResult(
@@ -49,5 +50,14 @@ public final class DefaultUserRepository: UserRepository {
         )
 
         return responseDTO.profileImageUrl
+    }
+
+    public func editProfile(nickname: String, profileImage: Data?) async throws {
+        let result = await provider.request(.editProfile(nickname: nickname, profileImage: profileImage))
+
+        try ResultHandler.handleResult(
+            result: result,
+            errorType: EditProfileError.self
+        )
     }
 }

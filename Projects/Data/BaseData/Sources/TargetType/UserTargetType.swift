@@ -12,12 +12,13 @@ import Moya
 public enum UserTargetType {
     case userInfo
     case uploadProfileImage(userId: Int, file: String)
+    case editProfile(nickname: String, profileImage: Data?)
 }
 
 extension UserTargetType: BaseTargetType {
     public var path: String {
         switch self {
-        case .userInfo:
+        case .userInfo, .editProfile:
             return "/users/me"
         case .uploadProfileImage:
             return "/s3/upload/profile-image"
@@ -30,6 +31,8 @@ extension UserTargetType: BaseTargetType {
             return .get
         case .uploadProfileImage:
             return .post
+        case .editProfile:
+            return .put
         }
     }
 
@@ -43,6 +46,21 @@ extension UserTargetType: BaseTargetType {
                 bodyEncoding: JSONEncoding.default,
                 urlParameters: ["userId": userId]
             )
+        case .editProfile(let nickname, let profileImage):
+            if let imageData = profileImage {
+                let multipartData = [MultipartFormData(
+                    provider: .data(imageData),
+                    name: "profileImage",
+                    fileName: "profile.jpg",
+                    mimeType: "image/jpeg"
+                )]
+                return .uploadCompositeMultipart(multipartData, urlParameters: ["nickname": nickname])
+            } else {
+                return .requestParameters(
+                    parameters: ["nickname": nickname],
+                    encoding: URLEncoding.queryString
+                )
+            }
         }
     }
 
@@ -55,11 +73,6 @@ extension UserTargetType: BaseTargetType {
     }
 
     public var isNeededAccessToken: Bool {
-        switch self {
-        case .userInfo:
-            return true
-        case .uploadProfileImage:
-            return true
-        }
+        return true
     }
 }
