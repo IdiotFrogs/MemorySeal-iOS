@@ -74,19 +74,21 @@ public final class SettingsViewModel {
 
 extension SettingsViewModel {
     private func requestSignOut() {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             try? await self.authUseCase.executeLogout()
-            await MainActor.run {
-                self.delegate?.moveToLogout()
+            await MainActor.run { [weak self] in
+                self?.delegate?.moveToLogout()
             }
         }
     }
 
     private func requestDeleteAccount() {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             try? await self.userUseCase.deleteAccount()
-            await MainActor.run {
-                self.delegate?.moveToWithdrawal()
+            await MainActor.run { [weak self] in
+                self?.delegate?.moveToWithdrawal()
             }
         }
     }
