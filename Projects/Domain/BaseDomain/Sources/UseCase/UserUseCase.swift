@@ -11,6 +11,7 @@ import Foundation
 public protocol UserUseCase {
     func fetchUserInfo() async throws -> UserInfoEntity
     func editProfile(nickname: String, profileImage: Data?) async throws
+    func deleteAccount() async throws
 }
 
 public final class DefaultUserUseCase: UserUseCase {
@@ -26,5 +27,9 @@ public final class DefaultUserUseCase: UserUseCase {
 
     public func editProfile(nickname: String, profileImage: Data?) async throws {
         try await userRepository.editProfile(nickname: nickname, profileImage: profileImage)
+    }
+
+    public func deleteAccount() async throws {
+        try await userRepository.deleteAccount()
     }
 }

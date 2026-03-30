@@ -43,7 +43,8 @@ public final class SplashDIContainer {
     private func makeUserRepository() -> UserRepository {
         return DefaultUserRepository(
             provider: makeUserProvider(),
-            userDefaultStorage: makeUserDefaultStorage()
+            userDefaultStorage: makeUserDefaultStorage(),
+            keyChainStorage: makeKeyChainStorage()
         )
     }
 

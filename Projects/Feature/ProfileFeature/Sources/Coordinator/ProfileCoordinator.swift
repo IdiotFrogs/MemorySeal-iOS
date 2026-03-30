@@ -81,6 +81,6 @@ extension ProfileCoordinator: ProfileViewModelDelegate, EditProfileViewModelDele
     }
 
     public func moveToWithdrawal() {
-        // TODO: Handle withdrawal
+        delegate?.profileCoordinatorDidLogout()
     }
 }
