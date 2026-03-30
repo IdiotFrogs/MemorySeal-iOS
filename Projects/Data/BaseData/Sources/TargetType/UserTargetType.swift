@@ -13,12 +13,13 @@ public enum UserTargetType {
     case userInfo
     case uploadProfileImage(userId: Int, file: String)
     case editProfile(nickname: String, profileImage: Data?)
+    case deleteAccount
 }
 
 extension UserTargetType: BaseTargetType {
     public var path: String {
         switch self {
-        case .userInfo, .editProfile:
+        case .userInfo, .editProfile, .deleteAccount:
             return "/users/me"
         case .uploadProfileImage:
             return "/s3/upload/profile-image"
@@ -33,6 +34,8 @@ extension UserTargetType: BaseTargetType {
             return .post
         case .editProfile:
             return .put
+        case .deleteAccount:
+            return .delete
         }
     }
 
@@ -46,6 +49,8 @@ extension UserTargetType: BaseTargetType {
                 bodyEncoding: JSONEncoding.default,
                 urlParameters: ["userId": userId]
             )
+        case .deleteAccount:
+            return .requestPlain
         case .editProfile(let nickname, let profileImage):
             if let imageData = profileImage {
                 let multipartData = [MultipartFormData(

@@ -18,6 +18,7 @@ public final class SettingsViewController: UIViewController {
     private let viewModel: SettingsViewModel
     
     private let logoutButtonDidTap: PublishRelay<Void> = .init()
+    private let withdrawalConfirmDidTap: PublishRelay<Void> = .init()
     
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
@@ -97,7 +98,7 @@ extension SettingsViewController {
             backButtonDidTap: navigationView.backButtonDidTap,
             termsOfServiceDidTap: termsOfServiceButton.rx.tap,
             logoutButtonDidTap: logoutButtonDidTap.asObservable(),
-            withdrawalDidTap: withdrawalButton.rx.tap
+            withdrawalDidTap: withdrawalConfirmDidTap.asObservable()
         )
         let _ = viewModel.translation(input)
     }
@@ -106,6 +107,12 @@ extension SettingsViewController {
         logoutButton.rx.tap
             .subscribe(with: self, onNext: { (self, _) in
                 self.showLogoutDiaLogView()
+            })
+            .disposed(by: disposeBag)
+
+        withdrawalButton.rx.tap
+            .subscribe(with: self, onNext: { (self, _) in
+                self.showWithdrawalDialogView()
             })
             .disposed(by: disposeBag)
     }
@@ -133,7 +140,29 @@ extension SettingsViewController {
             })
             .disposed(by: disposeBag)
     }
-    
+
+    private func showWithdrawalDialogView() {
+        let dialog = DialogView.show(
+            on: view,
+            title: "회원탈퇴",
+            message: "메실 회원을 탈퇴하시겠습니까?\n티켓에 저장된 내용은 삭제되지 않습니다.",
+            cancelTitle: "취소",
+            confirmTitle: "탈퇴"
+        )
+
+        dialog.confirmButtonDidTap
+            .subscribe(with: self, onNext: { (self, _) in
+                self.withdrawalConfirmDidTap.accept(())
+            })
+            .disposed(by: disposeBag)
+
+        dialog.cancelButtonDidTap
+            .subscribe(with: self, onNext: { (self, _) in
+                dialog.dismiss()
+            })
+            .disposed(by: disposeBag)
+    }
+
     private func addSubviews() {
         view.addSubview(navigationView)
         view.addSubview(rowsContainerView)

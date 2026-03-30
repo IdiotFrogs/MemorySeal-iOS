@@ -32,7 +32,8 @@ public final class ProfileDIContainer {
     private func makeUserRepository() -> UserRepository {
         return DefaultUserRepository(
             provider: makeUserProvider(),
-            userDefaultStorage: makeUserDefaultStorage()
+            userDefaultStorage: makeUserDefaultStorage(),
+            keyChainStorage: makeKeyChainStorage()
         )
     }
 
@@ -87,7 +88,10 @@ public final class ProfileDIContainer {
     }
 
     public func makeSettingsViewModel() -> SettingsViewModel {
-        return SettingsViewModel(authUseCase: makeAuthUseCase())
+        return SettingsViewModel(
+            authUseCase: makeAuthUseCase(),
+            userUseCase: makeUserUseCase()
+        )
     }
 
     public func makeSettingsViewController(

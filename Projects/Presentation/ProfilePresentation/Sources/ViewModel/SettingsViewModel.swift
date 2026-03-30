@@ -10,6 +10,7 @@ import RxSwift
 import RxCocoa
 
 import AuthDomain
+import BaseDomain
 
 public protocol SettingsViewModelDelegate: AnyObject {
     func moveToBack()
@@ -21,17 +22,19 @@ public protocol SettingsViewModelDelegate: AnyObject {
 public final class SettingsViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
     private let authUseCase: AuthUseCase
+    private let userUseCase: UserUseCase
     public weak var delegate: SettingsViewModelDelegate?
 
-    public init(authUseCase: AuthUseCase) {
+    public init(authUseCase: AuthUseCase, userUseCase: UserUseCase) {
         self.authUseCase = authUseCase
+        self.userUseCase = userUseCase
     }
 
     struct Input {
         let backButtonDidTap: ControlEvent<Void>
         let termsOfServiceDidTap: ControlEvent<Void>
         let logoutButtonDidTap: Observable<Void>
-        let withdrawalDidTap: ControlEvent<Void>
+        let withdrawalDidTap: Observable<Void>
     }
 
     struct Output {}
@@ -61,7 +64,7 @@ public final class SettingsViewModel {
         input.withdrawalDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToWithdrawal()
+                self.requestDeleteAccount()
             })
             .disposed(by: disposeBag)
 
@@ -71,10 +74,21 @@ public final class SettingsViewModel {
 
 extension SettingsViewModel {
     private func requestSignOut() {
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             try? await self.authUseCase.executeLogout()
-            await MainActor.run {
-                self.delegate?.moveToLogout()
+            await MainActor.run { [weak self] in
+                self?.delegate?.moveToLogout()
+            }
+        }
+    }
+
+    private func requestDeleteAccount() {
+        Task { [weak self] in
+            guard let self else { return }
+            try? await self.userUseCase.deleteAccount()
+            await MainActor.run { [weak self] in
+                self?.delegate?.moveToWithdrawal()
             }
         }
     }

@@ -12,16 +12,19 @@ import BaseDomain
 import Foundation
 
 public final class DefaultUserRepository: UserRepository {
-    
+
     private let provider: DefaultProvider<UserTargetType>
     private let userDefaultStorage: UserDefaultStorage
-    
+    private let keyChainStorage: KeyChainStorage
+
     public init(
         provider: DefaultProvider<UserTargetType>,
-        userDefaultStorage: UserDefaultStorage
+        userDefaultStorage: UserDefaultStorage,
+        keyChainStorage: KeyChainStorage
     ) {
         self.provider = provider
         self.userDefaultStorage = userDefaultStorage
+        self.keyChainStorage = keyChainStorage
     }
     
     public func fetchUserInfo() async throws -> UserInfoEntity {
@@ -59,5 +62,12 @@ public final class DefaultUserRepository: UserRepository {
             result: result,
             errorType: EditProfileError.self
         )
+    }
+
+    public func deleteAccount() async throws {
+        _ = await provider.request(.deleteAccount)
+        _ = keyChainStorage.delete(key: .accessToken)
+        _ = keyChainStorage.delete(key: .refreshToken)
+        userDefaultStorage.remove(forKey: .userId)
     }
 }
