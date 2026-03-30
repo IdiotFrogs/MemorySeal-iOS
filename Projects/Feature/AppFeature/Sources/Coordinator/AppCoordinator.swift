@@ -115,6 +115,11 @@ extension AppCoordinator: ProfileCoordinatorDelegate {
         navigationController.popViewController(animated: true)
         profileCoordinator = nil
     }
+
+    public func profileCoordinatorDidLogout() {
+        profileCoordinator = nil
+        moveToLoginCoordinator()
+    }
 }
 
 extension AppCoordinator: HomeCoordinatorDelegate {

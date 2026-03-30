@@ -35,7 +35,8 @@ public final class SplashDIContainer {
     private func makeAuthRepository() -> AuthRepository {
         return DefaultAuthRepository(
             authProvider: makeAuthProvider(),
-            keyChainStorage: makeKeyChainStorage()
+            keyChainStorage: makeKeyChainStorage(),
+            userDefaultStorage: makeUserDefaultStorage()
         )
     }
 

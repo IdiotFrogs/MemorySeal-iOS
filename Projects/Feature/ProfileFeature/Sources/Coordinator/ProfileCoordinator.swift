@@ -12,6 +12,7 @@ import ProfilePresentation
 
 public protocol ProfileCoordinatorDelegate: AnyObject {
     func moveToBack()
+    func profileCoordinatorDidLogout()
 }
 
 public final class ProfileCoordinator {
@@ -76,7 +77,7 @@ extension ProfileCoordinator: ProfileViewModelDelegate, EditProfileViewModelDele
     }
 
     public func moveToLogout() {
-        // TODO: Handle logout
+        delegate?.profileCoordinatorDidLogout()
     }
 
     public func moveToWithdrawal() {

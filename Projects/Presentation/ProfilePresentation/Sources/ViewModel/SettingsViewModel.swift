@@ -9,6 +9,8 @@
 import RxSwift
 import RxCocoa
 
+import AuthDomain
+
 public protocol SettingsViewModelDelegate: AnyObject {
     func moveToBack()
     func moveToTermsOfService()
@@ -18,8 +20,12 @@ public protocol SettingsViewModelDelegate: AnyObject {
 
 public final class SettingsViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
+    private let authUseCase: AuthUseCase
     public weak var delegate: SettingsViewModelDelegate?
-    public init() {}
+
+    public init(authUseCase: AuthUseCase) {
+        self.authUseCase = authUseCase
+    }
 
     struct Input {
         let backButtonDidTap: ControlEvent<Void>
@@ -48,7 +54,7 @@ public final class SettingsViewModel {
         input.logoutButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToLogout()
+                self.requestSignOut()
             })
             .disposed(by: disposeBag)
 
@@ -60,5 +66,16 @@ public final class SettingsViewModel {
             .disposed(by: disposeBag)
 
         return Output()
+    }
+}
+
+extension SettingsViewModel {
+    private func requestSignOut() {
+        Task {
+            try? await self.authUseCase.executeLogout()
+            await MainActor.run {
+                self.delegate?.moveToLogout()
+            }
+        }
     }
 }

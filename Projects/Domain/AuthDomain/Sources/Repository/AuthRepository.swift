@@ -9,4 +9,5 @@
 public protocol AuthRepository {
     func fetchSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws
     func hasAccessToken() -> Bool
+    func logout() async throws
 }

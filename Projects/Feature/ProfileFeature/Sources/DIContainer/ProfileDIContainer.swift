@@ -11,6 +11,8 @@ import Foundation
 import ProfilePresentation
 import BaseData
 import BaseDomain
+import AuthData
+import AuthDomain
 
 public final class ProfileDIContainer {
     public init() {}
@@ -23,6 +25,10 @@ public final class ProfileDIContainer {
         return DefaultUserDefaultStorage()
     }
 
+    private func makeKeyChainStorage() -> KeyChainStorage {
+        return DefaultKeyChainStorage()
+    }
+
     private func makeUserRepository() -> UserRepository {
         return DefaultUserRepository(
             provider: makeUserProvider(),
@@ -32,6 +38,25 @@ public final class ProfileDIContainer {
 
     private func makeUserUseCase() -> UserUseCase {
         return DefaultUserUseCase(userRepository: makeUserRepository())
+    }
+
+    private func makeAuthProvider() -> DefaultProvider<AuthTargetType> {
+        return DefaultProvider<AuthTargetType>()
+    }
+
+    private func makeAuthRepository() -> AuthRepository {
+        return DefaultAuthRepository(
+            authProvider: makeAuthProvider(),
+            keyChainStorage: makeKeyChainStorage(),
+            userDefaultStorage: makeUserDefaultStorage()
+        )
+    }
+
+    private func makeAuthUseCase() -> AuthUseCase {
+        return DefaultAuthUseCase(
+            authRepository: makeAuthRepository(),
+            userRepository: makeUserRepository()
+        )
     }
 
     public func makeProfileViewModel() -> ProfileViewModel {
@@ -62,7 +87,7 @@ public final class ProfileDIContainer {
     }
 
     public func makeSettingsViewModel() -> SettingsViewModel {
-        return SettingsViewModel()
+        return SettingsViewModel(authUseCase: makeAuthUseCase())
     }
 
     public func makeSettingsViewController(

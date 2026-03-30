@@ -35,7 +35,8 @@ public final class LoginDIContainer {
     private func makeAuthRepository() -> AuthRepository {
         return DefaultAuthRepository(
             authProvider: makeAuthProvdier(),
-            keyChainStorage: makeKeyChainStorage()
+            keyChainStorage: makeKeyChainStorage(),
+            userDefaultStorage: makeUserDefaultStorage()
         )
     }
     

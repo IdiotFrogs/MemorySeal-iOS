@@ -27,11 +27,12 @@ public final class DefaultProvider<T: TargetType>: MoyaProvider<T> {
         
         let interceptor: RequestInterceptor = AuthorizationInterceptor.shared
         let authorizationPlugin: PluginType = AuthorizationPlugin.shared
+        let loggerPlugin: MoyaLoggerPlugin = .init()
 
         super.init(
             requestClosure: requestClosure,
             session: Session(interceptor: interceptor),
-            plugins: [authorizationPlugin]
+            plugins: [authorizationPlugin, loggerPlugin]
         )
     }
 }
