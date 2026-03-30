@@ -15,6 +15,7 @@ public enum AutoSignInError: Error {
 public protocol AuthUseCase {
     func executeSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws -> Bool
     func executeAutoSignIn() async throws -> Bool
+    func executeLogout() async throws
 }
 
 public final class DefaultAuthUseCase: AuthUseCase {
@@ -38,7 +39,7 @@ public final class DefaultAuthUseCase: AuthUseCase {
     }
 
     public func executeAutoSignIn() async throws -> Bool {
-                
+
         guard authRepository.hasAccessToken() else {
             throw AutoSignInError.noToken
         }
@@ -46,5 +47,9 @@ public final class DefaultAuthUseCase: AuthUseCase {
         let userInfo = try await userRepository.fetchUserInfo()
 
         return userInfo.isOnboarding
+    }
+
+    public func executeLogout() async throws {
+        try await authRepository.logout()
     }
 }
