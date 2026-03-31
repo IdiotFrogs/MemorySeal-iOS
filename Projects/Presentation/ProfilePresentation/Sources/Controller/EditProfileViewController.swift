@@ -235,24 +235,38 @@ extension EditProfileViewController {
             })
             .disposed(by: disposeBag)
 
-        nicknameTextField.rx.controlEvent(.editingChanged)
+        let nicknameValidation = nicknameTextField.rx.controlEvent(.editingChanged)
             .withLatestFrom(nicknameTextField.rx.text.orEmpty)
             .distinctUntilChanged()
-            .scan((validatedText: "", isLimitExceeded: false)) { previous, newText in
+            .scan((validatedText: viewModel.nickname, isLimitExceeded: false)) { previous, newText in
                 guard newText.count <= 16 else {
                     return (previous.validatedText, true)
                 }
                 return (newText, false)
             }
+            .share(replay: 1)
+
+        nicknameValidation
             .withUnretained(self)
             .bind { (self, result) in
                 let isInvalid = result.validatedText.isEmpty || result.isLimitExceeded
-                let saveButtonIsInvalid = result.validatedText.isEmpty
                 self.nicknameHelperLabel.isHidden = !isInvalid
-                self.saveButton.isEnabled = !saveButtonIsInvalid
-                
                 self.nicknameTextField.text = result.validatedText
             }
+            .disposed(by: disposeBag)
+
+        let nicknameChanged = nicknameValidation
+            .map {
+                $0.validatedText != self.viewModel.nickname && !$0.validatedText.isEmpty
+            }
+            .startWith(false)
+
+        let imageSelected = selectedProfileImage
+            .map { $0 != nil }
+
+        Observable.combineLatest(nicknameChanged, imageSelected)
+            .map { $0 || $1 }
+            .bind(to: saveButton.rx.isEnabled)
             .disposed(by: disposeBag)
     }
 
