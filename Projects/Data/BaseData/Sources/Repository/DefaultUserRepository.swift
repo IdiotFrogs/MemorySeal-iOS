@@ -55,8 +55,11 @@ public final class DefaultUserRepository: UserRepository {
         return responseDTO.profileImageUrl
     }
 
-    public func editProfile(nickname: String, profileImage: Data?) async throws {
+    public func editProfile(nickname: String?, profileImage: Data?) async throws {
         let result = await provider.request(.editProfile(nickname: nickname, profileImage: profileImage))
+        
+        print("profileImage", profileImage)
+        print("nickname", nickname)
 
         try ResultHandler.handleResult(
             result: result,

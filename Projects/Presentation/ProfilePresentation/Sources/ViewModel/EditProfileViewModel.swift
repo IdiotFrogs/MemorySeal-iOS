@@ -50,13 +50,14 @@ public final class EditProfileViewModel {
 
         input.saveButtonDidTap
             .withLatestFrom(Observable.combineLatest(
-                input.nicknameText.map { $0 ?? "" },
+                input.nicknameText.asObservable(),
                 input.selectedProfileImage.asObservable()
             ))
             .withUnretained(self)
             .subscribe(onNext: { (self, args) in
-                let (nickname, imageData) = args
-                
+                let (nicknameText, imageData) = args
+                let nickname: String? = (nicknameText != self.nickname) ? nicknameText : nil
+
                 self.editUserProfileInfo(nickname: nickname, profileImage: imageData)
             })
             .disposed(by: disposeBag)
@@ -66,7 +67,7 @@ public final class EditProfileViewModel {
 }
 
 extension EditProfileViewModel {
-    private func editUserProfileInfo(nickname: String, profileImage: Data?) {
+    private func editUserProfileInfo(nickname: String?, profileImage: Data?) {
         Task {
             do {
                 try await self.userUseCase.editProfile(

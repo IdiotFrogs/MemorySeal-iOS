@@ -11,6 +11,6 @@ import Foundation
 public protocol UserRepository {
     func fetchUserInfo() async throws -> UserInfoEntity
     func uploadProfileImage(file: String) async throws -> String
-    func editProfile(nickname: String, profileImage: Data?) async throws
+    func editProfile(nickname: String?, profileImage: Data?) async throws
     func deleteAccount() async throws
 }
