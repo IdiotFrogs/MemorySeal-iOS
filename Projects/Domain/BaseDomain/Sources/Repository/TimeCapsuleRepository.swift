@@ -10,4 +10,5 @@ import Foundation
 
 public protocol TimeCapsuleRepository {
     func fetchMyTimeCapsules() async throws -> [TimeCapsuleEntity]
+    func inviteToTimeCapsule(capsuleId: Int) async throws -> String
 }

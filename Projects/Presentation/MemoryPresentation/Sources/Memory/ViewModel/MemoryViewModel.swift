@@ -15,36 +15,40 @@ public protocol MemoryViewModelDelegate: AnyObject {
 
 public final class MemoryViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
-    
+
     public var delegate: MemoryViewModelDelegate?
-    
-    public init() {}
-    
+
+    private let capsuleId: Int
+
+    public init(capsuleId: Int) {
+        self.capsuleId = capsuleId
+    }
+
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
         let didTapAddMemberButton: PublishRelay<Void>
     }
-    
+
     struct Output {
-        
+
     }
-    
+
     func transform(_ input: Input) -> Output {
-        
+
         input.rxViewDidLoad
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                
+
             })
             .disposed(by: disposeBag)
-        
+
         input.didTapAddMemberButton
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.delegate?.moveToAddMemeber()
             })
             .disposed(by: disposeBag)
-        
+
         return Output()
     }
 }

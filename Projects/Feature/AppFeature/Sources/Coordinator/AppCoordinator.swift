@@ -19,6 +19,7 @@ public final class AppCoordinator {
     private let navigationController: UINavigationController
     private var splashCoordinator: SplashCoordinator?
     private var profileCoordinator: ProfileCoordinator?
+    private var memoryCoordinator: MemoryCoordinator?
 
     public init(
         with navigationController: UINavigationController
@@ -75,11 +76,13 @@ public final class AppCoordinator {
         coordinator.start()
     }
     
-    public func moveToMemoryCoordinator() {
-        let memoryCoordinator: MemoryCoordinator = MemoryCoordinator(
-            with: navigationController
+    public func moveToMemoryCoordinator(capsuleId: Int) {
+        let coordinator = MemoryCoordinator(
+            with: navigationController,
+            capsuleId: capsuleId
         )
-        memoryCoordinator.start()
+        memoryCoordinator = coordinator
+        coordinator.start()
     }
 }
 
@@ -123,8 +126,8 @@ extension AppCoordinator: ProfileCoordinatorDelegate {
 }
 
 extension AppCoordinator: HomeCoordinatorDelegate {
-    public func moveToMemory() {
-        self.moveToMemoryCoordinator()
+    public func moveToMemory(capsuleId: Int) {
+        self.moveToMemoryCoordinator(capsuleId: capsuleId)
     }
     
     public func moveToProfile() {

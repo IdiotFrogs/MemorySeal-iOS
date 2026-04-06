@@ -29,4 +29,16 @@ public final class DefaultTimeCapsuleRepository: TimeCapsuleRepository {
 
         return responseDTOs.map { $0.toDomain }
     }
+
+    public func inviteToTimeCapsule(capsuleId: Int) async throws -> String {
+        let result = await provider.request(.inviteToTimeCapsule(capsuleId: capsuleId))
+
+        let responseDTO = try ResultHandler.handleResult(
+            result: result,
+            responseType: InviteCodeResponseDTO.self,
+            errorType: TimeCapsuleError.self
+        )
+
+        return responseDTO.code
+    }
 }
