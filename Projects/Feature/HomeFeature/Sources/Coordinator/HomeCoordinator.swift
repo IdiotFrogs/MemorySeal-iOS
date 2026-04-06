@@ -13,7 +13,7 @@ import BaseDomain
 public protocol HomeCoordinatorDelegate: AnyObject {
     func moveToCreateTicket()
     func moveToProfile()
-    func moveToMemory()
+    func moveToMemory(capsuleId: Int)
 }
 
 public final class HomeCoordinator {
@@ -83,7 +83,7 @@ extension HomeCoordinator: HomeTabmanViewModelDelegate {
 }
 
 extension HomeCoordinator: HomeViewModelDelegate {
-    public func moveToMemory() {
-        delegate?.moveToMemory()
+    public func moveToMemory(capsuleId: Int) {
+        delegate?.moveToMemory(capsuleId: capsuleId)
     }
 }

@@ -10,24 +10,38 @@ import Foundation
 import RxSwift
 import RxCocoa
 
+import BaseDomain
+
 public final class AddMemberViewModel {
     private let disposeBag = DisposeBag()
-    
-    public init() {
-        
+
+    private let capsuleId: Int
+    private let timeCapsuleUseCase: TimeCapsuleUseCase
+
+    public init(
+        capsuleId: Int,
+        timeCapsuleUseCase: TimeCapsuleUseCase
+    ) {
+        self.capsuleId = capsuleId
+        self.timeCapsuleUseCase = timeCapsuleUseCase
     }
-    
+
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
+        let didTapCopyInviteCode: PublishRelay<Void>
     }
-    
+
     struct Output {
         let memberList: PublishRelay<[String]>
+        let inviteCode: PublishRelay<String>
+        let errorToast: PublishRelay<String>
     }
-    
+
     func transform(_ input: Input) -> Output {
         let memberList: PublishRelay<[String]> = .init()
-        
+        let inviteCode: PublishRelay<String> = .init()
+        let errorToast: PublishRelay<String> = .init()
+
         input.rxViewDidLoad
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
@@ -43,7 +57,32 @@ public final class AddMemberViewModel {
                 ])
             })
             .disposed(by: disposeBag)
-        
-        return .init(memberList: memberList)
+
+        input.didTapCopyInviteCode
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                Task { [weak self] in
+                    guard let self else { return }
+                    do {
+                        let code = try await self.timeCapsuleUseCase.inviteToTimeCapsule(
+                            capsuleId: self.capsuleId
+                        )
+                        await MainActor.run {
+                            inviteCode.accept(code)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorToast.accept("참여 코드를 가져올 수 없습니다")
+                        }
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+
+        return .init(
+            memberList: memberList,
+            inviteCode: inviteCode,
+            errorToast: errorToast
+        )
     }
 }

@@ -13,7 +13,7 @@ import RxCocoa
 import BaseDomain
 
 public protocol HomeViewModelDelegate: AnyObject {
-    func moveToMemory()
+    func moveToMemory(capsuleId: Int)
 }
 
 public final class HomeViewModel {
@@ -23,7 +23,7 @@ public final class HomeViewModel {
     private let timeCapsuleUseCase: TimeCapsuleUseCase
     private let role: TimeCapsuleRole
 
-    private let memoryList: PublishRelay<[TimeCapsuleEntity]> = .init()
+    private let memoryList: BehaviorRelay<[TimeCapsuleEntity]> = .init(value: [])
 
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
@@ -31,7 +31,7 @@ public final class HomeViewModel {
     }
 
     struct Output {
-        let memoryList: PublishRelay<[TimeCapsuleEntity]>
+        let memoryList: BehaviorRelay<[TimeCapsuleEntity]>
     }
 
     func transform(_ input: Input) -> Output {
@@ -57,7 +57,9 @@ public final class HomeViewModel {
         input.didTapMemoryList
             .withUnretained(self)
             .subscribe(onNext: { (self, indexPath) in
-                self.delegate?.moveToMemory()
+                guard indexPath.item < self.memoryList.value.count else { return }
+                let capsuleId = self.memoryList.value[indexPath.item].timeCapsuleId
+                self.delegate?.moveToMemory(capsuleId: capsuleId)
             })
             .disposed(by: disposeBag)
 
