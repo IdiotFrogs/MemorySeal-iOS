@@ -11,7 +11,7 @@ import BaseDomain
 public enum AuthError: DomainError {
     case defaultError
     
-    public init(statusCode: Int) {
+    public init(errorResponse: BaseDomain.ErrorResponseEntity) {
         self = .defaultError
     }
 }

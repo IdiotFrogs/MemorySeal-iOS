@@ -11,6 +11,7 @@ import Foundation
 public protocol TimeCapsuleUseCase {
     func fetchMyTimeCapsules(role: TimeCapsuleRole) async throws -> [TimeCapsuleEntity]
     func inviteToTimeCapsule(capsuleId: Int) async throws -> String
+    func joinRequest(code: String) async throws
 }
 
 public final class DefaultTimeCapsuleUseCase: TimeCapsuleUseCase {
@@ -30,5 +31,9 @@ public final class DefaultTimeCapsuleUseCase: TimeCapsuleUseCase {
 
     public func inviteToTimeCapsule(capsuleId: Int) async throws -> String {
         return try await timeCapsuleRepository.inviteToTimeCapsule(capsuleId: capsuleId)
+    }
+
+    public func joinRequest(code: String) async throws {
+        try await timeCapsuleRepository.joinRequest(code: code)
     }
 }

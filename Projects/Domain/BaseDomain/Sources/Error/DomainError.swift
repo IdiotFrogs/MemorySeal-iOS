@@ -7,5 +7,5 @@
 //
 
 public protocol DomainError: Error, Equatable {
-    init(statusCode: Int)
+    init(errorResponse: ErrorResponseEntity)
 }

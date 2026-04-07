@@ -11,11 +11,14 @@ import Foundation
 public enum RefreshError: DomainError {
     case defaultError
     case tokenExpired
+    case notFoundUser
     
-    public init(statusCode: Int) {
-        switch statusCode {
-        case 401:
+    public init(errorResponse: ErrorResponseEntity) {
+        switch errorResponse.error {
+        case "EXPIRED_TOKEN":
             self = .tokenExpired
+        case "USER_NOT_FOUND":
+            self = .notFoundUser
         default:
             self = .defaultError
         }

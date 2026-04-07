@@ -55,7 +55,9 @@ public final class HomeDIContainer {
     }
 
     func makeEnterTicketViewModel() -> EnterTicketViewModel {
-        return EnterTicketViewModel()
+        return EnterTicketViewModel(
+            timeCapsuleUseCase: makeTimeCapsuleUseCase()
+        )
     }
 
     func makeEnterTicketViewController(viewModel: EnterTicketViewModel) -> EnterTicketViewController {
