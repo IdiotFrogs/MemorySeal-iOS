@@ -16,6 +16,8 @@ import DesignSystem
 public final class MemoryViewController: UIViewController {
     private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let didTapAddMemberButton: PublishRelay<Void> = .init()
+    private let didTapManageButton: PublishRelay<Void> = .init()
+    private let disposeBag: DisposeBag = DisposeBag()
     
     enum MemorySection: Int, CaseIterable {
         case memoryImage
@@ -274,7 +276,8 @@ extension MemoryViewController {
     private func bindViewModel() {
         let input = MemoryViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
-            didTapAddMemberButton: didTapAddMemberButton
+            didTapAddMemberButton: didTapAddMemberButton,
+            didTapManageButton: didTapManageButton
         )
         let _ = viewModel.transform(input)
     }
@@ -334,6 +337,11 @@ extension MemoryViewController: UICollectionViewDataSource {
                 withReuseIdentifier: MemoryImageCollectionViewCell.reuseIdentifier,
                 for: indexPath
             ) as? MemoryImageCollectionViewCell else { return .init() }
+
+            cell.manageButton.rx.tap
+                .bind(to: didTapManageButton)
+                .disposed(by: disposeBag)
+
             return cell
         case .memoryDescription:
             guard let cell = collectionView.dequeueReusableCell(

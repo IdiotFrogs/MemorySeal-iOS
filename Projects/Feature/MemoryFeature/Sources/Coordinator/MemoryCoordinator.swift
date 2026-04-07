@@ -46,4 +46,21 @@ extension MemoryCoordinator: MemoryViewModelDelegate {
             animated: true
         )
     }
+
+    public func moveToManageTicket() {
+        // TODO: ticketName은 추후 디테일 API 연동 시 실제 값으로 교체
+        let viewModel = memoryDIContainer.makeManageTicketViewModel(capsuleId: capsuleId, ticketName: "티켓 이름")
+        viewModel.delegate = self
+        let viewController = memoryDIContainer.makeManageTicketViewController(viewModel: viewModel)
+        self.navigationController.pushViewController(
+            viewController,
+            animated: true
+        )
+    }
+}
+
+extension MemoryCoordinator: ManageTicketViewModelDelegate {
+    public func didDeleteTimeCapsule() {
+        self.navigationController.popToRootViewController(animated: true)
+    }
 }
