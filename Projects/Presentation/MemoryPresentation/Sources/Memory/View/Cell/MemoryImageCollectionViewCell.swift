@@ -14,6 +14,16 @@ import RxCocoa
 import DesignSystem
 
 final class MemoryImageCollectionViewCell: UICollectionViewCell {
+    let manageButton: UIButton = {
+        let button = UIButton()
+        button.layer.cornerRadius = 16
+        button.backgroundColor = .white.withAlphaComponent(0.9)
+        button.setTitle("관리", for: .normal)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
+        return button
+    }()
+
     private let memoryImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.backgroundColor = .gray
@@ -68,6 +78,7 @@ extension MemoryImageCollectionViewCell {
     private func addSubViews() {
         addSubview(memoryImageView)
         addSubview(closeMemoryButton)
+        addSubview(manageButton)
         addSubview(imageBlurView)
         addSubview(memoryPeriodLabel)
         addSubview(memoryEndDateLabel)
@@ -82,6 +93,13 @@ extension MemoryImageCollectionViewCell {
             $0.top.equalToSuperview().offset(52)
             $0.leading.equalToSuperview().offset(20)
             $0.width.height.equalTo(32)
+        }
+
+        manageButton.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(52)
+            $0.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(32)
+            $0.width.equalTo(49)
         }
         
         imageBlurView.snp.makeConstraints {

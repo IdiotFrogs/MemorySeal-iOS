@@ -11,6 +11,7 @@ import RxCocoa
 
 public protocol MemoryViewModelDelegate: AnyObject {
     func moveToAddMemeber()
+    func moveToManageTicket()
 }
 
 public final class MemoryViewModel {
@@ -27,6 +28,7 @@ public final class MemoryViewModel {
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
         let didTapAddMemberButton: PublishRelay<Void>
+        let didTapManageButton: PublishRelay<Void>
     }
 
     struct Output {
@@ -48,6 +50,14 @@ public final class MemoryViewModel {
                 self.delegate?.moveToAddMemeber()
             })
             .disposed(by: disposeBag)
+
+        input.didTapManageButton
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.delegate?.moveToManageTicket()
+            })
+            .disposed(by: disposeBag)
+
 
         return Output()
     }

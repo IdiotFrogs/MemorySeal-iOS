@@ -46,4 +46,9 @@ public final class DefaultTimeCapsuleRepository: TimeCapsuleRepository {
 
         return responseDTO.code
     }
+
+    public func deleteTimeCapsule(capsuleId: Int) async throws {
+        let result = await provider.request(.deleteTimeCapsule(capsuleId: capsuleId))
+        try ResultHandler.handleResult(result: result, errorType: TimeCapsuleError.self)
+    }
 }
