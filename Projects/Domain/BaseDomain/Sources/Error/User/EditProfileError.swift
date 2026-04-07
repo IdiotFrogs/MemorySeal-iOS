@@ -9,7 +9,7 @@
 public enum EditProfileError: DomainError {
     case defaultError
 
-    public init(statusCode: Int) {
+    public init(errorResponse: BaseDomain.ErrorResponseEntity) {
         self = .defaultError
     }
 }

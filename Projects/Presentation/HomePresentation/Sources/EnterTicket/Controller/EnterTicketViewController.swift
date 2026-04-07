@@ -134,7 +134,55 @@ extension EnterTicketViewController {
     }
     
     private func bindViewModel() {
-        
+        let didTapEnterButton: PublishRelay<String> = .init()
+
+        let input = EnterTicketViewModel.Input(
+            didTapEnterButton: didTapEnterButton
+        )
+        let output = viewModel.transform(input)
+
+        enterButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                guard let code = self.codeTextField.text, !code.isEmpty else { return }
+                didTapEnterButton.accept(code)
+            })
+            .disposed(by: disposeBag)
+
+        output.joinSuccess
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.dismiss(animated: true) {
+                    guard let window = UIApplication.shared.connectedScenes
+                        .compactMap({ $0 as? UIWindowScene })
+                        .first?.windows.first else { return }
+                    ToastView.show(on: window, message: "참여 코드 복사되었습니다.")
+                }
+            })
+            .disposed(by: disposeBag)
+
+        output.joinError
+            .withUnretained(self)
+            .subscribe(onNext: { (self, message) in
+                let dialog = DialogView.show(
+                    on: self.view,
+                    title: "합류 실패",
+                    message: message,
+                    cancelTitle: "닫기",
+                    confirmTitle: "확인"
+                )
+                dialog.cancelButtonDidTap
+                    .subscribe(onNext: { _ in
+                        dialog.dismiss()
+                    })
+                    .disposed(by: self.disposeBag)
+                dialog.confirmButtonDidTap
+                    .subscribe(onNext: { _ in
+                        dialog.dismiss()
+                    })
+                    .disposed(by: self.disposeBag)
+            })
+            .disposed(by: disposeBag)
     }
     
     private func bindButton() {

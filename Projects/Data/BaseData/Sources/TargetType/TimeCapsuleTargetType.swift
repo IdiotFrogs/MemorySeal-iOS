@@ -12,6 +12,7 @@ import Moya
 public enum TimeCapsuleTargetType {
     case fetchMyTimeCapsules
     case inviteToTimeCapsule(capsuleId: Int)
+    case joinRequest(code: String)
 }
 
 extension TimeCapsuleTargetType: BaseTargetType {
@@ -21,6 +22,8 @@ extension TimeCapsuleTargetType: BaseTargetType {
             return "/time-capsules/my"
         case .inviteToTimeCapsule(let capsuleId):
             return "/time-capsules/\(capsuleId)/invite"
+        case .joinRequest:
+            return "/time-capsules/join-request"
         }
     }
 
@@ -29,6 +32,8 @@ extension TimeCapsuleTargetType: BaseTargetType {
         case .fetchMyTimeCapsules:
             return .get
         case .inviteToTimeCapsule:
+            return .post
+        case .joinRequest:
             return .post
         }
     }
@@ -39,6 +44,8 @@ extension TimeCapsuleTargetType: BaseTargetType {
             return .requestPlain
         case .inviteToTimeCapsule:
             return .requestPlain
+        case .joinRequest(let code):
+            return .requestJSONEncodable(["code": code])
         }
     }
 
@@ -55,6 +62,8 @@ extension TimeCapsuleTargetType: BaseTargetType {
         case .fetchMyTimeCapsules:
             return true
         case .inviteToTimeCapsule:
+            return true
+        case .joinRequest:
             return true
         }
     }

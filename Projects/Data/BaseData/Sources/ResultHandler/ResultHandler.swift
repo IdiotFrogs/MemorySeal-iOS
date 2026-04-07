@@ -23,13 +23,18 @@ public final class ResultHandler {
             case 200..<300:
                 return try response.map(responseType, using: JSONDecoder())
             default:
-                throw Error.init(statusCode: response.statusCode)
+                let errorResponseDTO = try response.map(ErrorResponseDTO.self, using: JSONDecoder())
+                throw Error.init(errorResponse: errorResponseDTO.toDomain)
             }
         case .failure(let error):
+            guard let response = error.response else { throw error }
+            if let errorResponseDTO = try? response.map(ErrorResponseDTO.self, using: JSONDecoder()) {
+                throw Error.init(errorResponse: errorResponseDTO.toDomain)
+            }
             throw error
         }
     }
-    
+
     public static func handleResult<Error: DomainError>(
         result: Result<Response, MoyaError>,
         errorType: Error.Type
@@ -40,9 +45,14 @@ public final class ResultHandler {
             case 200..<300:
                 return
             default:
-                throw Error.init(statusCode: response.statusCode)
+                let errorResponseDTO = try response.map(ErrorResponseDTO.self, using: JSONDecoder())
+                throw Error.init(errorResponse: errorResponseDTO.toDomain)
             }
         case .failure(let error):
+            guard let response = error.response else { throw error }
+            if let errorResponseDTO = try? response.map(ErrorResponseDTO.self, using: JSONDecoder()) {
+                throw Error.init(errorResponse: errorResponseDTO.toDomain)
+            }
             throw error
         }
     }
