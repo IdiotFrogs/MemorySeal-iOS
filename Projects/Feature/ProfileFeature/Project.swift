@@ -14,8 +14,6 @@ let project = Project.makeModule(
     dependencies: [
         .Presentation.ProfilePresentation,
         .Data.BaseData,
-        .Data.AuthData,
-        .Domain.BaseDomain,
-        .Domain.AuthDomain
+        .Data.AuthData
     ]
 )
