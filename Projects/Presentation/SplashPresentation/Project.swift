@@ -5,8 +5,7 @@ let project = Project.makeModule(
     name: "SplashPresentation",
     product: .staticFramework,
     dependencies: [
-        .Domain.AuthDomain,
-        .ThridPartyLib.ThridPartyLib,
-        .Shared.DesignSystem
+        .Presentation.BasePresentation,
+        .Domain.AuthDomain
     ]
 )

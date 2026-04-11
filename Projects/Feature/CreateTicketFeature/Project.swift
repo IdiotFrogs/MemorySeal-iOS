@@ -12,8 +12,6 @@ let project = Project.makeModule(
     name: "CreateTicketFeature",
     product: .staticFramework,
     dependencies: [
-        .Domain.CalendarDomain,
-        .Domain.CreateTicketDomain,
         .Data.CreateTicketData,
         .Presentation.CreateTicketPresentation
     ]
