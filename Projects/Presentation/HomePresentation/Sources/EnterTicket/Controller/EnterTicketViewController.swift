@@ -156,7 +156,7 @@ extension EnterTicketViewController {
                     guard let window = UIApplication.shared.connectedScenes
                         .compactMap({ $0 as? UIWindowScene })
                         .first?.windows.first else { return }
-                    ToastView.show(on: window, message: "참여 코드 복사되었습니다.")
+                    ToastView.show(on: window, message: "타임 캡슐 참여 요청이 완료되었어요.")
                 }
             })
             .disposed(by: disposeBag)

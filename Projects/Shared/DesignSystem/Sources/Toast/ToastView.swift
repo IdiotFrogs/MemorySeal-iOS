@@ -10,6 +10,13 @@ import UIKit
 import SnapKit
 
 public final class ToastView: UIView {
+    private let blurView: UIVisualEffectView = {
+        let blur = UIBlurEffect(style: .dark)
+        let view = UIVisualEffectView(effect: blur)
+        view.backgroundColor = UIColor(red: 11/255, green: 11/255, blue: 11/255, alpha: 0.48)
+        return view
+    }()
+
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(systemName: "checkmark.circle.fill")
@@ -21,7 +28,7 @@ public final class ToastView: UIView {
     private let messageLabel: UILabel = {
         let label = UILabel()
         label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 14)
-        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
+        label.textColor = .white
         label.numberOfLines = 0
         return label
     }()
@@ -29,7 +36,7 @@ public final class ToastView: UIView {
     private let contentStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 8
+        stack.spacing = 6
         stack.alignment = .center
         return stack
     }()
@@ -37,26 +44,34 @@ public final class ToastView: UIView {
     private init(message: String) {
         super.init(frame: .zero)
 
-        self.backgroundColor = .white
+        self.backgroundColor = .clear
         self.layer.cornerRadius = 12
-        self.layer.shadowColor = UIColor.black.cgColor
-        self.layer.shadowOpacity = 0.1
-        self.layer.shadowOffset = CGSize(width: 0, height: 2)
+        self.layer.shadowColor = UIColor(red: 80/255, green: 80/255, blue: 80/255, alpha: 1.0).cgColor
+        self.layer.shadowOpacity = 0.16
+        self.layer.shadowOffset = CGSize(width: 0, height: 0)
         self.layer.shadowRadius = 8
+
+        blurView.layer.cornerRadius = 12
+        blurView.clipsToBounds = true
 
         messageLabel.text = message
 
         contentStackView.addArrangedSubview(iconImageView)
         contentStackView.addArrangedSubview(messageLabel)
 
+        addSubview(blurView)
         addSubview(contentStackView)
+
+        blurView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
 
         iconImageView.snp.makeConstraints {
             $0.size.equalTo(24)
         }
 
         contentStackView.snp.makeConstraints {
-            $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 16, left: 20, bottom: 16, right: 20))
+            $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16))
         }
     }
 
