@@ -6,6 +6,6 @@ let project = Project.makeModule(
     product: .staticFramework,
     dependencies: [
         .Presentation.SplashPresentation,
-        .Data.AuthData
+        .Data.SignInData
     ]
 )

@@ -9,7 +9,7 @@
 import RxSwift
 import RxCocoa
 
-import AuthDomain
+import SignInDomain
 
 public protocol LoginViewModelDelegate: AnyObject {
     func moveToHome()

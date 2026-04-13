@@ -8,7 +8,7 @@
 
 import Moya
 
-import AuthDomain
+import SignInDomain
 import BaseData
 
 public final class DefaultAuthRepository: AuthRepository {

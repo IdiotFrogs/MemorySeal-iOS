@@ -6,7 +6,7 @@
 //  Copyright © 2026 MemorySeal. All rights reserved.
 //
 
-import AuthDomain
+import SignInDomain
 
 public protocol SplashViewModelDelegate: AnyObject {
     func moveToLogin()

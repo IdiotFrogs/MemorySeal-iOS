@@ -9,7 +9,7 @@
 import RxSwift
 import RxCocoa
 
-import AuthDomain
+import SignInDomain
 import BaseDomain
 
 public protocol SettingsViewModelDelegate: AnyObject {

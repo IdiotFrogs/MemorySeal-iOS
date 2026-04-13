@@ -9,9 +9,10 @@ import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "AuthDomain",
+    name: "SignInData",
     product: .staticFramework,
     dependencies: [
-        .Domain.BaseDomain
+        .Domain.SignInDomain,
+        .Data.BaseData
     ]
 )

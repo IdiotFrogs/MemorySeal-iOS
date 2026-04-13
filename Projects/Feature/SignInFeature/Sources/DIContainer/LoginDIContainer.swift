@@ -9,9 +9,9 @@
 import Foundation
 import Moya
 
-import AuthPresentation
-import AuthData
-import AuthDomain
+import SignInPresentation
+import SignInData
+import SignInDomain
 import BaseData
 import BaseDomain
 

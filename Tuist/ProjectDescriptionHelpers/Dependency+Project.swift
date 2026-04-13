@@ -23,9 +23,9 @@ public extension TargetDependency.Data {
         path: .relativeToRoot("Projects/Data/BaseData")
     )
     
-    static let AuthData = TargetDependency.project(
-        target: "AuthData",
-        path: .relativeToRoot("Projects/Data/AuthData")
+    static let SignInData = TargetDependency.project(
+        target: "SignInData",
+        path: .relativeToRoot("Projects/Data/SignInData")
     )
     
     static let UserData = TargetDependency.project(
@@ -56,9 +56,9 @@ public extension TargetDependency.Domain {
         path: .relativeToRoot("Projects/Domain/CalendarDomain")
     )
     
-    static let AuthDomain = TargetDependency.project(
-        target: "AuthDomain",
-        path: .relativeToRoot("Projects/Domain/AuthDomain")
+    static let SignInDomain = TargetDependency.project(
+        target: "SignInDomain",
+        path: .relativeToRoot("Projects/Domain/SignInDomain")
     )
     
     static let UserDomain = TargetDependency.project(
@@ -137,9 +137,9 @@ public extension TargetDependency.Presentation {
         path: .relativeToRoot("Projects/Presentation/BasePresentation")
     )
     
-    static let AuthPresentation = TargetDependency.project(
-        target: "AuthPresentation",
-        path: .relativeToRoot("Projects/Presentation/AuthPresentation")
+    static let SignInPresentation = TargetDependency.project(
+        target: "SignInPresentation",
+        path: .relativeToRoot("Projects/Presentation/SignInPresentation")
     )
     
     static let SignUpPresentation = TargetDependency.project(

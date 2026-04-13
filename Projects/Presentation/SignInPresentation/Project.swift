@@ -2,17 +2,17 @@
 //  Project.swift
 //  ProjectDescriptionHelpers
 //
-//  Created by 선민재 on 01/20/26.
+//  Created by 선민재 on 10/28/24.
 //
 
 import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "AuthData",
+    name: "SignInPresentation",
     product: .staticFramework,
     dependencies: [
-        .Domain.AuthDomain,
-        .Data.BaseData
-    ]
+        .Domain.SignInDomain
+    ],
+    resources: ["Resources/**"]
 )

@@ -7,7 +7,7 @@
 
 import UIKit
 
-import AuthPresentation
+import SignInPresentation
 
 public protocol LoginCoordinatorDelegate: AnyObject {
     func startSignUp()

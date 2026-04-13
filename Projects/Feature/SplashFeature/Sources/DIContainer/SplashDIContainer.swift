@@ -10,8 +10,8 @@ import Foundation
 import Moya
 
 import SplashPresentation
-import AuthData
-import AuthDomain
+import SignInData
+import SignInDomain
 import BaseData
 import BaseDomain
 

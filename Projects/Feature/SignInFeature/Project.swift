@@ -12,7 +12,7 @@ let project = Project.makeModule(
     name: "SignInFeature",
     product: .staticFramework,
     dependencies: [
-        .Presentation.AuthPresentation,
-        .Data.AuthData
+        .Presentation.SignInPresentation,
+        .Data.SignInData
     ]
 )
