@@ -89,9 +89,19 @@ public extension TargetDependency.Feature {
         path: .relativeToRoot("Projects/Feature/SignUpFeature")
     )
     
+    static let SignInFeature = TargetDependency.project(
+        target: "SignInFeature",
+        path: .relativeToRoot("Projects/Feature/SignInFeature")
+    )
+
     static let AuthFeature = TargetDependency.project(
         target: "AuthFeature",
         path: .relativeToRoot("Projects/Feature/AuthFeature")
+    )
+
+    static let MainFeature = TargetDependency.project(
+        target: "MainFeature",
+        path: .relativeToRoot("Projects/Feature/MainFeature")
     )
     
     static let HomeFeature = TargetDependency.project(

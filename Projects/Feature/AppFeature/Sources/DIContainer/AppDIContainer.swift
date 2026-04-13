@@ -9,6 +9,7 @@
 import Foundation
 
 import AuthFeature
+import MainFeature
 
 public final class AppDIContainer {
     

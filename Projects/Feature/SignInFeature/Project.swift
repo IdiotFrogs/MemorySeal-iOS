@@ -1,19 +1,18 @@
 //
 //  Project.swift
-//  Manifests
+//  ProjectDescriptionHelpers
 //
-//  Created by 선민재 on 4/13/26.
+//  Created by 선민재 on 9/26/24.
 //
 
 import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "AuthFeature",
+    name: "SignInFeature",
     product: .staticFramework,
     dependencies: [
-        .Feature.SplashFeature,
-        .Feature.SignInFeature,
-        .Feature.SignUpFeature
+        .Presentation.AuthPresentation,
+        .Data.AuthData
     ]
 )
