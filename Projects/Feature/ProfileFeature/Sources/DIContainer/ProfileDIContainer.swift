@@ -11,8 +11,8 @@ import Foundation
 import ProfilePresentation
 import BaseData
 import BaseDomain
-import AuthData
-import AuthDomain
+import SignInData
+import SignInDomain
 
 public final class ProfileDIContainer {
     public init() {}

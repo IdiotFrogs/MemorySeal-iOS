@@ -10,7 +10,7 @@ import Foundation
 import Moya
 
 import BaseData
-import AuthDomain
+import SignInDomain
 
 public enum AuthTargetType {
     case signIn(_ requestDTO: SignInRequestDTO, type: SignInType)

@@ -1,5 +1,5 @@
 //
-//  LoginViewModel.swift
+//  SignInViewModel.swift
 //  LoginPresentation
 //
 //  Created by 선민재 on 5/13/25.
@@ -9,18 +9,18 @@
 import RxSwift
 import RxCocoa
 
-import AuthDomain
+import SignInDomain
 
-public protocol LoginViewModelDelegate: AnyObject {
+public protocol SignInViewModelDelegate: AnyObject {
     func moveToHome()
     func moveToSignUp()
 }
 
-public final class LoginViewModel {
+public final class SignInViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
     private let authUseCase: AuthUseCase
     
-    public var delegate: LoginViewModelDelegate?
+    public var delegate: SignInViewModelDelegate?
     
     public init(authUseCase: AuthUseCase) {
         self.authUseCase = authUseCase
@@ -62,7 +62,7 @@ public final class LoginViewModel {
     }
 }
 
-extension LoginViewModel {
+extension SignInViewModel {
     private func requestSignIn(idToken: String, authorizationCode: String?, type: SignInType) {
         Task {
             let isOnboardingFinished: Bool = try await authUseCase.executeSignIn(

@@ -11,7 +11,7 @@ import UIKit
 import SplashPresentation
 
 public protocol SplashCoordinatorDelegate: AnyObject {
-    func splashCoordinatorMoveToLogin()
+    func splashCoordinatorMoveToSignIn()
     func splashCoordinatorMoveToHome()
     func splashCoordinatorMoveToSignUp()
 }
@@ -37,8 +37,8 @@ public final class SplashCoordinator {
 }
 
 extension SplashCoordinator: SplashViewModelDelegate {
-    public func moveToLogin() {
-        delegate?.splashCoordinatorMoveToLogin()
+    public func moveToSignIn() {
+        delegate?.splashCoordinatorMoveToSignIn()
     }
 
     public func moveToHome() {

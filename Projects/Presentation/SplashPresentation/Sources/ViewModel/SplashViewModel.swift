@@ -6,10 +6,10 @@
 //  Copyright © 2026 MemorySeal. All rights reserved.
 //
 
-import AuthDomain
+import SignInDomain
 
 public protocol SplashViewModelDelegate: AnyObject {
-    func moveToLogin()
+    func moveToSignIn()
     func moveToHome()
     func moveToSignUp()
 }
@@ -36,7 +36,7 @@ public final class SplashViewModel {
                 }
             } catch {
                 await MainActor.run {
-                    delegate?.moveToLogin()
+                    delegate?.moveToSignIn()
                 }
             }
         }

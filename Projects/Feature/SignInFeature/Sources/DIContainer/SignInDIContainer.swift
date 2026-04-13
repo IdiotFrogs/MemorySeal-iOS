@@ -1,5 +1,5 @@
 //
-//  LoginDIContainer.swift
+//  SignInDIContainer.swift
 //  LoginFeature
 //
 //  Created by 선민재 on 5/1/25.
@@ -9,13 +9,13 @@
 import Foundation
 import Moya
 
-import AuthPresentation
-import AuthData
-import AuthDomain
+import SignInPresentation
+import SignInData
+import SignInDomain
 import BaseData
 import BaseDomain
 
-public final class LoginDIContainer {
+public final class SignInDIContainer {
     private func makeAuthProvdier() -> MoyaProvider<AuthTargetType> {
         return MoyaProvider<AuthTargetType>()
     }
@@ -55,15 +55,15 @@ public final class LoginDIContainer {
         )
     }
     
-    func makeLoginViewModel() -> LoginViewModel {
-        return LoginViewModel(
+    func makeSignInViewModel() -> SignInViewModel {
+        return SignInViewModel(
             authUseCase: makeAuthUseCase()
         )
     }
     
-    func makeLoginViewController(
-        with viewModel: LoginViewModel
-    ) -> LoginViewController {
-        return LoginViewController(with: viewModel)
+    func makeSignInViewController(
+        with viewModel: SignInViewModel
+    ) -> SignInViewController {
+        return SignInViewController(with: viewModel)
     }
 }
