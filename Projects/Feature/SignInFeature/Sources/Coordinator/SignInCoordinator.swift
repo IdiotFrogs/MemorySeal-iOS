@@ -1,5 +1,5 @@
 //
-//  LoginCoordinator.swift
+//  SignInCoordinator.swift
 //  ProjectDescriptionHelpers
 //
 //  Created by 선민재 on 5/01/25.
@@ -9,16 +9,16 @@ import UIKit
 
 import SignInPresentation
 
-public protocol LoginCoordinatorDelegate: AnyObject {
+public protocol SignInCoordinatorDelegate: AnyObject {
     func startSignUp()
     func startHome()
 }
 
-public final class LoginCoordinator {
+public final class SignInCoordinator {
     private let navigationController: UINavigationController
-    private let loginDIContainer: LoginDIContainer = LoginDIContainer()
+    private let signInDIContainer: SignInDIContainer = SignInDIContainer()
     
-    public var delegate: LoginCoordinatorDelegate?
+    public var delegate: SignInCoordinatorDelegate?
     
     public init(
         with navigationController: UINavigationController
@@ -27,20 +27,20 @@ public final class LoginCoordinator {
     }
     
     public func start() {
-        let loginViewModel: LoginViewModel = loginDIContainer.makeLoginViewModel()
-        loginViewModel.delegate = self
-        let loginViewController: LoginViewController = loginDIContainer.makeLoginViewController(with: loginViewModel)
+        let signInViewModel: SignInViewModel = signInDIContainer.makeSignInViewModel()
+        signInViewModel.delegate = self
+        let signInViewController: SignInViewController = signInDIContainer.makeSignInViewController(with: signInViewModel)
         
         self.navigationController.pushViewController(
-            loginViewController,
+            signInViewController,
             animated: false
         )
         
-        self.navigationController.viewControllers = [loginViewController]
+        self.navigationController.viewControllers = [signInViewController]
     }
 }
 
-extension LoginCoordinator: LoginViewModelDelegate {
+extension SignInCoordinator: SignInViewModelDelegate {
     public func moveToHome() {
         delegate?.startHome()
     }

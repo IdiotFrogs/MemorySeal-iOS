@@ -1,5 +1,5 @@
 //
-//  LoginViewController.swift
+//  SignInViewController.swift
 //  SplashFeature
 //
 //  Created by 선민재 on 10/28/24.
@@ -15,9 +15,9 @@ import GoogleSignIn
 
 import DesignSystem
 
-public final class LoginViewController: UIViewController {
+public final class SignInViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
-    private let viewModel: LoginViewModel
+    private let viewModel: SignInViewModel
     
     private let appleAuthorizationCompleted: PublishRelay<(
         idToken: String,
@@ -61,7 +61,7 @@ public final class LoginViewController: UIViewController {
         
     private let googleSignInButton = OAuthButton(oauthType: .google)
     
-    public init(with viewModel: LoginViewModel) {
+    public init(with viewModel: SignInViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -83,9 +83,9 @@ public final class LoginViewController: UIViewController {
     }
 }
 
-extension LoginViewController {
+extension SignInViewController {
     private func bindViewModel() {
-        let input = LoginViewModel.Input(
+        let input = SignInViewModel.Input(
             appleAuthorizationCompleted: appleAuthorizationCompleted,
             googleAuthorizationCompleted: googleAuthorizationCompleted
         )
@@ -125,7 +125,7 @@ extension LoginViewController {
     }
 }
 
-extension LoginViewController: ASAuthorizationControllerDelegate {
+extension SignInViewController: ASAuthorizationControllerDelegate {
     public func authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithAuthorization authorization: ASAuthorization
@@ -143,13 +143,13 @@ extension LoginViewController: ASAuthorizationControllerDelegate {
     }
 }
 
-extension LoginViewController: ASAuthorizationControllerPresentationContextProviding {
+extension SignInViewController: ASAuthorizationControllerPresentationContextProviding {
     public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
         return self.view.window!
     }
 }
 
-extension LoginViewController {
+extension SignInViewController {
     private func addSubViews() {
         view.addSubview(titleLabel)
         view.addSubview(subTitleLabel)

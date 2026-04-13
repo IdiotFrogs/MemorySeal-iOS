@@ -34,7 +34,7 @@ public final class AuthCoordinator {
     }
 
     private func moveToSignInCoordinator() {
-        let coordinator = LoginCoordinator(with: navigationController)
+        let coordinator = SignInCoordinator(with: navigationController)
         coordinator.delegate = self
         coordinator.start()
     }
@@ -47,7 +47,7 @@ public final class AuthCoordinator {
 }
 
 extension AuthCoordinator: SplashCoordinatorDelegate {
-    public func splashCoordinatorMoveToLogin() {
+    public func splashCoordinatorMoveToSignIn() {
         splashCoordinator = nil
         moveToSignInCoordinator()
     }
@@ -63,7 +63,7 @@ extension AuthCoordinator: SplashCoordinatorDelegate {
     }
 }
 
-extension AuthCoordinator: LoginCoordinatorDelegate {
+extension AuthCoordinator: SignInCoordinatorDelegate {
     public func startSignUp() {
         moveToSignUpCoordinator()
     }
