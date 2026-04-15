@@ -15,18 +15,26 @@ import DesignSystem
 import BaseDomain
 
 final class TicketCollectionViewCell: UICollectionViewCell {
-    private let ticketHeaderView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 16
-        return view
+    
+    private let ticketHeaderView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.ticketHeaderStroke.image
+        return imageView
     }()
     
     private let endDateLabel: UILabel = {
         let label = UILabel()
         label.text = "D-5"
         label.textColor = .black
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 32)
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 28)
+        return label
+    }()
+    
+    private let ticketTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "제목입니다."
+        label.textColor = .black
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
         return label
     }()
     
@@ -44,19 +52,10 @@ final class TicketCollectionViewCell: UICollectionViewCell {
         return view
     }()
     
-    private let ticketContentView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 16
-        return view
-    }()
-    
-    private let ticketTitleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "제목입니다."
-        label.textColor = .black
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        return label
+    private let ticketContentView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.ticketContentsStroke.image
+        return imageView
     }()
     
     private let ticketImageView: UIImageView = {
@@ -141,11 +140,10 @@ extension TicketCollectionViewCell {
     private func addSubviews() {
         contentView.addSubview(ticketHeaderView)
         ticketHeaderView.addSubview(endDateLabel)
+        ticketHeaderView.addSubview(ticketTitleLabel)
         ticketHeaderView.addSubview(ticketCreatedAtLabel)
-        contentView.addSubview(dotLineView)
         
         contentView.addSubview(ticketContentView)
-        ticketContentView.addSubview(ticketTitleLabel)
         ticketContentView.addSubview(ticketImageView)
     }
     
@@ -155,35 +153,28 @@ extension TicketCollectionViewCell {
         }
         
         endDateLabel.snp.makeConstraints {
-            $0.top.bottom.leading.equalToSuperview().inset(16)
+            $0.top.equalToSuperview().offset(24)
+            $0.leading.equalToSuperview().offset(24)
+        }
+        
+        ticketTitleLabel.snp.makeConstraints {
+            $0.top.equalTo(endDateLabel.snp.bottom).offset(4)
+            $0.leading.equalToSuperview().offset(24)
         }
         
         ticketCreatedAtLabel.snp.makeConstraints {
             $0.centerY.equalToSuperview()
-            $0.trailing.equalToSuperview().inset(16)
-        }
-        
-        dotLineView.snp.makeConstraints {
-            $0.top.equalTo(ticketHeaderView.snp.bottom)
-            $0.leading.trailing.equalToSuperview().inset(15)
-            $0.height.equalTo(2)
+            $0.trailing.equalToSuperview().inset(24)
         }
         
         ticketContentView.snp.makeConstraints {
-            $0.top.equalTo(dotLineView.snp.bottom)
+            $0.top.equalTo(ticketHeaderView.snp.bottom).offset(-7)
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview()
         }
         
-        ticketTitleLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(16)
-            $0.leading.equalToSuperview().offset(16)
-            $0.trailing.equalToSuperview().offset(16)
-        }
-        
         ticketImageView.snp.makeConstraints {
-            $0.top.equalTo(ticketTitleLabel.snp.bottom).offset(8)
-            $0.leading.trailing.bottom.equalToSuperview().inset(16)
+            $0.center.equalToSuperview()
         }
     }
 }

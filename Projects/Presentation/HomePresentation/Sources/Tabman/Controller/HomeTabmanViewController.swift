@@ -69,20 +69,14 @@ public final class HomeTabmanViewController: TabmanViewController {
             button.selectedFont = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
             button.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
         }
-        tabmanBar.indicator.weight = .custom(value: 2)
-        tabmanBar.indicator.tintColor = .black
+        tabmanBar.indicator.weight = .custom(value: 8)
+        tabmanBar.indicator.tintColor = .clear
         tabmanBar.layout.transitionStyle = .snap
         tabmanBar.layout.alignment = .centerDistributed
         tabmanBar.layout.contentMode = .fit
         tabmanBar.backgroundView.style = .flat(color: .clear)
         tabmanBar.buttons.transitionStyle = .snap
         return tabmanBar
-    }()
-    
-    private let underLineView: UIView = {
-        let view = UIView()
-        view.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
-        return view
     }()
     
     private let floatingButton: FloatingButton = {
@@ -143,6 +137,15 @@ public final class HomeTabmanViewController: TabmanViewController {
         return button
     }()
     
+    private let indicatorImageView: UIImageView = {
+        let indicatorImageView = UIImageView(
+            image: DesignSystemAsset.ImageAssets.tabIndicatorLine.image
+        )
+        indicatorImageView.contentMode = .scaleToFill
+        indicatorImageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        return indicatorImageView
+    }()
+    
     private let stackView: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .vertical
@@ -184,6 +187,15 @@ public final class HomeTabmanViewController: TabmanViewController {
             dataSource: self,
             at: .custom(view: customContainerView, layout: nil)
         )
+
+        self.disableClipping(in: homeTabManBar)
+    }
+}
+
+extension HomeTabmanViewController {
+    private func disableClipping(in view: UIView) {
+        view.clipsToBounds = false
+        view.subviews.forEach { disableClipping(in: $0) }
     }
 }
 
@@ -253,23 +265,18 @@ extension HomeTabmanViewController {
     
     private func addSubViews() {
         view.addSubview(tabManBackgroundView)
-        tabManBackgroundView.addSubview(underLineView)
         tabManBackgroundView.addSubview(titleLabel)
         tabManBackgroundView.addSubview(userProfileButton)
         tabManBackgroundView.addSubview(customContainerView)
         
         view.addSubview(floatingButton)
+        
+        homeTabManBar.indicator.addSubview(indicatorImageView)
     }
     
     private func setLayout() {
         tabManBackgroundView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
-        }
-        
-        underLineView.snp.makeConstraints {
-            $0.top.equalTo(tabManBackgroundView.snp.bottom).inset(1)
-            $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(1)
         }
         
         titleLabel.snp.makeConstraints {
@@ -284,7 +291,7 @@ extension HomeTabmanViewController {
         }
         
         customContainerView.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(19)
+            $0.top.equalTo(userProfileButton.snp.bottom).offset(16)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalTo(tabManBackgroundView.snp.bottom)
             $0.height.equalTo(40)
@@ -294,6 +301,11 @@ extension HomeTabmanViewController {
             $0.trailing.equalToSuperview().inset(20)
             $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).inset(24)
             $0.width.height.equalTo(56)
+        }
+        
+        indicatorImageView.snp.makeConstraints {
+            $0.centerY.equalToSuperview().offset(5)
+            $0.leading.trailing.equalToSuperview()
         }
     }
 }
