@@ -12,22 +12,11 @@ import SnapKit
 public enum FloatingButtonStatus {
     case opened
     case closed
-    
-    var backgroundColor: UIColor {
-        switch self {
-        case .opened:
-            return .white
-        case .closed:
-            return DesignSystemAsset.ColorAssests.primaryNormal.color
-        }
-    }
-    
+
     var tintColor: UIColor {
         switch self {
-        case .opened:
-            return .black
-        case .closed:
-            return .white
+        case .opened: return .black
+        case .closed: return .white
         }
     }
 }
@@ -35,21 +24,27 @@ public enum FloatingButtonStatus {
 public final class FloatingButton: UIButton {
     public var status: FloatingButtonStatus = .closed {
         didSet {
-            let openedRotationAngle: CGAffineTransform = CGAffineTransform(
-                rotationAngle: .pi - (.pi / 4)
-            )
-            let closedRotationAngle: CGAffineTransform = CGAffineTransform.identity
-            
-            let roatation = status == .opened ? openedRotationAngle : closedRotationAngle
+            let openedRotation = CGAffineTransform(rotationAngle: .pi - (.pi / 4))
+            let closedRotation = CGAffineTransform.identity
+            let rotation = status == .opened ? openedRotation : closedRotation
 
             UIView.animate(withDuration: 0.3) {
                 self.buttonImageView.tintColor = self.status.tintColor
-                self.backgroundColor = self.status.backgroundColor
-                self.buttonImageView.transform = roatation
+                self.borderImageView.isHidden = self.status == .opened
+                self.backgroundColor = self.status == .opened ? .white : .clear
+                self.buttonImageView.transform = rotation
             }
         }
     }
-    
+
+    private let borderImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.fab.image
+        imageView.contentMode = .scaleToFill
+        imageView.isUserInteractionEnabled = false
+        return imageView
+    }()
+
     private let buttonImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = DesignSystemAsset.ImageAssets.plusWhite24.image.withRenderingMode(
@@ -58,16 +53,15 @@ public final class FloatingButton: UIButton {
         imageView.tintColor = .white
         return imageView
     }()
-    
+
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        
-        self.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
-        
-        self.addSubviews()
-        self.setLayout()
+        backgroundColor = .clear
+        clipsToBounds = false
+        addSubviews()
+        setLayout()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -75,10 +69,17 @@ public final class FloatingButton: UIButton {
 
 extension FloatingButton {
     private func addSubviews() {
+        addSubview(borderImageView)
         addSubview(buttonImageView)
     }
-    
+
     private func setLayout() {
+        borderImageView.snp.makeConstraints {
+            $0.width.height.equalTo(78)
+            $0.centerX.equalToSuperview()
+            $0.centerY.equalToSuperview().offset(4)
+        }
+
         buttonImageView.snp.makeConstraints {
             $0.width.height.equalTo(24)
             $0.center.equalToSuperview()

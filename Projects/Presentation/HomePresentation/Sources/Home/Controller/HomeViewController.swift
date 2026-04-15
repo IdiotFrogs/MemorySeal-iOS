@@ -30,6 +30,7 @@ public final class HomeViewController: UIViewController {
         )
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
+        collectionView.contentInset = UIEdgeInsets(top: 23, left: 0, bottom: 0, right: 0)
         collectionView.register(
             TicketCollectionViewCell.self,
             forCellWithReuseIdentifier: TicketCollectionViewCell.reuseIdentifier
@@ -48,7 +49,7 @@ public final class HomeViewController: UIViewController {
     
     public override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
+        self.view.backgroundColor = .white
         
         self.addSubviews()
         self.setLayout()
@@ -85,7 +86,7 @@ extension HomeViewController {
     
     private func setLayout() {
         collectionView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(172)
+            $0.top.equalToSuperview().offset(164)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalToSuperview()
         }

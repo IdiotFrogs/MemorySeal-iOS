@@ -33,17 +33,13 @@ public final class HomeCoordinator {
         homeTabmanViewModel.delegate = self
         
         let hostHomeViewModel = homeDIContainer.makeHomeViewModel(role: .host)
-        let hostHomeViewController = homeDIContainer.makeHomeViewController(
-            viewModel: hostHomeViewModel
-        )
         hostHomeViewModel.delegate = self
-        
+        let hostHomeViewController = homeDIContainer.makeHomeViewController(viewModel: hostHomeViewModel)
+
         let contributorHomeViewModel = homeDIContainer.makeHomeViewModel(role: .contributor)
-        let contributorHomeViewController = homeDIContainer.makeHomeViewController(
-            viewModel: contributorHomeViewModel
-        )
         contributorHomeViewModel.delegate = self
-        
+        let contributorHomeViewController = homeDIContainer.makeHomeViewController(viewModel: contributorHomeViewModel)
+
         let homeTabManViewController: HomeTabmanViewController = homeDIContainer.makeHomeTabmanViewController(
             with: homeTabmanViewModel,
             viewControllers: [
