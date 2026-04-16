@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyA3vwFg21S2J5I0bHFHDDT46Biz2aKVeiA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1053803275178</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>io.tuist.MemorySeal</string>
+	<key>PROJECT_ID</key>
+	<string>memory-seal-7f5af</string>
+	<key>STORAGE_BUCKET</key>
+	<string>memory-seal-7f5af.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1053803275178:ios:4f5679eb3c14e0292241d3</string>
+</dict>
+</plist>
