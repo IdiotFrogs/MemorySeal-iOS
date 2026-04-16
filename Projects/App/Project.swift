@@ -54,6 +54,9 @@ let project = Project(
                             ]
                         ]
                     ],
+                    "UIBackgroundModes": [
+                        "remote-notification"
+                    ],
                 ]
             ),
             sources: ["Sources/**"],

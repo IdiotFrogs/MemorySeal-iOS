@@ -19,6 +19,7 @@ let project = Project.makeModule(
         .SPM.SnapKit,
         .SPM.Lottie,
         .SPM.Tabman,
-        .SPM.GoogleSignIn
+        .SPM.GoogleSignIn,
+        .SPM.FirebaseMessaging
     ]
 )

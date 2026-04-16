@@ -10,6 +10,7 @@ let package = Package(
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "7.0.0"),
         .package(url: "https://github.com/airbnb/lottie-spm.git", from: "4.4.3"),
         .package(url: "https://github.com/uias/Tabman.git", from: "3.2.0"),
-        .package(url: "https://github.com/google/GoogleSignIn-iOS", from: "9.0.0")
+        .package(url: "https://github.com/google/GoogleSignIn-iOS", from: "9.0.0"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "11.0.0")
     ]
 )
