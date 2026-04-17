@@ -9,43 +9,38 @@ import UIKit
 
 import SignInPresentation
 
-public protocol SignInCoordinatorDelegate: AnyObject {
-    func startSignUp()
-    func startHome()
-}
-
 public final class SignInCoordinator {
+    public struct Action {
+        public let moveToHome: () -> Void
+        public let moveToSignUp: () -> Void
+
+        public init(moveToHome: @escaping () -> Void, moveToSignUp: @escaping () -> Void) {
+            self.moveToHome = moveToHome
+            self.moveToSignUp = moveToSignUp
+        }
+    }
+
     private let navigationController: UINavigationController
     private let signInDIContainer: SignInDIContainer = SignInDIContainer()
-    
-    public var delegate: SignInCoordinatorDelegate?
-    
-    public init(
-        with navigationController: UINavigationController
-    ) {
+    private let action: Action
+
+    public init(with navigationController: UINavigationController, action: Action) {
         self.navigationController = navigationController
+        self.action = action
     }
-    
+
     public func start() {
-        let signInViewModel: SignInViewModel = signInDIContainer.makeSignInViewModel()
-        signInViewModel.delegate = self
-        let signInViewController: SignInViewController = signInDIContainer.makeSignInViewController(with: signInViewModel)
-        
+        let vmAction = SignInViewModel.Action(
+            moveToHome: action.moveToHome,
+            moveToSignUp: action.moveToSignUp
+        )
+        let signInViewController = signInDIContainer.makeSignInViewController(action: vmAction)
+
         self.navigationController.pushViewController(
             signInViewController,
             animated: false
         )
-        
-        self.navigationController.viewControllers = [signInViewController]
-    }
-}
 
-extension SignInCoordinator: SignInViewModelDelegate {
-    public func moveToHome() {
-        delegate?.startHome()
-    }
-    
-    public func moveToSignUp() {
-        delegate?.startSignUp()
+        self.navigationController.viewControllers = [signInViewController]
     }
 }

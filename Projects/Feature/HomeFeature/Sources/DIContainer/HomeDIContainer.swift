@@ -29,38 +29,39 @@ public final class HomeDIContainer {
         )
     }
 
-    func makeHomeTabmanViewModel() -> HomeTabmanViewModel {
-        return HomeTabmanViewModel()
+    private func makeHomeTabmanViewModel(action: HomeTabmanViewModel.Action) -> HomeTabmanViewModel {
+        return HomeTabmanViewModel(action: action)
     }
 
     func makeHomeTabmanViewController(
-        with viewModel: HomeTabmanViewModel,
+        action: HomeTabmanViewModel.Action,
         viewControllers: [UIViewController]
     ) -> HomeTabmanViewController {
         return HomeTabmanViewController(
             viewControllers: viewControllers,
-            with: viewModel
+            with: makeHomeTabmanViewModel(action: action)
         )
     }
 
-    func makeHomeViewModel(role: TimeCapsuleRole) -> HomeViewModel {
+    private func makeHomeViewModel(action: HomeViewModel.Action, role: TimeCapsuleRole) -> HomeViewModel {
         return HomeViewModel(
+            action: action,
             timeCapsuleUseCase: makeTimeCapsuleUseCase(),
             role: role
         )
     }
 
-    func makeHomeViewController(viewModel: HomeViewModel) -> HomeViewController {
-        return HomeViewController(with: viewModel)
+    func makeHomeViewController(action: HomeViewModel.Action, role: TimeCapsuleRole) -> HomeViewController {
+        return HomeViewController(with: makeHomeViewModel(action: action, role: role))
     }
 
-    func makeEnterTicketViewModel() -> EnterTicketViewModel {
+    private func makeEnterTicketViewModel() -> EnterTicketViewModel {
         return EnterTicketViewModel(
             timeCapsuleUseCase: makeTimeCapsuleUseCase()
         )
     }
 
-    func makeEnterTicketViewController(viewModel: EnterTicketViewModel) -> EnterTicketViewController {
-        return EnterTicketViewController(with: viewModel)
+    func makeEnterTicketViewController() -> EnterTicketViewController {
+        return EnterTicketViewController(with: makeEnterTicketViewModel())
     }
 }

@@ -14,16 +14,20 @@ import CalendarDomain
 import CreateTicketDomain
 import DesignSystem
 
-public protocol CreateTicketViewModelDelegate: AnyObject {
-    func popViewController()
-}
-
 public final class CreateTicketViewModel {
+    public struct Action {
+        public let popViewController: () -> Void
+
+        public init(popViewController: @escaping () -> Void) {
+            self.popViewController = popViewController
+        }
+    }
+
     private let disposeBag: DisposeBag = DisposeBag()
     private let calendarUseCase: CalendarUseCase
     private let createTicketUseCase: CreateTicketUseCase
 
-    public var delegate: CreateTicketViewModelDelegate?
+    public let action: Action
 
     private var storedImage: UIImage?
     private var storedDate: Date = Date().kstNow
@@ -33,10 +37,12 @@ public final class CreateTicketViewModel {
 
     public init(
         calendarUseCase: CalendarUseCase,
-        createTicketUseCase: CreateTicketUseCase
+        createTicketUseCase: CreateTicketUseCase,
+        action: Action
     ) {
         self.calendarUseCase = calendarUseCase
         self.createTicketUseCase = createTicketUseCase
+        self.action = action
     }
 
     struct Input {
@@ -70,7 +76,7 @@ public final class CreateTicketViewModel {
         input.navigationViewBackButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.popViewController()
+                self.action.popViewController()
             })
             .disposed(by: disposeBag)
 
@@ -166,7 +172,7 @@ extension CreateTicketViewModel {
                 )
                 await MainActor.run {
                     isLoading.accept(false)
-                    self.delegate?.popViewController()
+                    self.action.popViewController()
                 }
             } catch {
                 await MainActor.run {

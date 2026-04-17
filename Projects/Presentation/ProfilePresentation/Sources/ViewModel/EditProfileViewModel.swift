@@ -12,10 +12,6 @@ import RxCocoa
 import BaseDomain
 import Foundation
 
-public protocol EditProfileViewModelDelegate: AnyObject {
-    func moveToBack()
-}
-
 public final class EditProfileViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
     private let userUseCase: UserUseCase
@@ -23,10 +19,18 @@ public final class EditProfileViewModel {
     let nickname: String
     let profileImageUrl: String
 
-    public weak var delegate: EditProfileViewModelDelegate?
+    public struct Action {
+        public let moveToBack: () -> Void
 
-    public init(userUseCase: UserUseCase, nickname: String, profileImageUrl: String) {
+        public init(moveToBack: @escaping () -> Void) {
+            self.moveToBack = moveToBack
+        }
+    }
+    public let action: Action
+
+    public init(userUseCase: UserUseCase, action: Action, nickname: String, profileImageUrl: String) {
         self.userUseCase = userUseCase
+        self.action = action
         self.nickname = nickname
         self.profileImageUrl = profileImageUrl
     }
@@ -44,7 +48,7 @@ public final class EditProfileViewModel {
         input.backButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToBack()
+                self.action.moveToBack()
             })
             .disposed(by: disposeBag)
 
@@ -75,7 +79,7 @@ extension EditProfileViewModel {
                     profileImage: profileImage
                 )
                 await MainActor.run {
-                    self.delegate?.moveToBack()
+                    self.action.moveToBack()
                 }
             } catch {}
         }

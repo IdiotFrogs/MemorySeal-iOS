@@ -55,11 +55,11 @@ public final class SplashDIContainer {
         )
     }
 
-    func makeSplashViewModel() -> SplashViewModel {
-        return SplashViewModel(authUseCase: makeAuthUseCase())
+    private func makeSplashViewModel(action: SplashViewModel.Action) -> SplashViewModel {
+        return SplashViewModel(authUseCase: makeAuthUseCase(), action: action)
     }
 
-    func makeSplashViewController(with viewModel: SplashViewModel) -> SplashViewController {
-        return SplashViewController(with: viewModel)
+    func makeSplashViewController(action: SplashViewModel.Action) -> SplashViewController {
+        return SplashViewController(with: makeSplashViewModel(action: action))
     }
 }

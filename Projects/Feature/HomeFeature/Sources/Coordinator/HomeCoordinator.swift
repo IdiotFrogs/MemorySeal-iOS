@@ -10,76 +10,61 @@ import UIKit
 import HomePresentation
 import BaseDomain
 
-public protocol HomeCoordinatorDelegate: AnyObject {
-    func moveToCreateTicket()
-    func moveToProfile()
-    func moveToMemory(capsuleId: Int)
-}
-
 public final class HomeCoordinator {
+    public struct Action {
+        public let moveToCreateTicket: () -> Void
+        public let moveToProfile: () -> Void
+        public let moveToMemory: (_ capsuleId: Int) -> Void
+
+        public init(moveToCreateTicket: @escaping () -> Void, moveToProfile: @escaping () -> Void, moveToMemory: @escaping (_ capsuleId: Int) -> Void) {
+            self.moveToCreateTicket = moveToCreateTicket
+            self.moveToProfile = moveToProfile
+            self.moveToMemory = moveToMemory
+        }
+    }
+
     private let navigationController: UINavigationController
     private let homeDIContainer: HomeDIContainer = .init()
-    
-    public var delegate: HomeCoordinatorDelegate?
-    
-    public init(
-        with navigationController: UINavigationController
-    ) {
+    private let action: Action
+
+    public init(with navigationController: UINavigationController, action: Action) {
         self.navigationController = navigationController
+        self.action = action
     }
-    
+
     public func start() {
-        let homeTabmanViewModel = homeDIContainer.makeHomeTabmanViewModel()
-        homeTabmanViewModel.delegate = self
-        
-        let hostHomeViewModel = homeDIContainer.makeHomeViewModel(role: .host)
-        hostHomeViewModel.delegate = self
-        let hostHomeViewController = homeDIContainer.makeHomeViewController(viewModel: hostHomeViewModel)
+        let tabmanAction = HomeTabmanViewModel.Action(
+            moveToCreateTicket: action.moveToCreateTicket,
+            moveToProfile: action.moveToProfile,
+            moveToEnterTicket: moveToEnterTicket
+        )
 
-        let contributorHomeViewModel = homeDIContainer.makeHomeViewModel(role: .contributor)
-        contributorHomeViewModel.delegate = self
-        let contributorHomeViewController = homeDIContainer.makeHomeViewController(viewModel: contributorHomeViewModel)
+        let homeAction = HomeViewModel.Action(moveToMemory: action.moveToMemory)
 
-        let homeTabManViewController: HomeTabmanViewController = homeDIContainer.makeHomeTabmanViewController(
-            with: homeTabmanViewModel,
+        let hostHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .host)
+        let contributorHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .contributor)
+
+        let homeTabManViewController = homeDIContainer.makeHomeTabmanViewController(
+            action: tabmanAction,
             viewControllers: [
                 hostHomeViewController,
                 contributorHomeViewController
             ]
         )
-        
+
         self.navigationController.navigationBar.isHidden = true
         self.navigationController.setViewControllers(
             [homeTabManViewController],
             animated: false
         )
     }
-}
 
-extension HomeCoordinator: HomeTabmanViewModelDelegate {
-    public func moveToEnterTicket() {
-        let enterTicketViewModel = homeDIContainer.makeEnterTicketViewModel()
-        let enterTicketViewController = homeDIContainer.makeEnterTicketViewController(
-            viewModel: enterTicketViewModel
-        )
+    private func moveToEnterTicket() {
+        let enterTicketViewController = homeDIContainer.makeEnterTicketViewController()
         enterTicketViewController.modalPresentationStyle = .overFullScreen
         self.navigationController.present(
             enterTicketViewController,
             animated: true
         )
-    }
-    
-    public func moveToProfile() {
-        delegate?.moveToProfile()
-    }
-    
-    public func moveToCreateTicket() {
-        delegate?.moveToCreateTicket()
-    }
-}
-
-extension HomeCoordinator: HomeViewModelDelegate {
-    public func moveToMemory(capsuleId: Int) {
-        delegate?.moveToMemory(capsuleId: capsuleId)
     }
 }

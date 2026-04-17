@@ -11,19 +11,24 @@ import RxCocoa
 
 import SignInDomain
 
-public protocol SignInViewModelDelegate: AnyObject {
-    func moveToHome()
-    func moveToSignUp()
-}
-
 public final class SignInViewModel {
+    public struct Action {
+        public let moveToHome: () -> Void
+        public let moveToSignUp: () -> Void
+
+        public init(moveToHome: @escaping () -> Void, moveToSignUp: @escaping () -> Void) {
+            self.moveToHome = moveToHome
+            self.moveToSignUp = moveToSignUp
+        }
+    }
+
     private let disposeBag: DisposeBag = DisposeBag()
     private let authUseCase: AuthUseCase
-    
-    public var delegate: SignInViewModelDelegate?
-    
-    public init(authUseCase: AuthUseCase) {
+    public let action: Action
+
+    public init(authUseCase: AuthUseCase, action: Action) {
         self.authUseCase = authUseCase
+        self.action = action
     }
     
     struct Input {
@@ -73,9 +78,9 @@ extension SignInViewModel {
 
             await MainActor.run {
                 if isOnboardingFinished {
-                    delegate?.moveToHome()
+                    action.moveToHome()
                 } else {
-                    delegate?.moveToSignUp()
+                    action.moveToSignUp()
                 }
             }
         }

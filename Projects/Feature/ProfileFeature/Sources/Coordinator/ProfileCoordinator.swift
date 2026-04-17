@@ -10,49 +10,45 @@ import UIKit
 
 import ProfilePresentation
 
-public protocol ProfileCoordinatorDelegate: AnyObject {
-    func moveToBack()
-    func profileCoordinatorDidLogout()
-}
-
 public final class ProfileCoordinator {
+    public struct Action {
+        public let moveToBack: () -> Void
+        public let didLogout: () -> Void
+
+        public init(moveToBack: @escaping () -> Void, didLogout: @escaping () -> Void) {
+            self.moveToBack = moveToBack
+            self.didLogout = didLogout
+        }
+    }
+
     private let navigationController: UINavigationController
     private let profileDIContainer: ProfileDIContainer = .init()
+    private let action: Action
 
-    public var delegate: ProfileCoordinatorDelegate?
-
-    public init(
-        with navigationController: UINavigationController
-    ) {
+    public init(with navigationController: UINavigationController, action: Action) {
         self.navigationController = navigationController
+        self.action = action
     }
 
     public func start() {
-        let profileViewModel = profileDIContainer.makeProfileViewModel()
-        profileViewModel.delegate = self
-        let profileViewController = profileDIContainer.makeProfileViewController(
-            with: profileViewModel
+        let profileAction = ProfileViewModel.Action(
+            moveToBack: action.moveToBack,
+            moveToEditProfile: moveToEditProfile,
+            moveToSettings: moveToSettings
         )
+        let profileViewController = profileDIContainer.makeProfileViewController(action: profileAction)
         self.navigationController.pushViewController(
             profileViewController,
             animated: true
         )
     }
-}
 
-extension ProfileCoordinator: ProfileViewModelDelegate, EditProfileViewModelDelegate, SettingsViewModelDelegate {
-    public func moveToBack() {
-        self.navigationController.popViewController(animated: true)
-    }
-
-    public func moveToEditProfile(nickname: String, profileImageUrl: String) {
-        let editProfileViewModel = profileDIContainer.makeEditProfileViewModel(
+    private func moveToEditProfile(nickname: String, profileImageUrl: String) {
+        let editAction = EditProfileViewModel.Action(moveToBack: popViewController)
+        let editProfileViewController = profileDIContainer.makeEditProfileViewController(
+            action: editAction,
             nickname: nickname,
             profileImageUrl: profileImageUrl
-        )
-        editProfileViewModel.delegate = self
-        let editProfileViewController = profileDIContainer.makeEditProfileViewController(
-            with: editProfileViewModel
         )
         self.navigationController.pushViewController(
             editProfileViewController,
@@ -60,27 +56,25 @@ extension ProfileCoordinator: ProfileViewModelDelegate, EditProfileViewModelDele
         )
     }
 
-    public func moveToSettings() {
-        let settingsViewModel = profileDIContainer.makeSettingsViewModel()
-        settingsViewModel.delegate = self
-        let settingsViewController = profileDIContainer.makeSettingsViewController(
-            with: settingsViewModel
+    private func moveToSettings() {
+        let settingsAction = SettingsViewModel.Action(
+            moveToBack: popViewController,
+            moveToTermsOfService: moveToTermsOfService,
+            moveToLogout: action.didLogout,
+            moveToWithdrawal: action.didLogout
         )
+        let settingsViewController = profileDIContainer.makeSettingsViewController(action: settingsAction)
         self.navigationController.pushViewController(
             settingsViewController,
             animated: true
         )
     }
 
-    public func moveToTermsOfService() {
+    private func popViewController() {
+        self.navigationController.popViewController(animated: true)
+    }
+
+    private func moveToTermsOfService() {
         // TODO: Navigate to Terms of Service
-    }
-
-    public func moveToLogout() {
-        delegate?.profileCoordinatorDidLogout()
-    }
-
-    public func moveToWithdrawal() {
-        delegate?.profileCoordinatorDidLogout()
     }
 }

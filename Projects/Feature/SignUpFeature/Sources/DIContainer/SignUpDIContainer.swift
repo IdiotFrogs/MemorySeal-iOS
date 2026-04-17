@@ -27,11 +27,11 @@ public final class SignUpDIContainer {
         return DefaultSignUpUseCase(signUpRepository: makeSignUpRepository())
     }
 
-    func makeSignUpViewModel() -> SignUpViewModel {
-        return SignUpViewModel(signUpUseCase: makeSignUpUseCase())
+    private func makeSignUpViewModel(action: SignUpViewModel.Action) -> SignUpViewModel {
+        return SignUpViewModel(signUpUseCase: makeSignUpUseCase(), action: action)
     }
 
-    func makeSignUpViewController(with viewModel: SignUpViewModel) -> SignUpViewController {
-        return SignUpViewController(with: viewModel)
+    func makeSignUpViewController(action: SignUpViewModel.Action) -> SignUpViewController {
+        return SignUpViewController(with: makeSignUpViewModel(action: action))
     }
 }

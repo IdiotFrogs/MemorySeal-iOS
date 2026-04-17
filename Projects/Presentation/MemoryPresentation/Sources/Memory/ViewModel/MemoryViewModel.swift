@@ -9,19 +9,25 @@
 import RxSwift
 import RxCocoa
 
-public protocol MemoryViewModelDelegate: AnyObject {
-    func moveToAddMemeber()
-    func moveToManageTicket()
-}
-
 public final class MemoryViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
 
-    public var delegate: MemoryViewModelDelegate?
+    public struct Action {
+        public let moveToAddMember: () -> Void
+        public let moveToManageTicket: () -> Void
+
+        public init(moveToAddMember: @escaping () -> Void, moveToManageTicket: @escaping () -> Void) {
+            self.moveToAddMember = moveToAddMember
+            self.moveToManageTicket = moveToManageTicket
+        }
+    }
+
+    public let action: Action
 
     private let capsuleId: Int
 
-    public init(capsuleId: Int) {
+    public init(action: Action, capsuleId: Int) {
+        self.action = action
         self.capsuleId = capsuleId
     }
 
@@ -47,14 +53,14 @@ public final class MemoryViewModel {
         input.didTapAddMemberButton
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToAddMemeber()
+                self.action.moveToAddMember()
             })
             .disposed(by: disposeBag)
 
         input.didTapManageButton
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToManageTicket()
+                self.action.moveToManageTicket()
             })
             .disposed(by: disposeBag)
 

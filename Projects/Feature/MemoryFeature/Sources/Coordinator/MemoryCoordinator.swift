@@ -25,21 +25,19 @@ public final class MemoryCoordinator {
     }
 
     public func start() {
-        let memoryViewModel = memoryDIContainer.makeMemoryViewModel(capsuleId: capsuleId)
-        memoryViewModel.delegate = self
-        let memoryViewController = memoryDIContainer.makeMemoryViewController(
-            viewModel: memoryViewModel
+        let memoryAction = MemoryViewModel.Action(
+            moveToAddMember: moveToAddMember,
+            moveToManageTicket: moveToManageTicket
         )
+        let memoryViewController = memoryDIContainer.makeMemoryViewController(action: memoryAction, capsuleId: capsuleId)
 
         self.navigationController.pushViewController(
             memoryViewController,
             animated: true
         )
     }
-}
 
-extension MemoryCoordinator: MemoryViewModelDelegate {
-    public func moveToAddMemeber() {
+    public func moveToAddMember() {
         let viewController = memoryDIContainer.makeAddMemberViewController(capsuleId: capsuleId)
         self.navigationController.pushViewController(
             viewController,
@@ -49,17 +47,14 @@ extension MemoryCoordinator: MemoryViewModelDelegate {
 
     public func moveToManageTicket() {
         // TODO: ticketName은 추후 디테일 API 연동 시 실제 값으로 교체
-        let viewModel = memoryDIContainer.makeManageTicketViewModel(capsuleId: capsuleId, ticketName: "티켓 이름")
-        viewModel.delegate = self
-        let viewController = memoryDIContainer.makeManageTicketViewController(viewModel: viewModel)
+        let manageAction = ManageTicketViewModel.Action(didDeleteTimeCapsule: didDeleteTimeCapsule)
+        let viewController = memoryDIContainer.makeManageTicketViewController(action: manageAction, capsuleId: capsuleId, ticketName: "티켓 이름")
         self.navigationController.pushViewController(
             viewController,
             animated: true
         )
     }
-}
 
-extension MemoryCoordinator: ManageTicketViewModelDelegate {
     public func didDeleteTimeCapsule() {
         self.navigationController.popToRootViewController(animated: true)
     }

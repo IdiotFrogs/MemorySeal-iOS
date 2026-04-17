@@ -20,23 +20,16 @@ public final class CreateTicketCoordinator {
     }
     
     public func start() {
-        let createTicketViewModel = createTicketDIContainer.makeCreateTicketViewModel()
-        createTicketViewModel.delegate = self
-        let createTicketViewController = createTicketDIContainer.makeCreateTicketViewController(with: createTicketViewModel)
-        
+        let action = CreateTicketViewModel.Action(popViewController: popViewController)
+        let createTicketViewController = createTicketDIContainer.makeCreateTicketViewController(action: action)
+
         self.navigationController.pushViewController(
             createTicketViewController,
             animated: true
         )
     }
-    
-    private func popCreateTicketViewController() {
-        self.navigationController.popViewController(animated: true)
-    }
-}
 
-extension CreateTicketCoordinator: CreateTicketViewModelDelegate {
-    public func popViewController() {
-        self.popCreateTicketViewController()
+    private func popViewController() {
+        self.navigationController.popViewController(animated: true)
     }
 }

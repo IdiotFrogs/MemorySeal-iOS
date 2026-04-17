@@ -12,65 +12,50 @@ import SplashFeature
 import SignInFeature
 import SignUpFeature
 
-public protocol AuthCoordinatorDelegate: AnyObject {
-    func authDidFinish()
-}
-
 public final class AuthCoordinator {
+    public struct Action {
+        public let authDidFinish: () -> Void
+
+        public init(authDidFinish: @escaping () -> Void) {
+            self.authDidFinish = authDidFinish
+        }
+    }
+
     private let navigationController: UINavigationController
     private var splashCoordinator: SplashCoordinator?
+    private let action: Action
 
-    public weak var delegate: AuthCoordinatorDelegate?
-
-    public init(with navigationController: UINavigationController) {
+    public init(with navigationController: UINavigationController, action: Action) {
         self.navigationController = navigationController
+        self.action = action
     }
 
     public func start() {
-        let coordinator = SplashCoordinator(with: navigationController)
-        coordinator.delegate = self
+        let splashAction = SplashCoordinator.Action(
+            moveToSignIn: moveToSignInCoordinator,
+            moveToHome: action.authDidFinish,
+            moveToSignUp: moveToSignUpCoordinator
+        )
+        let coordinator = SplashCoordinator(with: navigationController, action: splashAction)
         splashCoordinator = coordinator
         coordinator.start()
     }
 
     private func moveToSignInCoordinator() {
-        let coordinator = SignInCoordinator(with: navigationController)
-        coordinator.delegate = self
+        splashCoordinator = nil
+        let signInAction = SignInCoordinator.Action(
+            moveToHome: action.authDidFinish,
+            moveToSignUp: moveToSignUpCoordinator
+        )
+        let coordinator = SignInCoordinator(with: navigationController, action: signInAction)
         coordinator.start()
     }
 
     private func moveToSignUpCoordinator() {
-        let coordinator = SignUpCoordinator(with: navigationController)
-        coordinator.delegate = self
+        let signUpAction = SignUpCoordinator.Action(
+            moveToHome: action.authDidFinish
+        )
+        let coordinator = SignUpCoordinator(with: navigationController, action: signUpAction)
         coordinator.start()
     }
 }
-
-extension AuthCoordinator: SplashCoordinatorDelegate {
-    public func splashCoordinatorMoveToSignIn() {
-        splashCoordinator = nil
-        moveToSignInCoordinator()
-    }
-
-    public func splashCoordinatorMoveToHome() {
-        splashCoordinator = nil
-        delegate?.authDidFinish()
-    }
-
-    public func splashCoordinatorMoveToSignUp() {
-        splashCoordinator = nil
-        moveToSignUpCoordinator()
-    }
-}
-
-extension AuthCoordinator: SignInCoordinatorDelegate {
-    public func startSignUp() {
-        moveToSignUpCoordinator()
-    }
-
-    public func startHome() {
-        delegate?.authDidFinish()
-    }
-}
-
-extension AuthCoordinator: SignUpCoordinatorDelegate {}
