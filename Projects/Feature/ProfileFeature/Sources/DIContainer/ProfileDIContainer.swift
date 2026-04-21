@@ -60,43 +60,44 @@ public final class ProfileDIContainer {
         )
     }
 
-    public func makeProfileViewModel() -> ProfileViewModel {
-        return ProfileViewModel(userUseCase: makeUserUseCase())
+    private func makeProfileViewModel(action: ProfileViewModel.Action) -> ProfileViewModel {
+        return ProfileViewModel(userUseCase: makeUserUseCase(), action: action)
     }
 
-    public func makeProfileViewController(
-        with viewModel: ProfileViewModel
-    ) -> ProfileViewController {
-        return ProfileViewController(with: viewModel)
+    public func makeProfileViewController(action: ProfileViewModel.Action) -> ProfileViewController {
+        return ProfileViewController(with: makeProfileViewModel(action: action))
     }
 
-    public func makeEditProfileViewModel(
+    private func makeEditProfileViewModel(
+        action: EditProfileViewModel.Action,
         nickname: String,
         profileImageUrl: String
     ) -> EditProfileViewModel {
         return EditProfileViewModel(
             userUseCase: makeUserUseCase(),
+            action: action,
             nickname: nickname,
             profileImageUrl: profileImageUrl
         )
     }
 
     public func makeEditProfileViewController(
-        with viewModel: EditProfileViewModel
+        action: EditProfileViewModel.Action,
+        nickname: String,
+        profileImageUrl: String
     ) -> EditProfileViewController {
-        return EditProfileViewController(with: viewModel)
+        return EditProfileViewController(with: makeEditProfileViewModel(action: action, nickname: nickname, profileImageUrl: profileImageUrl))
     }
 
-    public func makeSettingsViewModel() -> SettingsViewModel {
+    private func makeSettingsViewModel(action: SettingsViewModel.Action) -> SettingsViewModel {
         return SettingsViewModel(
             authUseCase: makeAuthUseCase(),
-            userUseCase: makeUserUseCase()
+            userUseCase: makeUserUseCase(),
+            action: action
         )
     }
 
-    public func makeSettingsViewController(
-        with viewModel: SettingsViewModel
-    ) -> SettingsViewController {
-        return SettingsViewController(with: viewModel)
+    public func makeSettingsViewController(action: SettingsViewModel.Action) -> SettingsViewController {
+        return SettingsViewController(with: makeSettingsViewModel(action: action))
     }
 }

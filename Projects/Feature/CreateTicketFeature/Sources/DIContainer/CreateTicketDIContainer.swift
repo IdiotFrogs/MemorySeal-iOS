@@ -31,16 +31,15 @@ public final class CreateTicketDIContainer {
         return DefaultCreateTicketUseCase(createTicketRepository: makeCreateTicketRepository())
     }
 
-    func makeCreateTicketViewModel() -> CreateTicketViewModel {
+    private func makeCreateTicketViewModel(action: CreateTicketViewModel.Action) -> CreateTicketViewModel {
         return CreateTicketViewModel(
             calendarUseCase: makeCalendarUseCase(),
-            createTicketUseCase: makeCreateTicketUseCase()
+            createTicketUseCase: makeCreateTicketUseCase(),
+            action: action
         )
     }
 
-    func makeCreateTicketViewController(
-        with viewModel: CreateTicketViewModel
-    ) -> CreateTicketViewController {
-        return CreateTicketViewController(with: viewModel)
+    func makeCreateTicketViewController(action: CreateTicketViewModel.Action) -> CreateTicketViewController {
+        return CreateTicketViewController(with: makeCreateTicketViewModel(action: action))
     }
 }

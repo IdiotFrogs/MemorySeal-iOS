@@ -12,22 +12,30 @@ import RxCocoa
 import SignInDomain
 import BaseDomain
 
-public protocol SettingsViewModelDelegate: AnyObject {
-    func moveToBack()
-    func moveToTermsOfService()
-    func moveToLogout()
-    func moveToWithdrawal()
-}
-
 public final class SettingsViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
     private let authUseCase: AuthUseCase
     private let userUseCase: UserUseCase
-    public weak var delegate: SettingsViewModelDelegate?
 
-    public init(authUseCase: AuthUseCase, userUseCase: UserUseCase) {
+    public struct Action {
+        public let moveToBack: () -> Void
+        public let moveToTermsOfService: () -> Void
+        public let moveToLogout: () -> Void
+        public let moveToWithdrawal: () -> Void
+
+        public init(moveToBack: @escaping () -> Void, moveToTermsOfService: @escaping () -> Void, moveToLogout: @escaping () -> Void, moveToWithdrawal: @escaping () -> Void) {
+            self.moveToBack = moveToBack
+            self.moveToTermsOfService = moveToTermsOfService
+            self.moveToLogout = moveToLogout
+            self.moveToWithdrawal = moveToWithdrawal
+        }
+    }
+    public let action: Action
+
+    public init(authUseCase: AuthUseCase, userUseCase: UserUseCase, action: Action) {
         self.authUseCase = authUseCase
         self.userUseCase = userUseCase
+        self.action = action
     }
 
     struct Input {
@@ -43,14 +51,14 @@ public final class SettingsViewModel {
         input.backButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToBack()
+                self.action.moveToBack()
             })
             .disposed(by: disposeBag)
 
         input.termsOfServiceDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToTermsOfService()
+                self.action.moveToTermsOfService()
             })
             .disposed(by: disposeBag)
 
@@ -78,7 +86,7 @@ extension SettingsViewModel {
             guard let self else { return }
             try? await self.authUseCase.executeLogout()
             await MainActor.run { [weak self] in
-                self?.delegate?.moveToLogout()
+                self?.action.moveToLogout()
             }
         }
     }
@@ -88,7 +96,7 @@ extension SettingsViewModel {
             guard let self else { return }
             try? await self.userUseCase.deleteAccount()
             await MainActor.run { [weak self] in
-                self?.delegate?.moveToWithdrawal()
+                self?.action.moveToWithdrawal()
             }
         }
     }

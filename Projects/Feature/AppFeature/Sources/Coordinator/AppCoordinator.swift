@@ -26,30 +26,26 @@ public final class AppCoordinator {
     }
 
     private func moveToAuthCoordinator() {
-        let coordinator = AuthCoordinator(with: navigationController)
-        coordinator.delegate = self
+        let action = AuthCoordinator.Action(
+            authDidFinish: { [weak self] in
+                self?.authCoordinator = nil
+                self?.moveToMainCoordinator()
+            }
+        )
+        let coordinator = AuthCoordinator(with: navigationController, action: action)
         authCoordinator = coordinator
         coordinator.start()
     }
 
     private func moveToMainCoordinator() {
-        let coordinator = MainCoordinator(with: navigationController)
-        coordinator.delegate = self
+        let action = MainCoordinator.Action(
+            didRequestLogout: { [weak self] in
+                self?.mainCoordinator = nil
+                self?.moveToAuthCoordinator()
+            }
+        )
+        let coordinator = MainCoordinator(with: navigationController, action: action)
         mainCoordinator = coordinator
         coordinator.start()
-    }
-}
-
-extension AppCoordinator: AuthCoordinatorDelegate {
-    public func authDidFinish() {
-        authCoordinator = nil
-        moveToMainCoordinator()
-    }
-}
-
-extension AppCoordinator: MainCoordinatorDelegate {
-    public func mainDidRequestLogout() {
-        mainCoordinator = nil
-        moveToAuthCoordinator()
     }
 }

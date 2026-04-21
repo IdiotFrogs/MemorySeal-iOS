@@ -9,36 +9,34 @@ import UIKit
 
 import SignUpPresentation
 
-public protocol SignUpCoordinatorDelegate: AnyObject {
-    func startHome()
-}
-
 public final class SignUpCoordinator {
+    public struct Action {
+        public let moveToHome: () -> Void
+
+        public init(moveToHome: @escaping () -> Void) {
+            self.moveToHome = moveToHome
+        }
+    }
+
     private let navigationController: UINavigationController
     private let signUpDIContainer: SignUpDIContainer = SignUpDIContainer()
+    private let action: Action
 
-    public var delegate: SignUpCoordinatorDelegate?
-
-    public init(with navigationController: UINavigationController) {
+    public init(with navigationController: UINavigationController, action: Action) {
         self.navigationController = navigationController
+        self.action = action
     }
 
     public func start() {
-        let signUpViewModel = signUpDIContainer.makeSignUpViewModel()
-        signUpViewModel.delegate = self
-
-        let signUpViewController = signUpDIContainer.makeSignUpViewController(with: signUpViewModel)
+        let vmAction = SignUpViewModel.Action(
+            moveToHome: action.moveToHome
+        )
+        let signUpViewController = signUpDIContainer.makeSignUpViewController(action: vmAction)
 
         self.navigationController.navigationBar.isHidden = true
         self.navigationController.pushViewController(
             signUpViewController,
             animated: false
         )
-    }
-}
-
-extension SignUpCoordinator: SignUpViewModelDelegate {
-    public func moveToHome() {
-        delegate?.startHome()
     }
 }

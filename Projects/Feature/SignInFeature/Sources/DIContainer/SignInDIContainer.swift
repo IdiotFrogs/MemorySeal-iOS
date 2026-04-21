@@ -55,15 +55,14 @@ public final class SignInDIContainer {
         )
     }
     
-    func makeSignInViewModel() -> SignInViewModel {
+    private func makeSignInViewModel(action: SignInViewModel.Action) -> SignInViewModel {
         return SignInViewModel(
-            authUseCase: makeAuthUseCase()
+            authUseCase: makeAuthUseCase(),
+            action: action
         )
     }
-    
-    func makeSignInViewController(
-        with viewModel: SignInViewModel
-    ) -> SignInViewController {
-        return SignInViewController(with: viewModel)
+
+    func makeSignInViewController(action: SignInViewModel.Action) -> SignInViewController {
+        return SignInViewController(with: makeSignInViewModel(action: action))
     }
 }

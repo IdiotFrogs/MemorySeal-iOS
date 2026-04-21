@@ -12,21 +12,24 @@ import RxCocoa
 
 import SignUpDomain
 
-public protocol SignUpViewModelDelegate: AnyObject {
-    func moveToHome()
-}
-
 public final class SignUpViewModel {
+    public struct Action {
+        public let moveToHome: () -> Void
+
+        public init(moveToHome: @escaping () -> Void) {
+            self.moveToHome = moveToHome
+        }
+    }
 
     private let disposeBag = DisposeBag()
     private let signUpUseCase: SignUpUseCase
-
-    public var delegate: SignUpViewModelDelegate?
+    public let action: Action
 
     private var selectedImage: UIImage?
 
-    public init(signUpUseCase: SignUpUseCase) {
+    public init(signUpUseCase: SignUpUseCase, action: Action) {
         self.signUpUseCase = signUpUseCase
+        self.action = action
     }
 
     struct Input {
@@ -109,7 +112,7 @@ extension SignUpViewModel {
                 try await signUpUseCase.execute(nickname: nickname, profileImage: profileImage)
                 await MainActor.run {
                     isLoading.accept(false)
-                    delegate?.moveToHome()
+                    action.moveToHome()
                 }
             } catch {
                 await MainActor.run {

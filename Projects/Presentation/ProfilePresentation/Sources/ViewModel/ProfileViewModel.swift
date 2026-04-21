@@ -11,17 +11,22 @@ import RxCocoa
 
 import BaseDomain
 
-public protocol ProfileViewModelDelegate: AnyObject {
-    func moveToBack()
-    func moveToEditProfile(nickname: String, profileImageUrl: String)
-    func moveToSettings()
-}
-
 public final class ProfileViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
     private let userUseCase: UserUseCase
 
-    public weak var delegate: ProfileViewModelDelegate?
+    public struct Action {
+        public let moveToBack: () -> Void
+        public let moveToEditProfile: (_ nickname: String, _ profileImageUrl: String) -> Void
+        public let moveToSettings: () -> Void
+
+        public init(moveToBack: @escaping () -> Void, moveToEditProfile: @escaping (_ nickname: String, _ profileImageUrl: String) -> Void, moveToSettings: @escaping () -> Void) {
+            self.moveToBack = moveToBack
+            self.moveToEditProfile = moveToEditProfile
+            self.moveToSettings = moveToSettings
+        }
+    }
+    public let action: Action
 
     private let userInfo: BehaviorRelay<UserInfoEntity?> = .init(value: nil)
 
@@ -36,8 +41,9 @@ public final class ProfileViewModel {
         let userInfo: Driver<UserInfoEntity?>
     }
 
-    public init(userUseCase: UserUseCase) {
+    public init(userUseCase: UserUseCase, action: Action) {
         self.userUseCase = userUseCase
+        self.action = action
     }
 
     func translation(_ input: Input) -> Output {
@@ -58,7 +64,7 @@ public final class ProfileViewModel {
         input.backButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToBack()
+                self.action.moveToBack()
             })
             .disposed(by: disposeBag)
 
@@ -67,14 +73,14 @@ public final class ProfileViewModel {
             .compactMap { $0 }
             .withUnretained(self)
             .subscribe(onNext: { (self, user) in
-                self.delegate?.moveToEditProfile(nickname: user.nickname, profileImageUrl: user.profileImageUrl)
+                self.action.moveToEditProfile(user.nickname, user.profileImageUrl)
             })
             .disposed(by: disposeBag)
 
         input.settingButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.delegate?.moveToSettings()
+                self.action.moveToSettings()
             })
             .disposed(by: disposeBag)
 

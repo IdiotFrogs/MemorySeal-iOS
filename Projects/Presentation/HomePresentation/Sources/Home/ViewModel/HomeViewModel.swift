@@ -12,13 +12,18 @@ import RxCocoa
 
 import BaseDomain
 
-public protocol HomeViewModelDelegate: AnyObject {
-    func moveToMemory(capsuleId: Int)
-}
-
 public final class HomeViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
-    public var delegate: HomeViewModelDelegate?
+
+    public struct Action {
+        public let moveToMemory: (_ capsuleId: Int) -> Void
+
+        public init(moveToMemory: @escaping (_ capsuleId: Int) -> Void) {
+            self.moveToMemory = moveToMemory
+        }
+    }
+
+    public let action: Action
 
     private let timeCapsuleUseCase: TimeCapsuleUseCase
     private let role: TimeCapsuleRole
@@ -59,7 +64,7 @@ public final class HomeViewModel {
             .subscribe(onNext: { (self, indexPath) in
                 guard indexPath.item < self.memoryList.value.count else { return }
                 let capsuleId = self.memoryList.value[indexPath.item].timeCapsuleId
-                self.delegate?.moveToMemory(capsuleId: capsuleId)
+                self.action.moveToMemory(capsuleId)
             })
             .disposed(by: disposeBag)
 
@@ -67,9 +72,11 @@ public final class HomeViewModel {
     }
 
     public init(
+        action: Action,
         timeCapsuleUseCase: TimeCapsuleUseCase,
         role: TimeCapsuleRole
     ) {
+        self.action = action
         self.timeCapsuleUseCase = timeCapsuleUseCase
         self.role = role
     }

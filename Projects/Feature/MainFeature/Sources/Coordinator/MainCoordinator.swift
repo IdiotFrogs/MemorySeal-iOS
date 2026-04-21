@@ -13,30 +13,47 @@ import ProfileFeature
 import CreateTicketFeature
 import MemoryFeature
 
-public protocol MainCoordinatorDelegate: AnyObject {
-    func mainDidRequestLogout()
-}
-
 public final class MainCoordinator {
+    public struct Action {
+        public let didRequestLogout: () -> Void
+
+        public init(didRequestLogout: @escaping () -> Void) {
+            self.didRequestLogout = didRequestLogout
+        }
+    }
+
     private let navigationController: UINavigationController
     private var profileCoordinator: ProfileCoordinator?
     private var memoryCoordinator: MemoryCoordinator?
+    private let action: Action
 
-    public weak var delegate: MainCoordinatorDelegate?
-
-    public init(with navigationController: UINavigationController) {
+    public init(with navigationController: UINavigationController, action: Action) {
         self.navigationController = navigationController
+        self.action = action
     }
 
     public func start() {
-        let coordinator = HomeCoordinator(with: navigationController)
-        coordinator.delegate = self
+        let homeAction = HomeCoordinator.Action(
+            moveToCreateTicket: moveToCreateTicketCoordinator,
+            moveToProfile: moveToProfileCoordinator,
+            moveToMemory: moveToMemoryCoordinator
+        )
+        let coordinator = HomeCoordinator(with: navigationController, action: homeAction)
         coordinator.start()
     }
 
     private func moveToProfileCoordinator() {
-        let coordinator = ProfileCoordinator(with: navigationController)
-        coordinator.delegate = self
+        let profileAction = ProfileCoordinator.Action(
+            moveToBack: { [weak self] in
+                self?.navigationController.popViewController(animated: true)
+                self?.profileCoordinator = nil
+            },
+            didLogout: { [weak self] in
+                self?.profileCoordinator = nil
+                self?.action.didRequestLogout()
+            }
+        )
+        let coordinator = ProfileCoordinator(with: navigationController, action: profileAction)
         profileCoordinator = coordinator
         coordinator.start()
     }
@@ -50,31 +67,5 @@ public final class MainCoordinator {
         let coordinator = MemoryCoordinator(with: navigationController, capsuleId: capsuleId)
         memoryCoordinator = coordinator
         coordinator.start()
-    }
-}
-
-extension MainCoordinator: HomeCoordinatorDelegate {
-    public func moveToProfile() {
-        moveToProfileCoordinator()
-    }
-
-    public func moveToCreateTicket() {
-        moveToCreateTicketCoordinator()
-    }
-
-    public func moveToMemory(capsuleId: Int) {
-        moveToMemoryCoordinator(capsuleId: capsuleId)
-    }
-}
-
-extension MainCoordinator: ProfileCoordinatorDelegate {
-    public func moveToBack() {
-        navigationController.popViewController(animated: true)
-        profileCoordinator = nil
-    }
-
-    public func profileCoordinatorDidLogout() {
-        profileCoordinator = nil
-        delegate?.mainDidRequestLogout()
     }
 }
