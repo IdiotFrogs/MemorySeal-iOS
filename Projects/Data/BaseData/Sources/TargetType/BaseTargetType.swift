@@ -16,6 +16,6 @@ public protocol BaseTargetType: TargetType {
 
 public extension BaseTargetType {
     var baseURL: URL {
-        return URL(string: "http://43.201.236.253:8080")!
+        return URL(string: "http://43.201.15.113:8080")!
     }
 }
