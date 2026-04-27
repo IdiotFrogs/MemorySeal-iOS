@@ -25,18 +25,21 @@ public struct TimeCapsuleEntity {
     public let openedAt: Date
     public let timeCapsuleStatus: TimeCapsuleStatus
     public let role: TimeCapsuleRole
+    public let imageUrl: String?
 
     public init(
         timeCapsuleId: Int,
         title: String,
         openedAt: Date,
         timeCapsuleStatus: TimeCapsuleStatus,
-        role: TimeCapsuleRole
+        role: TimeCapsuleRole,
+        imageUrl: String? = nil
     ) {
         self.timeCapsuleId = timeCapsuleId
         self.title = title
         self.openedAt = openedAt
         self.timeCapsuleStatus = timeCapsuleStatus
         self.role = role
+        self.imageUrl = imageUrl
     }
 }
