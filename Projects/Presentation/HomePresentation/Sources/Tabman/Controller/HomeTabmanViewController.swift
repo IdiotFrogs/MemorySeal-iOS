@@ -146,15 +146,14 @@ public final class HomeTabmanViewController: TabmanViewController {
         return indicatorImageView
     }()
     
-    private let stackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 4
-        stackView.backgroundColor = .white
-        stackView.layer.cornerRadius = 12
-        stackView.distribution = .fillEqually
-        stackView.alignment = .leading
-        return stackView
+    private let menuContainerView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: .white,
+            strokeColor: .white,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        return view
     }()
     
     public init(
@@ -216,12 +215,12 @@ extension HomeTabmanViewController {
             .subscribe(onNext: { (self, status) in
                 if status == .closed {
                     self.showDimView()
-                    self.showStackView()
+                    self.showMenuContainer()
                     self.floatingButton.status = .opened
                 } else {
                     self.floatingButton.status = .closed
                     self.dimView.removeFromSuperview()
-                    self.stackView.removeFromSuperview()
+                    self.menuContainerView.removeFromSuperview()
                 }
             })
             .disposed(by: disposeBag)
@@ -237,10 +236,10 @@ extension HomeTabmanViewController {
         }
     }
     
-    private func showStackView() {
-        view.addSubview(stackView)
-        stackView.addSubview(createNewTicketButton)
-        stackView.addSubview(enterTickButton)
+    private func showMenuContainer() {
+        view.addSubview(menuContainerView)
+        menuContainerView.addSubview(createNewTicketButton)
+        menuContainerView.addSubview(enterTickButton)
         
         createNewTicketButton.snp.makeConstraints {
             $0.top.equalToSuperview().offset(8)
@@ -255,7 +254,7 @@ extension HomeTabmanViewController {
             $0.bottom.equalToSuperview().inset(8)
         }
         
-        stackView.snp.makeConstraints {
+        menuContainerView.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(20)
             $0.bottom.equalTo(floatingButton.snp.top).offset(-16)
             $0.width.equalTo(176)
