@@ -48,12 +48,21 @@ public final class CreateTicketViewController: UIViewController {
     private let ticketImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = DesignSystemAsset.ImageAssets.ticketNoneImage.image
-        imageView.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
-        imageView.layer.borderWidth = 1
         imageView.layer.cornerRadius = 12
         imageView.layer.masksToBounds = true
         imageView.isUserInteractionEnabled = true
         return imageView
+    }()
+
+    private let ticketImageWavyStrokeView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     private let ticketTitleLabel: UILabel = {
@@ -73,10 +82,19 @@ public final class CreateTicketViewController: UIViewController {
             color: DesignSystemAsset.ColorAssests.grey3.color,
             font: DesignSystemFontFamily.Pretendard.regular.font(size: 16)
         )
-        textField.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
-        textField.layer.borderWidth = 1
         textField.layer.cornerRadius = 12
         return textField
+    }()
+
+    private let ticketTitleWavyStrokeView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     private let descriptionTitleLabel: UILabel = {
@@ -91,12 +109,21 @@ public final class CreateTicketViewController: UIViewController {
         let textView = UITextView()
         textView.textColor = DesignSystemAsset.ColorAssests.grey5.color
         textView.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
-        textView.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
-        textView.layer.borderWidth = 1
         textView.layer.cornerRadius = 12
         textView.textContainerInset = .init(top: 14.0, left: 12.0, bottom: 14.0, right: 12.0)
         textView.isScrollEnabled = false
         return textView
+    }()
+
+    private let descriptionWavyStrokeView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     private let descriptionPlaceholderLabel: UILabel = {
@@ -117,9 +144,30 @@ public final class CreateTicketViewController: UIViewController {
 
     private let calendarView: MemorySealCalendarView = {
         let view = MemorySealCalendarView()
-        view.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
-        view.layer.borderWidth = 1
         view.layer.cornerRadius = 12
+        return view
+    }()
+
+    private let calendarWavyStrokeView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
+    private let createButtonWavyBackground: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            strokeColor: UIColor(hex: "#29A047") ?? DesignSystemAsset.ColorAssests.primaryDark.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
         return view
     }()
 
@@ -128,8 +176,7 @@ public final class CreateTicketViewController: UIViewController {
         button.setTitle("생성", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
-        button.layer.cornerRadius = 12
+        button.backgroundColor = .clear
         return button
     }()
 
@@ -321,17 +368,22 @@ extension CreateTicketViewController {
 
         scrollView.addSubview(photoTitleLabel)
         scrollView.addSubview(ticketImageView)
+        scrollView.addSubview(ticketImageWavyStrokeView)
 
         scrollView.addSubview(ticketTitleLabel)
         scrollView.addSubview(ticketTitleTextField)
+        scrollView.addSubview(ticketTitleWavyStrokeView)
 
         scrollView.addSubview(descriptionTitleLabel)
         scrollView.addSubview(descriptionTextView)
         scrollView.addSubview(descriptionPlaceholderLabel)
+        scrollView.addSubview(descriptionWavyStrokeView)
 
         scrollView.addSubview(calendarTitleLabel)
         scrollView.addSubview(calendarView)
+        scrollView.addSubview(calendarWavyStrokeView)
 
+        scrollView.addSubview(createButtonWavyBackground)
         scrollView.addSubview(createButton)
     }
 
@@ -362,6 +414,10 @@ extension CreateTicketViewController {
             $0.width.height.equalTo(120)
         }
 
+        ticketImageWavyStrokeView.snp.makeConstraints {
+            $0.edges.equalTo(ticketImageView)
+        }
+
         ticketTitleLabel.snp.makeConstraints {
             $0.top.equalTo(ticketImageView.snp.bottom).offset(16)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
@@ -375,6 +431,10 @@ extension CreateTicketViewController {
             $0.height.equalTo(48)
         }
 
+        ticketTitleWavyStrokeView.snp.makeConstraints {
+            $0.edges.equalTo(ticketTitleTextField)
+        }
+
         descriptionTitleLabel.snp.makeConstraints {
             $0.top.equalTo(ticketTitleTextField.snp.bottom).offset(16)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
@@ -386,6 +446,10 @@ extension CreateTicketViewController {
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
             $0.height.greaterThanOrEqualTo(48)
+        }
+
+        descriptionWavyStrokeView.snp.makeConstraints {
+            $0.edges.equalTo(descriptionTextView)
         }
 
         descriptionPlaceholderLabel.snp.makeConstraints {
@@ -405,12 +469,20 @@ extension CreateTicketViewController {
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
         }
 
+        calendarWavyStrokeView.snp.makeConstraints {
+            $0.edges.equalTo(calendarView)
+        }
+
         createButton.snp.makeConstraints {
             $0.top.equalTo(calendarView.snp.bottom).offset(24)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
             $0.bottom.equalTo(scrollView.snp.bottom).inset(24)
             $0.height.equalTo(48)
+        }
+
+        createButtonWavyBackground.snp.makeConstraints {
+            $0.edges.equalTo(createButton)
         }
     }
 }
