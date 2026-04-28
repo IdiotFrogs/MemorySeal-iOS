@@ -18,6 +18,14 @@ public enum WavyStrokeStyle {
     case filledStroked(fill: UIColor, stroke: UIColor, lineWidth: CGFloat)
 }
 
+/// `.stroked` 모드에서 wavy 외곽선이 뷰 bounds 기준 어느 쪽으로 형성될지 결정.
+public enum WavyStrokeAlignment {
+    /// 외곽선이 bounds 안쪽에 형성된다.
+    case inside
+    /// 외곽선이 bounds 바깥쪽으로 확장된다. 안쪽 콘텐츠 영역을 그대로 두고 데코레이션만 바깥에 그릴 때.
+    case outside
+}
+
 public final class WavyStrokeView: UIView {
 
     // MARK: - Properties
@@ -43,6 +51,11 @@ public final class WavyStrokeView: UIView {
 
     /// 흔들림 패턴 결정 시드. 같은 값이면 레이아웃이 바뀌어도 동일 패턴이 그려진다.
     public var noiseSeed: UInt64 = 0xC0FFEE_BABE {
+        didSet { updateAppearance() }
+    }
+
+    /// `.stroked` 모드에서 stroke가 그려지는 방향. 기본은 `.inside`.
+    public var strokeAlignment: WavyStrokeAlignment = .inside {
         didSet { updateAppearance() }
     }
 
@@ -154,10 +167,17 @@ public final class WavyStrokeView: UIView {
                 return 0
             }
         }()
-        let totalInset = amp + strokeBuffer
-        let inset = bounds.insetBy(dx: totalInset, dy: totalInset)
+        let baseInset = amp + strokeBuffer
+        // outside 모드일 때 path baseline을 bounds 바깥으로 옮긴다 (.stroked에서만 적용).
+        let signedInset: CGFloat = {
+            if case .stroked = style, strokeAlignment == .outside {
+                return -baseInset
+            }
+            return baseInset
+        }()
+        let inset = bounds.insetBy(dx: signedInset, dy: signedInset)
         let radius = max(0, min(
-            waveCornerRadius - totalInset,
+            waveCornerRadius - signedInset,
             min(inset.width, inset.height) / 2
         ))
 

@@ -60,6 +60,7 @@ public final class CreateTicketViewController: UIViewController {
             lineWidth: 3
         )
         view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         return view
     }()
@@ -91,6 +92,7 @@ public final class CreateTicketViewController: UIViewController {
             lineWidth: 3
         )
         view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         return view
     }()
@@ -119,6 +121,7 @@ public final class CreateTicketViewController: UIViewController {
             lineWidth: 3
         )
         view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         return view
     }()
@@ -151,17 +154,7 @@ public final class CreateTicketViewController: UIViewController {
             lineWidth: 3
         )
         view.waveCornerRadius = 12
-        view.isUserInteractionEnabled = false
-        return view
-    }()
-
-    private let createButtonWavyBackground: WavyStrokeView = {
-        let view = WavyStrokeView(
-            fillColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
-            strokeColor: UIColor(hex: "#29A047") ?? DesignSystemAsset.ColorAssests.primaryDark.color,
-            lineWidth: 3
-        )
-        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         return view
     }()
@@ -171,8 +164,20 @@ public final class CreateTicketViewController: UIViewController {
         button.setTitle("생성", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        button.backgroundColor = .clear
+        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
+        button.layer.cornerRadius = 12
         return button
+    }()
+
+    private let createButtonWavyStrokeView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            strokeColor: UIColor(hex: "#29A047") ?? DesignSystemAsset.ColorAssests.primaryDark.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     public init(with viewModel: CreateTicketViewModel) {
@@ -378,8 +383,8 @@ extension CreateTicketViewController {
         scrollView.addSubview(calendarView)
         scrollView.addSubview(calendarWavyStrokeView)
 
-        scrollView.addSubview(createButtonWavyBackground)
         scrollView.addSubview(createButton)
+        scrollView.addSubview(createButtonWavyStrokeView)
     }
 
     private func setLayout() {
@@ -476,7 +481,7 @@ extension CreateTicketViewController {
             $0.height.equalTo(48)
         }
 
-        createButtonWavyBackground.snp.makeConstraints {
+        createButtonWavyStrokeView.snp.makeConstraints {
             $0.edges.equalTo(createButton)
         }
     }
