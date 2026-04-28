@@ -13,6 +13,16 @@ import RxSwift
 import RxCocoa
 
 final public class MemorySealCalendarView: UIView {
+    /// `layoutSubviews` 가 발생할 때마다 호출되는 콜백.
+    /// 캘린더가 collectionView contentSize 에 따라 비동기적으로 크기를 갱신하므로,
+    /// 외부 호스트(예: wavy stroke)가 이 시점에 bounds 동기화를 수행할 수 있도록 노출한다.
+    public var onLayoutSubviews: (() -> Void)?
+
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        onLayoutSubviews?()
+    }
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "2025년 6월"

@@ -180,11 +180,12 @@ public final class WavyStrokeView: UIView {
             }
         }()
         let baseInset = amp + strokeBuffer
-        // outside 모드일 때 path baseline을 bounds 바깥으로 옮긴다 (.stroked, .filledStroked).
+        // outside 모드는 path baseline 을 host bounds 위에 정확히 두어 wave 가 bounds 를 가로질러 진동하게 한다.
+        // 이렇게 하면 stroke 픽셀이 host 가장자리를 항상 덮어 antialiasing 갭이 보이지 않는다.
         let signedInset: CGFloat = {
             switch (style, strokeAlignment) {
             case (.stroked, .outside), (.filledStroked, .outside):
-                return -baseInset
+                return 0
             default:
                 return baseInset
             }

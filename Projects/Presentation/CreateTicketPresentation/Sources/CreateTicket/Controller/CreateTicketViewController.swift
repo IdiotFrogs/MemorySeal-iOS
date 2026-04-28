@@ -24,6 +24,11 @@ public final class CreateTicketViewController: UIViewController {
     private let selectedDateRelay: PublishRelay<Date> = .init()
     private var currentCalendarDates: [CalendarDateModel] = []
 
+    private var ticketImageWavyLayer: WavyStrokeLayer?
+    private var ticketTitleWavyLayer: WavyStrokeLayer?
+    private var descriptionWavyLayer: WavyStrokeLayer?
+    private var calendarWavyLayer: WavyStrokeLayer?
+
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
         view.setTitle("타임 티켓 생성하기")
@@ -54,14 +59,9 @@ public final class CreateTicketViewController: UIViewController {
         return imageView
     }()
 
-    private let ticketImageWavyStrokeView: WavyStrokeView = {
-        let view = WavyStrokeView(
-            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
-            lineWidth: 3
-        )
-        view.waveCornerRadius = 12
-        view.strokeAlignment = .outside
-        view.isUserInteractionEnabled = false
+    private let ticketImageContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
         return view
     }()
 
@@ -86,17 +86,6 @@ public final class CreateTicketViewController: UIViewController {
         return textField
     }()
 
-    private let ticketTitleWavyStrokeView: WavyStrokeView = {
-        let view = WavyStrokeView(
-            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
-            lineWidth: 3
-        )
-        view.waveCornerRadius = 12
-        view.strokeAlignment = .outside
-        view.isUserInteractionEnabled = false
-        return view
-    }()
-
     private let descriptionTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "간단한 설명"
@@ -113,17 +102,6 @@ public final class CreateTicketViewController: UIViewController {
         textView.textContainerInset = .init(top: 14.0, left: 12.0, bottom: 14.0, right: 12.0)
         textView.isScrollEnabled = false
         return textView
-    }()
-
-    private let descriptionWavyStrokeView: WavyStrokeView = {
-        let view = WavyStrokeView(
-            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
-            lineWidth: 3
-        )
-        view.waveCornerRadius = 12
-        view.strokeAlignment = .outside
-        view.isUserInteractionEnabled = false
-        return view
     }()
 
     private let descriptionPlaceholderLabel: UILabel = {
@@ -145,17 +123,6 @@ public final class CreateTicketViewController: UIViewController {
     private let calendarView: MemorySealCalendarView = {
         let view = MemorySealCalendarView()
         view.layer.cornerRadius = 12
-        return view
-    }()
-
-    private let calendarWavyStrokeView: WavyStrokeView = {
-        let view = WavyStrokeView(
-            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
-            lineWidth: 3
-        )
-        view.waveCornerRadius = 12
-        view.strokeAlignment = .outside
-        view.isUserInteractionEnabled = false
         return view
     }()
 
@@ -196,6 +163,7 @@ public final class CreateTicketViewController: UIViewController {
         self.addSubviews()
         self.setLayout()
         self.addLeftPaddingView()
+        self.setupWavyStrokeLayers()
 
         self.bindViewModel()
         self.bindScrollView()
@@ -203,6 +171,24 @@ public final class CreateTicketViewController: UIViewController {
         self.bindTextFieldFocus()
         self.bindImagePicker()
         self.rxViewDidLoad.accept(())
+    }
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        syncWavyStrokeLayer(ticketImageWavyLayer, to: ticketImageContainer.bounds)
+        syncWavyStrokeLayer(ticketTitleWavyLayer, to: ticketTitleTextField.bounds)
+        syncWavyStrokeLayer(descriptionWavyLayer, to: descriptionTextView.bounds)
+        syncWavyStrokeLayer(calendarWavyLayer, to: calendarView.bounds)
+    }
+
+    private func syncWavyStrokeLayer(_ layer: WavyStrokeLayer?, to bounds: CGRect) {
+        guard let layer else { return }
+        if layer.frame != bounds {
+            layer.frame = bounds
+        }
+        // CALayer 의 frame setter 가 Swift override 를 우회하는 케이스(예: Core Animation
+        // transaction 내부 갱신) 에 대비해 path 재생성을 명시적으로 한 번 더 트리거한다.
+        layer.setNeedsPathRefresh()
     }
 
     public override func touchesBegan(
@@ -290,6 +276,17 @@ extension CreateTicketViewController {
                 self.view.endEditing(true)
             })
             .disposed(by: disposeBag)
+
+        let backgroundTap = UITapGestureRecognizer()
+        backgroundTap.cancelsTouchesInView = false
+        scrollView.addGestureRecognizer(backgroundTap)
+
+        backgroundTap.rx.event
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.view.endEditing(true)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func bindTextView() {
@@ -311,7 +308,7 @@ extension CreateTicketViewController {
         ticketTitleTextField.rx.controlEvent(.editingDidBegin)
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.ticketTitleWavyStrokeView.setStrokeColor(activeColor)
+                self.ticketTitleWavyLayer?.setWavyStrokeColor(activeColor)
                 self.ticketTitleTextField.backgroundColor = .white
             })
             .disposed(by: disposeBag)
@@ -319,7 +316,7 @@ extension CreateTicketViewController {
         ticketTitleTextField.rx.controlEvent(.editingDidEnd)
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.ticketTitleWavyStrokeView.setStrokeColor(inactiveColor)
+                self.ticketTitleWavyLayer?.setWavyStrokeColor(inactiveColor)
                 let isEmpty = self.ticketTitleTextField.text?.isEmpty ?? true
                 self.ticketTitleTextField.backgroundColor = isEmpty ? .white : filledBg
             })
@@ -328,7 +325,7 @@ extension CreateTicketViewController {
         descriptionTextView.rx.didBeginEditing
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.descriptionWavyStrokeView.setStrokeColor(activeColor)
+                self.descriptionWavyLayer?.setWavyStrokeColor(activeColor)
                 self.descriptionTextView.backgroundColor = .white
             })
             .disposed(by: disposeBag)
@@ -336,7 +333,7 @@ extension CreateTicketViewController {
         descriptionTextView.rx.didEndEditing
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.descriptionWavyStrokeView.setStrokeColor(inactiveColor)
+                self.descriptionWavyLayer?.setWavyStrokeColor(inactiveColor)
                 let isEmpty = self.descriptionTextView.text?.isEmpty ?? true
                 self.descriptionTextView.backgroundColor = isEmpty ? .white : filledBg
             })
@@ -360,7 +357,7 @@ extension CreateTicketViewController {
             .subscribe(onNext: { (self, image) in
                 self.ticketImageView.image = image
                 self.ticketImageView.contentMode = .scaleAspectFill
-                self.ticketImageWavyStrokeView.setStrokeColor(
+                self.ticketImageWavyLayer?.setWavyStrokeColor(
                     DesignSystemAsset.ColorAssests.grey5.color
                 )
             })
@@ -406,26 +403,59 @@ extension CreateTicketViewController {
         ticketTitleTextField.leftViewMode = .always
     }
 
+    private func setupWavyStrokeLayers() {
+        let inactiveColor = DesignSystemAsset.ColorAssests.grey1.color
+
+        ticketImageWavyLayer = ticketImageContainer.addWavyStrokeLayer(
+            strokeColor: inactiveColor,
+            lineWidth: 3,
+            cornerRadius: 12,
+            alignment: .outside
+        )
+        ticketTitleWavyLayer = ticketTitleTextField.addWavyStrokeLayer(
+            strokeColor: inactiveColor,
+            lineWidth: 3,
+            cornerRadius: 12,
+            alignment: .outside
+        )
+        descriptionWavyLayer = descriptionTextView.addWavyStrokeLayer(
+            strokeColor: inactiveColor,
+            lineWidth: 3,
+            cornerRadius: 12,
+            alignment: .outside
+        )
+        calendarWavyLayer = calendarView.addWavyStrokeLayer(
+            strokeColor: inactiveColor,
+            lineWidth: 3,
+            cornerRadius: 12,
+            alignment: .outside
+        )
+
+        // calendarView 는 collectionView contentSize 변화로 비동기적으로 크기가 결정되므로
+        // 자체 layoutSubviews 콜백을 통해 wavy layer 를 갱신한다.
+        calendarView.onLayoutSubviews = { [weak self] in
+            guard let self else { return }
+            self.syncWavyStrokeLayer(self.calendarWavyLayer, to: self.calendarView.bounds)
+        }
+    }
+
     private func addSubviews() {
         view.addSubview(navigationView)
         view.addSubview(scrollView)
 
         scrollView.addSubview(photoTitleLabel)
-        scrollView.addSubview(ticketImageView)
-        scrollView.addSubview(ticketImageWavyStrokeView)
+        scrollView.addSubview(ticketImageContainer)
+        ticketImageContainer.addSubview(ticketImageView)
 
         scrollView.addSubview(ticketTitleLabel)
         scrollView.addSubview(ticketTitleTextField)
-        scrollView.addSubview(ticketTitleWavyStrokeView)
 
         scrollView.addSubview(descriptionTitleLabel)
         scrollView.addSubview(descriptionTextView)
         scrollView.addSubview(descriptionPlaceholderLabel)
-        scrollView.addSubview(descriptionWavyStrokeView)
 
         scrollView.addSubview(calendarTitleLabel)
         scrollView.addSubview(calendarView)
-        scrollView.addSubview(calendarWavyStrokeView)
 
         scrollView.addSubview(createButtonWavyBackground)
         scrollView.addSubview(createButton)
@@ -452,14 +482,14 @@ extension CreateTicketViewController {
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
         }
 
-        ticketImageView.snp.makeConstraints {
+        ticketImageContainer.snp.makeConstraints {
             $0.top.equalTo(photoTitleLabel.snp.bottom).offset(8)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.width.height.equalTo(120)
         }
 
-        ticketImageWavyStrokeView.snp.makeConstraints {
-            $0.edges.equalTo(ticketImageView)
+        ticketImageView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
         }
 
         ticketTitleLabel.snp.makeConstraints {
@@ -475,10 +505,6 @@ extension CreateTicketViewController {
             $0.height.equalTo(48)
         }
 
-        ticketTitleWavyStrokeView.snp.makeConstraints {
-            $0.edges.equalTo(ticketTitleTextField)
-        }
-
         descriptionTitleLabel.snp.makeConstraints {
             $0.top.equalTo(ticketTitleTextField.snp.bottom).offset(16)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
@@ -490,10 +516,6 @@ extension CreateTicketViewController {
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
             $0.height.greaterThanOrEqualTo(48)
-        }
-
-        descriptionWavyStrokeView.snp.makeConstraints {
-            $0.edges.equalTo(descriptionTextView)
         }
 
         descriptionPlaceholderLabel.snp.makeConstraints {
@@ -511,10 +533,6 @@ extension CreateTicketViewController {
             $0.top.equalTo(calendarTitleLabel.snp.bottom).offset(8)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
-        }
-
-        calendarWavyStrokeView.snp.makeConstraints {
-            $0.edges.equalTo(calendarView)
         }
 
         createButton.snp.makeConstraints {
