@@ -159,18 +159,9 @@ public final class CreateTicketViewController: UIViewController {
         return view
     }()
 
-    private let createButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("생성", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
-        button.layer.cornerRadius = 12
-        return button
-    }()
-
-    private let createButtonWavyStrokeView: WavyStrokeView = {
+    private let createButtonWavyBackground: WavyStrokeView = {
         let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
             strokeColor: UIColor(hex: "#29A047") ?? DesignSystemAsset.ColorAssests.primaryDark.color,
             lineWidth: 3
         )
@@ -178,6 +169,15 @@ public final class CreateTicketViewController: UIViewController {
         view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         return view
+    }()
+
+    private let createButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("생성", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
+        button.backgroundColor = .clear
+        return button
     }()
 
     public init(with viewModel: CreateTicketViewModel) {
@@ -383,8 +383,8 @@ extension CreateTicketViewController {
         scrollView.addSubview(calendarView)
         scrollView.addSubview(calendarWavyStrokeView)
 
+        scrollView.addSubview(createButtonWavyBackground)
         scrollView.addSubview(createButton)
-        scrollView.addSubview(createButtonWavyStrokeView)
     }
 
     private func setLayout() {
@@ -481,7 +481,7 @@ extension CreateTicketViewController {
             $0.height.equalTo(48)
         }
 
-        createButtonWavyStrokeView.snp.makeConstraints {
+        createButtonWavyBackground.snp.makeConstraints {
             $0.edges.equalTo(createButton)
         }
     }

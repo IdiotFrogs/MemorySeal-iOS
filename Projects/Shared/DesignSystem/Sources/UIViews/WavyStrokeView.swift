@@ -18,11 +18,11 @@ public enum WavyStrokeStyle {
     case filledStroked(fill: UIColor, stroke: UIColor, lineWidth: CGFloat)
 }
 
-/// `.stroked` 모드에서 wavy 외곽선이 뷰 bounds 기준 어느 쪽으로 형성될지 결정.
+/// `.stroked` / `.filledStroked` 모드에서 wavy path가 뷰 bounds 기준 어느 쪽으로 형성될지 결정.
 public enum WavyStrokeAlignment {
-    /// 외곽선이 bounds 안쪽에 형성된다.
+    /// path가 bounds 안쪽에 형성된다 (기본).
     case inside
-    /// 외곽선이 bounds 바깥쪽으로 확장된다. 안쪽 콘텐츠 영역을 그대로 두고 데코레이션만 바깥에 그릴 때.
+    /// path가 bounds 바깥쪽으로 확장된다. 안쪽 영역을 그대로 두고 wave 데코레이션만 바깥에 그릴 때.
     case outside
 }
 
@@ -168,12 +168,14 @@ public final class WavyStrokeView: UIView {
             }
         }()
         let baseInset = amp + strokeBuffer
-        // outside 모드일 때 path baseline을 bounds 바깥으로 옮긴다 (.stroked에서만 적용).
+        // outside 모드일 때 path baseline을 bounds 바깥으로 옮긴다 (.stroked, .filledStroked).
         let signedInset: CGFloat = {
-            if case .stroked = style, strokeAlignment == .outside {
+            switch (style, strokeAlignment) {
+            case (.stroked, .outside), (.filledStroked, .outside):
                 return -baseInset
+            default:
+                return baseInset
             }
-            return baseInset
         }()
         let inset = bounds.insetBy(dx: signedInset, dy: signedInset)
         let radius = max(0, min(
