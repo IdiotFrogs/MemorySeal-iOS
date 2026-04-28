@@ -200,6 +200,7 @@ public final class CreateTicketViewController: UIViewController {
         self.bindViewModel()
         self.bindScrollView()
         self.bindTextView()
+        self.bindTextFieldFocus()
         self.bindImagePicker()
         self.rxViewDidLoad.accept(())
     }
@@ -302,6 +303,46 @@ extension CreateTicketViewController {
             .disposed(by: disposeBag)
     }
 
+    private func bindTextFieldFocus() {
+        let activeColor = DesignSystemAsset.ColorAssests.primaryNormal.color
+        let inactiveColor = DesignSystemAsset.ColorAssests.grey1.color
+        let filledBg = DesignSystemAsset.ColorAssests.backgroundNormal.color
+
+        ticketTitleTextField.rx.controlEvent(.editingDidBegin)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.ticketTitleWavyStrokeView.setStrokeColor(activeColor)
+                self.ticketTitleTextField.backgroundColor = .white
+            })
+            .disposed(by: disposeBag)
+
+        ticketTitleTextField.rx.controlEvent(.editingDidEnd)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.ticketTitleWavyStrokeView.setStrokeColor(inactiveColor)
+                let isEmpty = self.ticketTitleTextField.text?.isEmpty ?? true
+                self.ticketTitleTextField.backgroundColor = isEmpty ? .white : filledBg
+            })
+            .disposed(by: disposeBag)
+
+        descriptionTextView.rx.didBeginEditing
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.descriptionWavyStrokeView.setStrokeColor(activeColor)
+                self.descriptionTextView.backgroundColor = .white
+            })
+            .disposed(by: disposeBag)
+
+        descriptionTextView.rx.didEndEditing
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.descriptionWavyStrokeView.setStrokeColor(inactiveColor)
+                let isEmpty = self.descriptionTextView.text?.isEmpty ?? true
+                self.descriptionTextView.backgroundColor = isEmpty ? .white : filledBg
+            })
+            .disposed(by: disposeBag)
+    }
+
     private func bindImagePicker() {
         let tapGesture = UITapGestureRecognizer()
         ticketImageView.addGestureRecognizer(tapGesture)
@@ -319,6 +360,9 @@ extension CreateTicketViewController {
             .subscribe(onNext: { (self, image) in
                 self.ticketImageView.image = image
                 self.ticketImageView.contentMode = .scaleAspectFill
+                self.ticketImageWavyStrokeView.setStrokeColor(
+                    DesignSystemAsset.ColorAssests.grey5.color
+                )
             })
             .disposed(by: disposeBag)
     }

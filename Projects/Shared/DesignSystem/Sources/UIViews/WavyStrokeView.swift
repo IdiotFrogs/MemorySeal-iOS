@@ -59,6 +59,18 @@ public final class WavyStrokeView: UIView {
         didSet { updateAppearance() }
     }
 
+    /// 현재 스타일을 유지하면서 stroke 색만 갈아끼운다 (`.stroked`, `.filledStroked` 한정).
+    public func setStrokeColor(_ color: UIColor) {
+        switch style {
+        case .stroked(_, let lineWidth):
+            style = .stroked(color: color, lineWidth: lineWidth)
+        case .filledStroked(let fill, _, let lineWidth):
+            style = .filledStroked(fill: fill, stroke: color, lineWidth: lineWidth)
+        case .filled:
+            break
+        }
+    }
+
     private let maskLayer = CAShapeLayer()
     private let fillLayer = CAShapeLayer()
     private let strokeLayer = CAShapeLayer()
