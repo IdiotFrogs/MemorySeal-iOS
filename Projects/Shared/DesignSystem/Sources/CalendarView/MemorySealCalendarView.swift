@@ -13,9 +13,6 @@ import RxSwift
 import RxCocoa
 
 final public class MemorySealCalendarView: UIView {
-    /// `layoutSubviews` 가 발생할 때마다 호출되는 콜백.
-    /// 캘린더가 collectionView contentSize 에 따라 비동기적으로 크기를 갱신하므로,
-    /// 외부 호스트(예: wavy stroke)가 이 시점에 bounds 동기화를 수행할 수 있도록 노출한다.
     public var onLayoutSubviews: (() -> Void)?
 
     public override func layoutSubviews() {
@@ -27,7 +24,7 @@ final public class MemorySealCalendarView: UIView {
         let label = UILabel()
         label.text = "2025년 6월"
         label.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
         return label
     }()
     
@@ -106,7 +103,7 @@ extension MemorySealCalendarView {
             let dayLabel: UILabel = {
                 let label = UILabel()
                 label.text = day
-                label.textColor = DesignSystemAsset.ColorAssests.grey4.color
+                label.textColor = DesignSystemAsset.ColorAssests.grey3.color
                 label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
                 label.textAlignment = .center
                 return label
@@ -167,28 +164,29 @@ extension MemorySealCalendarView {
     }
     
     private func setLayout() {
-        titleLabel.snp.makeConstraints {
-            $0.top.leading.equalToSuperview().offset(12)
-        }
-        
-        nextMonthButton.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(12.5)
-            $0.trailing.equalToSuperview().inset(12)
-            $0.width.height.equalTo(16)
-        }
-        
         previousMonthButton.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(12.5)
-            $0.trailing.equalTo(nextMonthButton.snp.leading).offset(-8)
-            $0.width.height.equalTo(16)
+            $0.top.equalToSuperview().offset(24)
+            $0.leading.equalToSuperview().offset(20)
+            $0.width.height.equalTo(20)
         }
-        
+
+        nextMonthButton.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(24)
+            $0.trailing.equalToSuperview().inset(20)
+            $0.width.height.equalTo(20)
+        }
+
+        titleLabel.snp.makeConstraints {
+            $0.centerX.equalToSuperview()
+            $0.centerY.equalTo(previousMonthButton)
+        }
+
         weekStackView.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(12)
+            $0.top.equalTo(titleLabel.snp.bottom).offset(24)
             $0.leading.trailing.equalToSuperview().inset(12)
             $0.height.equalTo(24)
         }
-        
+
         collectionView.snp.makeConstraints {
             $0.top.equalTo(weekStackView.snp.bottom)
             $0.leading.trailing.equalToSuperview().inset(12)

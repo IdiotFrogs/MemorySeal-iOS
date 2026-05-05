@@ -15,6 +15,17 @@ import RxCocoa
 import CalendarDomain
 import DesignSystem
 
+/// `layoutSubviews` 콜백으로 외부에서 bounds 변화를 추적할 수 있는 UITextView.
+/// wavy stroke 레이어처럼 호스트 layer 의 사이즈 변경을 즉시 반영해야 하는 경우 사용한다.
+private final class LayoutTrackingTextView: UITextView {
+    var onLayoutSubviews: (() -> Void)?
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        onLayoutSubviews?()
+    }
+}
+
 public final class CreateTicketViewController: UIViewController {
     private let viewModel: CreateTicketViewModel
     private let disposeBag: DisposeBag = DisposeBag()
@@ -45,8 +56,8 @@ public final class CreateTicketViewController: UIViewController {
     private let photoTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "사진"
-        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
+        label.textColor = DesignSystemAsset.ColorAssests.grey3.color
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 12)
         return label
     }()
 
@@ -68,8 +79,8 @@ public final class CreateTicketViewController: UIViewController {
     private let ticketTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "제목"
-        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
+        label.textColor = DesignSystemAsset.ColorAssests.grey3.color
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 12)
         return label
     }()
 
@@ -89,13 +100,13 @@ public final class CreateTicketViewController: UIViewController {
     private let descriptionTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "간단한 설명"
-        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
+        label.textColor = DesignSystemAsset.ColorAssests.grey3.color
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 12)
         return label
     }()
 
-    private let descriptionTextView: UITextView = {
-        let textView = UITextView()
+    private let descriptionTextView: LayoutTrackingTextView = {
+        let textView = LayoutTrackingTextView()
         textView.textColor = DesignSystemAsset.ColorAssests.grey5.color
         textView.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
         textView.layer.cornerRadius = 12
@@ -115,8 +126,8 @@ public final class CreateTicketViewController: UIViewController {
     private let calendarTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "오픈 날짜"
-        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 12)
+        label.textColor = DesignSystemAsset.ColorAssests.grey3.color
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 12)
         return label
     }()
 
@@ -260,13 +271,32 @@ extension CreateTicketViewController {
             })
             .disposed(by: disposeBag)
 
-        output.isLoading
-            .observe(on: MainScheduler.instance)
-            .withUnretained(self)
-            .subscribe(onNext: { (self, isLoading) in
-                self.createButton.isEnabled = !isLoading
-            })
+        output.canCreate
+            .drive(with: self) { (self, canCreate) in
+                self.applyCreateButtonState(enabled: canCreate)
+            }
             .disposed(by: disposeBag)
+    }
+
+    private func applyCreateButtonState(enabled: Bool) {
+        createButton.isEnabled = enabled
+
+        if enabled {
+            createButtonWavyBackground.style = .filledStroked(
+                fill: DesignSystemAsset.ColorAssests.primaryNormal.color,
+                stroke: UIColor(hex: "#29A047") ?? DesignSystemAsset.ColorAssests.primaryDark.color,
+                lineWidth: 3
+            )
+            createButton.setTitleColor(.white, for: .normal)
+        } else {
+            let disabledColor = DesignSystemAsset.ColorAssests.primaryLight.color
+            createButtonWavyBackground.style = .filledStroked(
+                fill: disabledColor,
+                stroke: disabledColor,
+                lineWidth: 3
+            )
+            createButton.setTitleColor(DesignSystemAsset.ColorAssests.grey3.color, for: .normal)
+        }
     }
 
     private func bindScrollView() {
@@ -296,6 +326,16 @@ extension CreateTicketViewController {
             .withUnretained(self)
             .subscribe(onNext: { (self, text) in
                 self.descriptionPlaceholderLabel.isHidden = text.isEmpty == false
+            })
+            .disposed(by: disposeBag)
+
+        // 줄바꿈 직후 / 텍스트 삭제 후 textView 의 intrinsicContentSize 가 자동으로 재계산되지 않아
+        // 높이 반영이 늦어지고, 늘어났던 wavy stroke 가 다시 줄어들지 않는 문제 방지.
+        descriptionTextView.rx.didChange
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.descriptionTextView.invalidateIntrinsicContentSize()
+                self.view.layoutIfNeeded()
             })
             .disposed(by: disposeBag)
     }
@@ -437,6 +477,14 @@ extension CreateTicketViewController {
             guard let self else { return }
             self.syncWavyStrokeLayer(self.calendarWavyLayer, to: self.calendarView.bounds)
         }
+
+        // descriptionTextView 는 텍스트 입력/삭제로 intrinsicContentSize 가 즉시 갱신되지 않거나
+        // viewDidLayoutSubviews 가 늦게 도달하는 경우가 있어 텍스트 뷰 자체 layoutSubviews 시점에
+        // wavy layer 를 동기화한다.
+        descriptionTextView.onLayoutSubviews = { [weak self] in
+            guard let self else { return }
+            self.syncWavyStrokeLayer(self.descriptionWavyLayer, to: self.descriptionTextView.bounds)
+        }
     }
 
     private func addSubviews() {
@@ -478,8 +526,8 @@ extension CreateTicketViewController {
 
         photoTitleLabel.snp.makeConstraints {
             $0.top.equalToSuperview().offset(24)
-            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
-            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
+            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(26)
+            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(26)
         }
 
         ticketImageContainer.snp.makeConstraints {
@@ -494,8 +542,8 @@ extension CreateTicketViewController {
 
         ticketTitleLabel.snp.makeConstraints {
             $0.top.equalTo(ticketImageView.snp.bottom).offset(16)
-            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
-            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
+            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(26)
+            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(26)
         }
 
         ticketTitleTextField.snp.makeConstraints {
@@ -507,8 +555,8 @@ extension CreateTicketViewController {
 
         descriptionTitleLabel.snp.makeConstraints {
             $0.top.equalTo(ticketTitleTextField.snp.bottom).offset(16)
-            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
-            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
+            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(26)
+            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(26)
         }
 
         descriptionTextView.snp.makeConstraints {
@@ -525,8 +573,8 @@ extension CreateTicketViewController {
 
         calendarTitleLabel.snp.makeConstraints {
             $0.top.equalTo(descriptionTextView.snp.bottom).offset(16)
-            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
-            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
+            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(26)
+            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(26)
         }
 
         calendarView.snp.makeConstraints {

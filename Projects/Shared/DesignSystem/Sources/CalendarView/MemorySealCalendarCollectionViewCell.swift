@@ -10,6 +10,19 @@ import UIKit
 import SnapKit
 
 public final class MemorySealCalendarCollectionViewCell: UICollectionViewCell {
+    private let selectedWavyBackground: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            strokeColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            lineWidth: 5
+        )
+        view.waveCornerRadius = 8
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        view.isHidden = true
+        return view
+    }()
+
     private let dateButton: UIButton = {
         let button = UIButton()
         button.setTitleColor(DesignSystemAsset.ColorAssests.grey5.color, for: .normal)
@@ -17,47 +30,50 @@ public final class MemorySealCalendarCollectionViewCell: UICollectionViewCell {
         button.setTitleColor(.white, for: .selected)
         button.setBackgroundColor(color: .clear, forState: .normal)
         button.setBackgroundColor(color: .clear, forState: .disabled)
-        button.setBackgroundColor(color: DesignSystemAsset.ColorAssests.primaryNormal.color, forState: .selected)
+        button.setBackgroundColor(color: .clear, forState: .selected)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
         button.layer.cornerRadius = 8
         button.isUserInteractionEnabled = false
         return button
     }()
-    
+
     public override init(frame: CGRect) {
         super.init(frame: frame)
-        
+
+        self.clipsToBounds = false
         self.layer.cornerRadius = 8
-        
+
         self.addSubviews()
         self.setLayout()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override public func prepareForReuse() {
         super.prepareForReuse()
-        
+
         self.dateButton.setBackgroundColor(color: .clear, forState: .normal)
+        self.selectedWavyBackground.isHidden = true
         self.isUserInteractionEnabled = true
     }
-    
+
     override public var isSelected: Bool {
         didSet {
             dateButton.isSelected = isSelected
+            selectedWavyBackground.isHidden = !isSelected
         }
     }
-    
+
     public func configure(dateText: String, isCurrentMonth: Bool, isToday: Bool) {
         dateButton.setTitle(dateText, for: .normal)
         dateButton.isEnabled = isCurrentMonth
-        
+
         if isCurrentMonth == false {
             isUserInteractionEnabled = false
         }
-        
+
         if isToday {
             dateButton.setBackgroundColor(
                 color: DesignSystemAsset.ColorAssests.grey1.color,
@@ -69,10 +85,15 @@ public final class MemorySealCalendarCollectionViewCell: UICollectionViewCell {
 
 extension MemorySealCalendarCollectionViewCell {
     private func addSubviews() {
+        addSubview(selectedWavyBackground)
         addSubview(dateButton)
     }
-    
+
     private func setLayout() {
+        selectedWavyBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
         dateButton.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
