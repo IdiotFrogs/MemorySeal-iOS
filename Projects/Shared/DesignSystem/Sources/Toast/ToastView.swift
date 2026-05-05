@@ -23,9 +23,21 @@ public final class ToastView: UIView {
         return view
     }()
 
+    private var wavyStrokeLayer: WavyStrokeLayer?
+
     private let colorOverlay: UIView = {
         let view = UIView()
         view.backgroundColor = UIColor(red: 0.043, green: 0.043, blue: 0.043, alpha: 0.48)
+        return view
+    }()
+
+    private let secondaryShadowView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        view.layer.shadowColor = UIColor(red: 80/255, green: 80/255, blue: 80/255, alpha: 1.0).cgColor
+        view.layer.shadowOpacity = 0.16
+        view.layer.shadowOffset = .zero
+        view.layer.shadowRadius = 8
         return view
     }()
 
@@ -60,19 +72,27 @@ public final class ToastView: UIView {
         self.backgroundColor = .clear
         self.clipsToBounds = false
 
-        // 그림자: Figma 디자인 값
-        self.layer.shadowColor = UIColor(red: 0.314, green: 0.314, blue: 0.314, alpha: 1.0).cgColor
-        self.layer.shadowOpacity = 0.16
-        self.layer.shadowOffset = .zero
+        self.layer.shadowColor = UIColor.black.cgColor
+        self.layer.shadowOpacity = 0.25
+        self.layer.shadowOffset = CGSize(width: 0, height: 4)
         self.layer.shadowRadius = 8
 
-        // 블러 contentView 안에 오버레이 배치 (블러 위에 색상이 얹힘)
         blurView.contentView.addSubview(colorOverlay)
 
         messageLabel.text = message
 
         addSubviews()
         setLayout()
+        setupWavyStroke()
+    }
+
+    private func setupWavyStroke() {
+        wavyStrokeLayer = self.addWavyStrokeLayer(
+            strokeColor: DesignSystemAsset.ColorAssests.grey4.color,
+            lineWidth: 3,
+            cornerRadius: 12,
+            alignment: .outside
+        )
     }
 
     required init?(coder: NSCoder) {
@@ -81,7 +101,14 @@ public final class ToastView: UIView {
 
     public override func layoutSubviews() {
         super.layoutSubviews()
-        self.layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 12).cgPath
+        let path = UIBezierPath(roundedRect: bounds, cornerRadius: 12).cgPath
+        self.layer.shadowPath = path
+        secondaryShadowView.layer.shadowPath = path
+
+        if let wavyStrokeLayer, wavyStrokeLayer.frame != bounds {
+            wavyStrokeLayer.frame = bounds
+            wavyStrokeLayer.setNeedsPathRefresh()
+        }
     }
 
     // MARK: - Layout
@@ -89,11 +116,16 @@ public final class ToastView: UIView {
         contentStackView.addArrangedSubview(iconImageView)
         contentStackView.addArrangedSubview(messageLabel)
 
+        addSubview(secondaryShadowView)
         addSubview(blurView)
         addSubview(contentStackView)
     }
 
     private func setLayout() {
+        secondaryShadowView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
         blurView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
@@ -107,7 +139,14 @@ public final class ToastView: UIView {
         }
 
         contentStackView.snp.makeConstraints {
-            $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16))
+            $0.edges.equalToSuperview().inset(
+                UIEdgeInsets(
+                    top: 12,
+                    left: 16,
+                    bottom: 12,
+                    right: 16
+                )
+            )
         }
     }
 
