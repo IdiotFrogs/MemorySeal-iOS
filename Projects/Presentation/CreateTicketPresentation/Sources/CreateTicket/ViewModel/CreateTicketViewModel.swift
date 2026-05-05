@@ -61,10 +61,12 @@ public final class CreateTicketViewModel {
         let currentMonth: BehaviorRelay<Date>
         let calendarDates: PublishRelay<[CalendarDateModel]>
         let isLoading: BehaviorRelay<Bool>
+        let canCreate: Driver<Bool>
     }
 
     func transform(_ input: Input) -> Output {
         let isLoading = BehaviorRelay<Bool>(value: false)
+        let imageSelectedRelay = BehaviorRelay<Bool>(value: false)
 
         input.rxViewDidLoad
             .withUnretained(self)
@@ -108,6 +110,7 @@ public final class CreateTicketViewModel {
             .withUnretained(self)
             .subscribe(onNext: { (self, image) in
                 self.storedImage = image
+                imageSelectedRelay.accept(true)
             })
             .disposed(by: disposeBag)
 
@@ -139,10 +142,24 @@ public final class CreateTicketViewModel {
             })
             .disposed(by: disposeBag)
 
+        let titleNonEmpty = input.titleText
+            .orEmpty
+            .map { !$0.isEmpty }
+
+        let canCreate = Observable.combineLatest(
+            titleNonEmpty.asObservable(),
+            imageSelectedRelay.asObservable(),
+            isLoading.asObservable()
+        ) { titleOk, imageOk, loading in
+            titleOk && imageOk && !loading
+        }
+        .asDriver(onErrorJustReturn: false)
+
         return Output(
             currentMonth: currentMonth,
             calendarDates: calendarDates,
-            isLoading: isLoading
+            isLoading: isLoading,
+            canCreate: canCreate
         )
     }
 }
