@@ -15,8 +15,6 @@ import RxCocoa
 import CalendarDomain
 import DesignSystem
 
-/// `layoutSubviews` 콜백으로 외부에서 bounds 변화를 추적할 수 있는 UITextView.
-/// wavy stroke 레이어처럼 호스트 layer 의 사이즈 변경을 즉시 반영해야 하는 경우 사용한다.
 private final class LayoutTrackingTextView: UITextView {
     var onLayoutSubviews: (() -> Void)?
 
@@ -197,8 +195,6 @@ public final class CreateTicketViewController: UIViewController {
         if layer.frame != bounds {
             layer.frame = bounds
         }
-        // CALayer 의 frame setter 가 Swift override 를 우회하는 케이스(예: Core Animation
-        // transaction 내부 갱신) 에 대비해 path 재생성을 명시적으로 한 번 더 트리거한다.
         layer.setNeedsPathRefresh()
     }
 
@@ -329,8 +325,6 @@ extension CreateTicketViewController {
             })
             .disposed(by: disposeBag)
 
-        // 줄바꿈 직후 / 텍스트 삭제 후 textView 의 intrinsicContentSize 가 자동으로 재계산되지 않아
-        // 높이 반영이 늦어지고, 늘어났던 wavy stroke 가 다시 줄어들지 않는 문제 방지.
         descriptionTextView.rx.didChange
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
@@ -471,16 +465,11 @@ extension CreateTicketViewController {
             alignment: .outside
         )
 
-        // calendarView 는 collectionView contentSize 변화로 비동기적으로 크기가 결정되므로
-        // 자체 layoutSubviews 콜백을 통해 wavy layer 를 갱신한다.
         calendarView.onLayoutSubviews = { [weak self] in
             guard let self else { return }
             self.syncWavyStrokeLayer(self.calendarWavyLayer, to: self.calendarView.bounds)
         }
 
-        // descriptionTextView 는 텍스트 입력/삭제로 intrinsicContentSize 가 즉시 갱신되지 않거나
-        // viewDidLayoutSubviews 가 늦게 도달하는 경우가 있어 텍스트 뷰 자체 layoutSubviews 시점에
-        // wavy layer 를 동기화한다.
         descriptionTextView.onLayoutSubviews = { [weak self] in
             guard let self else { return }
             self.syncWavyStrokeLayer(self.descriptionWavyLayer, to: self.descriptionTextView.bounds)

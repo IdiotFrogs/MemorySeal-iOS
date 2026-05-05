@@ -129,3 +129,4 @@ Chore: {빌드, 설정, 의존성 등 기능과 무관한 작업}
 - `withUnretained(self)` 로 메모리 누수 방지
 - ViewController UI 초기화는 `setInitialValues()` → `addSubviews()` → `setLayout()` → `bindViewModel()` 순서
 - ViewModel delegate는 `weak var delegate` 로 선언
+- **주석 작성 금지**: `// MARK: -` 섹션 구분 외에는 어떠한 주석도 추가하지 않는다 (설명 / 의도 / TODO / 워크어라운드 메모 모두 포함). 새 코드 작성 시는 물론 기존 코드 수정 시에도 주석을 새로 만들지 말 것. 변경 의도는 커밋 메시지 / PR 본문으로만 기록한다.
