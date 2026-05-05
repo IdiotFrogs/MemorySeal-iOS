@@ -8,21 +8,14 @@
 
 import UIKit
 
-/// 손그림 느낌의 불규칙한 경계를 표현하는 뷰의 렌더링 스타일.
 public enum WavyStrokeStyle {
-    /// wavy 모양으로 뷰 전체를 채운다. 자식 뷰는 wavy 영역으로 클리핑된다.
     case filled(color: UIColor)
-    /// wavy 외곽선만 그린다. 다른 뷰 위에 덧씌우는 데코레이션 용도.
     case stroked(color: UIColor, lineWidth: CGFloat)
-    /// 같은 wavy path를 fill + stroke로 그린다. 자식 뷰가 stroke 외곽선 안쪽에만 보이는 SVG 티켓 스타일.
     case filledStroked(fill: UIColor, stroke: UIColor, lineWidth: CGFloat)
 }
 
-/// `.stroked` / `.filledStroked` 모드에서 wavy path가 뷰 bounds 기준 어느 쪽으로 형성될지 결정.
 public enum WavyStrokeAlignment {
-    /// path가 bounds 안쪽에 형성된다 (기본).
     case inside
-    /// path가 bounds 바깥쪽으로 확장된다. 안쪽 영역을 그대로 두고 wave 데코레이션만 바깥에 그릴 때.
     case outside
 }
 
@@ -34,32 +27,26 @@ public final class WavyStrokeView: UIView {
         didSet { applyStyle() }
     }
 
-    /// 경계가 흔들리는 진폭(픽셀).
     public var waveAmplitude: CGFloat = 2.0 {
         didSet { updateAppearance() }
     }
 
-    /// 경계 위 샘플 점 사이의 간격(픽셀).
     public var waveSpacing: CGFloat = 6.0 {
         didSet { updateAppearance() }
     }
 
-    /// 모서리 라운드 반경.
     public var waveCornerRadius: CGFloat = 16.0 {
         didSet { updateAppearance() }
     }
 
-    /// 흔들림 패턴 결정 시드. 같은 값이면 레이아웃이 바뀌어도 동일 패턴이 그려진다.
     public var noiseSeed: UInt64 = 0xC0FFEE_BABE {
         didSet { updateAppearance() }
     }
 
-    /// `.stroked` 모드에서 stroke가 그려지는 방향. 기본은 `.inside`.
     public var strokeAlignment: WavyStrokeAlignment = .inside {
         didSet { updateAppearance() }
     }
 
-    /// 현재 스타일을 유지하면서 stroke 색만 갈아끼운다 (`.stroked`, `.filledStroked` 한정).
     public func setStrokeColor(_ color: UIColor) {
         switch style {
         case .stroked(_, let lineWidth):
@@ -149,7 +136,6 @@ public final class WavyStrokeView: UIView {
 
     public override func didAddSubview(_ subview: UIView) {
         super.didAddSubview(subview)
-        // 새 자식의 layer 위에 stroke가 다시 올라오도록 sublayer 순서를 끝으로 옮긴다.
         if !strokeLayer.isHidden {
             layer.addSublayer(strokeLayer)
         }
@@ -170,7 +156,6 @@ public final class WavyStrokeView: UIView {
 
     private func makeWavyPath() -> UIBezierPath {
         let amp = waveAmplitude
-        // stroke 외곽선이 waveCornerRadius 기준 rounded rect 경계와 일치하도록 inset 보정.
         let strokeBuffer: CGFloat = {
             switch style {
             case .stroked(_, let lineWidth), .filledStroked(_, _, let lineWidth):
@@ -180,8 +165,6 @@ public final class WavyStrokeView: UIView {
             }
         }()
         let baseInset = amp + strokeBuffer
-        // outside 모드는 path baseline 을 host bounds 위에 정확히 두어 wave 가 bounds 를 가로질러 진동하게 한다.
-        // 이렇게 하면 stroke 픽셀이 host 가장자리를 항상 덮어 antialiasing 갭이 보이지 않는다.
         let signedInset: CGFloat = {
             switch (style, strokeAlignment) {
             case (.stroked, .outside), (.filledStroked, .outside):
@@ -224,7 +207,6 @@ public final class WavyStrokeView: UIView {
     ) -> [PerimeterSample] {
         var result: [PerimeterSample] = []
 
-        // Top edge (→)
         appendLine(
             from: CGPoint(x: rect.minX + r, y: rect.minY),
             to: CGPoint(x: rect.maxX - r, y: rect.minY),
@@ -232,7 +214,6 @@ public final class WavyStrokeView: UIView {
             spacing: spacing,
             into: &result
         )
-        // Top-right corner
         appendArc(
             center: CGPoint(x: rect.maxX - r, y: rect.minY + r),
             radius: r,
@@ -241,7 +222,6 @@ public final class WavyStrokeView: UIView {
             spacing: spacing,
             into: &result
         )
-        // Right edge (↓)
         appendLine(
             from: CGPoint(x: rect.maxX, y: rect.minY + r),
             to: CGPoint(x: rect.maxX, y: rect.maxY - r),
@@ -249,7 +229,6 @@ public final class WavyStrokeView: UIView {
             spacing: spacing,
             into: &result
         )
-        // Bottom-right corner
         appendArc(
             center: CGPoint(x: rect.maxX - r, y: rect.maxY - r),
             radius: r,
@@ -258,7 +237,6 @@ public final class WavyStrokeView: UIView {
             spacing: spacing,
             into: &result
         )
-        // Bottom edge (←)
         appendLine(
             from: CGPoint(x: rect.maxX - r, y: rect.maxY),
             to: CGPoint(x: rect.minX + r, y: rect.maxY),
@@ -266,7 +244,6 @@ public final class WavyStrokeView: UIView {
             spacing: spacing,
             into: &result
         )
-        // Bottom-left corner
         appendArc(
             center: CGPoint(x: rect.minX + r, y: rect.maxY - r),
             radius: r,
@@ -275,7 +252,6 @@ public final class WavyStrokeView: UIView {
             spacing: spacing,
             into: &result
         )
-        // Left edge (↑)
         appendLine(
             from: CGPoint(x: rect.minX, y: rect.maxY - r),
             to: CGPoint(x: rect.minX, y: rect.minY + r),
@@ -283,7 +259,6 @@ public final class WavyStrokeView: UIView {
             spacing: spacing,
             into: &result
         )
-        // Top-left corner
         appendArc(
             center: CGPoint(x: rect.minX + r, y: rect.minY + r),
             radius: r,

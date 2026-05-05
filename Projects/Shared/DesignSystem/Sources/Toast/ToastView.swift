@@ -157,7 +157,6 @@ public final class ToastView: UIView {
         message: String,
         position: ToastPosition = .bottom
     ) -> ToastView {
-        // 기존 토스트 제거
         view.subviews.compactMap { $0 as? ToastView }.forEach { $0.removeFromSuperview() }
 
         let toast = ToastView(message: message)
@@ -174,18 +173,15 @@ public final class ToastView: UIView {
             }
         }
 
-        // 초기 상태
         let slideOffset: CGFloat = position == .top ? -20 : 20
         toast.alpha = 0
         toast.transform = CGAffineTransform(translationX: 0, y: slideOffset)
 
-        // 등장 애니메이션
         UIView.animate(withDuration: 0.25) {
             toast.alpha = 1
             toast.transform = .identity
         }
 
-        // 사라짐 애니메이션
         UIView.animate(
             withDuration: 0.25,
             delay: 2.0,

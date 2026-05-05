@@ -18,7 +18,7 @@ public final class EnterTicketViewController: UIViewController {
     
     private let popUpBackgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
+        view.backgroundColor = .white
         view.layer.cornerRadius = 24
         view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         return view
@@ -40,14 +40,27 @@ public final class EnterTicketViewController: UIViewController {
             color: DesignSystemAsset.ColorAssests.grey3.color,
             font: DesignSystemFontFamily.Pretendard.regular.font(size: 16)
         )
+        textField.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
+        textField.textColor = DesignSystemAsset.ColorAssests.grey5.color
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
         textField.leftViewMode = .always
-        textField.layer.cornerRadius = 12
-        textField.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
-        textField.layer.borderWidth = 1
         return textField
     }()
-    
+
+    private var codeTextFieldWavyLayer: WavyStrokeLayer?
+
+    private let cancelButtonWavyBg: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.grey1.color,
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
     private let cancelButton: UIButton = {
         let button = UIButton()
         button.setTitle("취소", for: .normal)
@@ -55,12 +68,23 @@ public final class EnterTicketViewController: UIViewController {
             DesignSystemAsset.ColorAssests.grey4.color,
             for: .normal
         )
-        button.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
+        button.backgroundColor = .clear
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        button.layer.cornerRadius = 12
         return button
     }()
-    
+
+    private let enterButtonWavyBg: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.primaryLight.color,
+            strokeColor: DesignSystemAsset.ColorAssests.primaryLight.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
     private let enterButton: UIButton = {
         let button = UIButton()
         button.setTitle("합류", for: .normal)
@@ -72,16 +96,8 @@ public final class EnterTicketViewController: UIViewController {
             .white,
             for: .normal
         )
-        button.setBackgroundColor(
-            color: DesignSystemAsset.ColorAssests.primaryLight.color,
-            forState: .disabled
-        )
-        button.setBackgroundColor(
-            color: DesignSystemAsset.ColorAssests.primaryNormal.color,
-            forState: .normal
-        )
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        button.layer.cornerRadius = 12
+        button.backgroundColor = .clear
         button.isEnabled = false
         return button
     }()
@@ -97,16 +113,47 @@ public final class EnterTicketViewController: UIViewController {
     
     public override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         self.codeTextField.becomeFirstResponder()
         self.setBackgroundView()
         self.addSubViews()
         self.setLayout()
+        self.setupWavyStrokeLayer()
+        self.applyEnterButtonState(enabled: false)
         self.observeKeyboardHeight()
-        
+
         self.bindViewModel()
         self.bindButton()
         self.bindTextField()
+    }
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let codeTextFieldWavyLayer else { return }
+        if codeTextFieldWavyLayer.frame != codeTextField.bounds {
+            codeTextFieldWavyLayer.frame = codeTextField.bounds
+        }
+        codeTextFieldWavyLayer.setNeedsPathRefresh()
+    }
+
+    private func setupWavyStrokeLayer() {
+        codeTextFieldWavyLayer = codeTextField.addWavyStrokeLayer(
+            strokeColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            lineWidth: 3,
+            cornerRadius: 12,
+            alignment: .outside
+        )
+    }
+
+    private func applyEnterButtonState(enabled: Bool) {
+        let color = enabled
+            ? DesignSystemAsset.ColorAssests.primaryNormal.color
+            : DesignSystemAsset.ColorAssests.primaryLight.color
+        enterButtonWavyBg.style = .filledStroked(
+            fill: color,
+            stroke: color,
+            lineWidth: 3
+        )
     }
     
     public override func viewDidDisappear(_ animated: Bool) {
@@ -198,7 +245,9 @@ extension EnterTicketViewController {
         codeTextField.rx.text.changed
             .withUnretained(self)
             .subscribe(onNext: { (self, content) in
-                self.enterButton.isEnabled = !(content?.isEmpty ?? false)
+                let isEnabled = !(content?.isEmpty ?? false)
+                self.enterButton.isEnabled = isEnabled
+                self.applyEnterButtonState(enabled: isEnabled)
             })
             .disposed(by: disposeBag)
     }
@@ -225,27 +274,29 @@ extension EnterTicketViewController {
         view.addSubview(popUpBackgroundView)
         popUpBackgroundView.addSubview(titleLabel)
         popUpBackgroundView.addSubview(codeTextField)
+        popUpBackgroundView.addSubview(cancelButtonWavyBg)
         popUpBackgroundView.addSubview(cancelButton)
+        popUpBackgroundView.addSubview(enterButtonWavyBg)
         popUpBackgroundView.addSubview(enterButton)
     }
-    
+
     private func setLayout() {
         popUpBackgroundView.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview()
         }
-        
+
         titleLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(24)
+            $0.top.equalToSuperview().offset(32)
             $0.leading.trailing.equalToSuperview()
         }
-        
+
         codeTextField.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(16)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(48)
         }
-        
+
         cancelButton.snp.makeConstraints {
             $0.top.equalTo(codeTextField.snp.bottom).offset(24)
             $0.leading.equalToSuperview().offset(20)
@@ -253,13 +304,21 @@ extension EnterTicketViewController {
             $0.height.equalTo(48)
             $0.width.equalTo(80)
         }
-        
+
+        cancelButtonWavyBg.snp.makeConstraints {
+            $0.edges.equalTo(cancelButton)
+        }
+
         enterButton.snp.makeConstraints {
             $0.top.equalTo(codeTextField.snp.bottom).offset(24)
             $0.leading.equalTo(cancelButton.snp.trailing).offset(8)
             $0.trailing.equalToSuperview().inset(20)
             $0.bottom.equalToSuperview().inset(24)
             $0.height.equalTo(48)
+        }
+
+        enterButtonWavyBg.snp.makeConstraints {
+            $0.edges.equalTo(enterButton)
         }
     }
 }

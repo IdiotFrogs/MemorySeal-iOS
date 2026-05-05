@@ -8,9 +8,6 @@
 
 import UIKit
 
-/// 손그림 느낌의 wavy 외곽선을 호스트 뷰의 layer 위에 직접 그리는 CAShapeLayer.
-/// `WavyStrokeView` 와 달리 별도의 sibling UIView 가 아닌 layer 단위로 동작하므로
-/// 호스트 bounds 와 동기화 슬립 없이 항상 같은 크기로 따라 움직인다.
 public final class WavyStrokeLayer: CAShapeLayer {
 
     // MARK: - Configurable
@@ -63,7 +60,6 @@ public final class WavyStrokeLayer: CAShapeLayer {
 
     // MARK: - Public API
 
-    /// stroke 색만 갈아끼우는 헬퍼. lineWidth/path 는 유지된다.
     public func setWavyStrokeColor(_ color: UIColor) {
         strokeColor = color.cgColor
     }
@@ -92,7 +88,6 @@ public final class WavyStrokeLayer: CAShapeLayer {
         }
     }
 
-    /// 외부에서 강제로 path 재생성을 요청한다 (host bounds 가 늦게 결정되는 경우 보조용).
     public func setNeedsPathRefresh() {
         regeneratePath()
     }
@@ -111,9 +106,6 @@ public final class WavyStrokeLayer: CAShapeLayer {
         let amp = waveAmplitude
         let strokeBuffer = lineWidth / 2
         let baseInset = amp + strokeBuffer
-        // outside 모드는 path baseline 을 host bounds 위에 정확히 둔다 (signedInset = 0).
-        // 이렇게 하면 perturb ±amp 로 wave 가 bounds 를 가로질러 진동하고,
-        // stroke 픽셀이 항상 host 가장자리를 덮어 antialiasing 갭이 발생하지 않는다.
         let signedInset: CGFloat = (alignment == .outside) ? 0 : baseInset
         let inset = bounds.insetBy(dx: signedInset, dy: signedInset)
         let radius = max(0, min(
@@ -297,9 +289,6 @@ public final class WavyStrokeLayer: CAShapeLayer {
 // MARK: - UIView attach helper
 
 public extension UIView {
-    /// 호스트 뷰의 layer 위에 wavy stroke 를 그리는 layer 를 추가한다.
-    /// 호스트가 `masksToBounds = true` 인 경우 outside 영역이 잘리므로,
-    /// 그런 호스트는 컨테이너 뷰로 감싸 컨테이너 layer 에 붙이는 것을 권장한다.
     @discardableResult
     func addWavyStrokeLayer(
         strokeColor: UIColor,
