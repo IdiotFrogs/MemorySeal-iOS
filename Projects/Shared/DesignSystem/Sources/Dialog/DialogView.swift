@@ -15,7 +15,7 @@ public final class DialogView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 20)
-        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
+        label.textColor = .black
         label.numberOfLines = 0
         return label
     }()
@@ -23,7 +23,7 @@ public final class DialogView: UIView {
     private let messageLabel: UILabel = {
         let label = UILabel()
         label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
-        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
+        label.textColor = DesignSystemAsset.ColorAssests.grey4.color
         label.numberOfLines = 0
         return label
     }()
@@ -37,26 +37,52 @@ public final class DialogView: UIView {
 
     private let cancelButton: UIButton = {
         let button = UIButton(type: .custom)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
+        button.backgroundColor = .clear
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
         button.setTitleColor(DesignSystemAsset.ColorAssests.grey4.color, for: .normal)
-        button.layer.cornerRadius = 12
         return button
     }()
 
+    private let cancelButtonWavyBackground: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.grey1.color,
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
+    private let cancelButtonContainer = UIView()
+
     private let confirmButton: UIButton = {
         let button = UIButton(type: .custom)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
+        button.backgroundColor = .clear
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
         button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
         return button
     }()
+
+    private let confirmButtonWavyBackground: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            strokeColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
+    private let confirmButtonContainer = UIView()
 
     private let buttonStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 8
+        stack.spacing = 12
         stack.distribution = .fillEqually
         return stack
     }()
@@ -160,8 +186,13 @@ extension DialogView {
         textStackView.addArrangedSubview(titleLabel)
         textStackView.addArrangedSubview(messageLabel)
 
-        buttonStackView.addArrangedSubview(cancelButton)
-        buttonStackView.addArrangedSubview(confirmButton)
+        cancelButtonContainer.addSubview(cancelButtonWavyBackground)
+        cancelButtonContainer.addSubview(cancelButton)
+        confirmButtonContainer.addSubview(confirmButtonWavyBackground)
+        confirmButtonContainer.addSubview(confirmButton)
+
+        buttonStackView.addArrangedSubview(cancelButtonContainer)
+        buttonStackView.addArrangedSubview(confirmButtonContainer)
 
         addSubview(textStackView)
         addSubview(buttonStackView)
@@ -178,6 +209,19 @@ extension DialogView {
             $0.leading.trailing.equalToSuperview().inset(24)
             $0.bottom.equalToSuperview().inset(24)
             $0.height.equalTo(48)
+        }
+
+        cancelButtonWavyBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        cancelButton.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        confirmButtonWavyBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        confirmButton.snp.makeConstraints {
+            $0.edges.equalToSuperview()
         }
     }
 }
