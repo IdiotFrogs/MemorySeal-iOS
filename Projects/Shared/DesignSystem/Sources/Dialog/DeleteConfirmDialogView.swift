@@ -27,38 +27,66 @@ public final class DeleteConfirmDialogView: UIView {
         let tf = UITextField()
         tf.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
         tf.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        tf.layer.cornerRadius = 12
-        tf.layer.borderWidth = 1
-        tf.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
-        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
+        tf.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
         tf.leftViewMode = .always
-        tf.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
+        tf.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
         tf.rightViewMode = .always
         return tf
     }()
 
+    private var textFieldWavyLayer: WavyStrokeLayer?
+
+    private let cancelButtonWavyBackground: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.grey1.color,
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
     private let cancelButton: UIButton = {
         let button = UIButton(type: .custom)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
+        button.backgroundColor = .clear
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
         button.setTitleColor(DesignSystemAsset.ColorAssests.grey4.color, for: .normal)
-        button.layer.cornerRadius = 12
         return button
+    }()
+
+    private let cancelButtonContainer = UIView()
+
+    private let confirmButtonWavyBackground: WavyStrokeView = {
+        let disabledColor = UIColor(hex: "#F3BBBB") ?? .systemPink
+        let view = WavyStrokeView(
+            fillColor: disabledColor,
+            strokeColor: disabledColor,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     private let confirmButton: UIButton = {
         let button = UIButton(type: .custom)
+        button.backgroundColor = .clear
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
         button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 12
         button.isEnabled = false
         return button
     }()
 
+    private let confirmButtonContainer = UIView()
+
     private let buttonStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
-        stack.spacing = 8
+        stack.spacing = 12
         stack.distribution = .fillEqually
         return stack
     }()
@@ -89,18 +117,37 @@ public final class DeleteConfirmDialogView: UIView {
         cancelButton.setTitle(cancelTitle, for: .normal)
         confirmButton.setTitle(confirmTitle, for: .normal)
 
-        self.backgroundColor = .white
+        self.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
         self.layer.cornerRadius = 24
         self.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
 
         self.addSubviews()
         self.setLayout()
+        self.setupWavyStrokeLayer()
         self.bindTextField()
         self.updateConfirmButtonState(isEnabled: false)
     }
 
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let textFieldWavyLayer else { return }
+        if textFieldWavyLayer.frame != textField.bounds {
+            textFieldWavyLayer.frame = textField.bounds
+        }
+        textFieldWavyLayer.setNeedsPathRefresh()
+    }
+
+    private func setupWavyStrokeLayer() {
+        textFieldWavyLayer = textField.addWavyStrokeLayer(
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3,
+            cornerRadius: 12,
+            alignment: .outside
+        )
     }
 
     private func bindTextField() {
@@ -116,13 +163,24 @@ public final class DeleteConfirmDialogView: UIView {
 
     private func updateConfirmButtonState(isEnabled: Bool) {
         confirmButton.isEnabled = isEnabled
+
         if isEnabled {
-            confirmButton.backgroundColor = DesignSystemAsset.ColorAssests.systemRed.color
+            let red = DesignSystemAsset.ColorAssests.systemRed.color
+            confirmButtonWavyBackground.style = .filledStroked(
+                fill: red,
+                stroke: red,
+                lineWidth: 3
+            )
             confirmButton.setTitleColor(.white, for: .normal)
         } else {
-            confirmButton.backgroundColor = DesignSystemAsset.ColorAssests.systemRed.color.withAlphaComponent(0.15)
+            let disabledColor = UIColor(hex: "#F3BBBB") ?? .systemPink
+            confirmButtonWavyBackground.style = .filledStroked(
+                fill: disabledColor,
+                stroke: disabledColor,
+                lineWidth: 3
+            )
             confirmButton.setTitleColor(
-                DesignSystemAsset.ColorAssests.systemRed.color.withAlphaComponent(0.5),
+                DesignSystemAsset.ColorAssests.systemRed.color.withAlphaComponent(0.35),
                 for: .normal
             )
         }
@@ -236,28 +294,47 @@ extension DeleteConfirmDialogView {
     private func addSubviews() {
         addSubview(messageLabel)
         addSubview(textField)
-        buttonStackView.addArrangedSubview(cancelButton)
-        buttonStackView.addArrangedSubview(confirmButton)
+
+        cancelButtonContainer.addSubview(cancelButtonWavyBackground)
+        cancelButtonContainer.addSubview(cancelButton)
+        confirmButtonContainer.addSubview(confirmButtonWavyBackground)
+        confirmButtonContainer.addSubview(confirmButton)
+
+        buttonStackView.addArrangedSubview(cancelButtonContainer)
+        buttonStackView.addArrangedSubview(confirmButtonContainer)
         addSubview(buttonStackView)
     }
 
     private func setLayout() {
         messageLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().inset(28)
-            $0.leading.trailing.equalToSuperview().inset(24)
+            $0.top.equalToSuperview().inset(32)
+            $0.leading.trailing.equalToSuperview().inset(20)
         }
 
         textField.snp.makeConstraints {
-            $0.top.equalTo(messageLabel.snp.bottom).offset(16)
-            $0.leading.trailing.equalToSuperview().inset(24)
+            $0.top.equalTo(messageLabel.snp.bottom).offset(24)
+            $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(48)
         }
 
         buttonStackView.snp.makeConstraints {
-            $0.top.equalTo(textField.snp.bottom).offset(16)
-            $0.leading.trailing.equalToSuperview().inset(24)
+            $0.top.equalTo(textField.snp.bottom).offset(24)
+            $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalToSuperview().inset(24)
             $0.height.equalTo(48)
+        }
+
+        cancelButtonWavyBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        cancelButton.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        confirmButtonWavyBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        confirmButton.snp.makeConstraints {
+            $0.edges.equalToSuperview()
         }
     }
 }
