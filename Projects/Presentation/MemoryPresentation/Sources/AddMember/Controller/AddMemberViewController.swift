@@ -21,7 +21,7 @@ public final class AddMemberViewController: UIViewController {
     private let viewModel: AddMemberViewModel
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
-        view.setTitle("맴버 추가")
+        view.setTitle("멤버 추가")
         return view
     }()
 
@@ -190,7 +190,7 @@ extension AddMemberViewController {
         }
 
         collectionView.snp.makeConstraints {
-            $0.top.equalTo(navigationView.snp.bottom).offset(8)
+            $0.top.equalTo(navigationView.snp.bottom).offset(12)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalToSuperview()
         }
