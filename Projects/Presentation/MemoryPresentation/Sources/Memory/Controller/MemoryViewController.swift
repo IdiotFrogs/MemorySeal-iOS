@@ -11,6 +11,7 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
+import BaseDomain
 import DesignSystem
 
 public final class MemoryViewController: UIViewController {
@@ -32,6 +33,9 @@ public final class MemoryViewController: UIViewController {
     private let viewModel: MemoryViewModel
     private let memoriesHeaderViewReuseIdentifier: String = "MyMemoriesCollectionHeaderView"
     private let sectionSpacingReusableViewReuseIdentifier: String = "SectionSpacingReusableView"
+
+    private var currentDetail: TimeCapsuleDetailEntity?
+    private var currentCollaborators: [CollaboratorEntity] = []
 
     // MARK: - Floating Header
     private let backButton: UIButton = {
@@ -279,7 +283,25 @@ extension MemoryViewController {
             didTapAddMemberButton: didTapAddMemberButton,
             didTapManageButton: didTapManageButton
         )
-        let _ = viewModel.transform(input)
+        let output = viewModel.transform(input)
+
+        output.detail
+            .observe(on: MainScheduler.instance)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, detail) in
+                self.currentDetail = detail
+                self.collectionView.reloadData()
+            })
+            .disposed(by: disposeBag)
+
+        output.collaborators
+            .observe(on: MainScheduler.instance)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, collaborators) in
+                self.currentCollaborators = collaborators
+                self.collectionView.reloadSections(IndexSet(integer: MemorySection.members.rawValue))
+            })
+            .disposed(by: disposeBag)
     }
 
     private func bindButtons() {
@@ -339,10 +361,12 @@ extension MemoryViewController: UICollectionViewDataSource {
         numberOfItemsInSection section: Int
     ) -> Int {
         switch MemorySection(rawValue: section) {
-        case .memoryImage, .memoryDescription, .buryTicket, .myMessages:
+        case .memoryImage, .memoryDescription, .myMessages:
             return 1
+        case .buryTicket:
+            return currentDetail?.userRole == .host ? 1 : 0
         case .members:
-            return 7
+            return currentCollaborators.count
         default:
             return 0
         }
@@ -354,15 +378,21 @@ extension MemoryViewController: UICollectionViewDataSource {
     ) -> UICollectionViewCell {
         switch MemorySection(rawValue: indexPath.section) {
         case .memoryImage:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: MemoryImageCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            )
+            ) as? MemoryImageCollectionViewCell else { return .init() }
+            cell.configure(imageUrl: currentDetail?.mainImageUrl)
+            return cell
         case .memoryDescription:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: MemoryDescriptionCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            )
+            ) as? MemoryDescriptionCollectionViewCell else { return .init() }
+            if let detail = currentDetail {
+                cell.configure(detail: detail)
+            }
+            return cell
         case .buryTicket:
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier,
@@ -373,15 +403,23 @@ extension MemoryViewController: UICollectionViewDataSource {
                 .disposed(by: cell.disposeBag)
             return cell
         case .myMessages:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: MyMessagesCardsCollectionViewCell.reuseIdentifier,
                 for: indexPath
+            ) as? MyMessagesCardsCollectionViewCell else { return .init() }
+            cell.configure(
+                contentCount: currentDetail?.myContentCount ?? 0,
+                imageCount: currentDetail?.myImageCount ?? 0
             )
+            return cell
         case .members:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: MemoryUserCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            )
+            ) as? MemoryUserCollectionViewCell else { return .init() }
+            guard indexPath.item < currentCollaborators.count else { return cell }
+            cell.configure(profileImageUrl: currentCollaborators[indexPath.item].profileImageUrl)
+            return cell
         default:
             return .init()
         }
@@ -416,7 +454,7 @@ extension MemoryViewController: UICollectionViewDelegate {
                 withReuseIdentifier: memoriesHeaderViewReuseIdentifier,
                 for: indexPath
             ) as? MyMemoriesCollectionHeaderView else { return .init() }
-            header.setStatus(.member)
+            header.setStatus(.member, memberCount: currentCollaborators.count)
             header.didTapSeeOtherButton
                 .withUnretained(self)
                 .subscribe(onNext: { (self, _) in

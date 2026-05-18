@@ -39,7 +39,6 @@ final class MyMemoriesCollectionHeaderView: UICollectionReusableView {
 
     private let memberCountLabel: UILabel = {
         let label = UILabel()
-        label.text = "7"
         label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
         label.textColor = DesignSystemAsset.ColorAssests.primaryNormal.color
         return label
@@ -75,11 +74,12 @@ final class MyMemoriesCollectionHeaderView: UICollectionReusableView {
 }
 
 extension MyMemoriesCollectionHeaderView {
-    func setStatus(_ status: Status) {
+    func setStatus(_ status: Status, memberCount: Int? = nil) {
         titleLabel.text = status.title
         memberCountLabel.removeFromSuperview()
 
         if status == .member {
+            memberCountLabel.text = memberCount.map(String.init) ?? "0"
             showMemberCountLabel()
         }
     }

@@ -14,6 +14,8 @@ public enum TimeCapsuleTargetType {
     case inviteToTimeCapsule(capsuleId: Int)
     case joinRequest(code: String)
     case deleteTimeCapsule(capsuleId: Int)
+    case fetchTimeCapsuleDetail(capsuleId: Int)
+    case fetchCollaborators(capsuleId: Int)
 }
 
 extension TimeCapsuleTargetType: BaseTargetType {
@@ -27,6 +29,10 @@ extension TimeCapsuleTargetType: BaseTargetType {
             return "/time-capsules/join-request"
         case .deleteTimeCapsule(let capsuleId):
             return "/time-capsules/\(capsuleId)"
+        case .fetchTimeCapsuleDetail(let capsuleId):
+            return "/time-capsules/\(capsuleId)"
+        case .fetchCollaborators(let capsuleId):
+            return "/time-capsules/\(capsuleId)/collaborators"
         }
     }
 
@@ -40,6 +46,10 @@ extension TimeCapsuleTargetType: BaseTargetType {
             return .post
         case .deleteTimeCapsule:
             return .delete
+        case .fetchTimeCapsuleDetail:
+            return .get
+        case .fetchCollaborators:
+            return .get
         }
     }
 
@@ -52,6 +62,10 @@ extension TimeCapsuleTargetType: BaseTargetType {
         case .joinRequest(let code):
             return .requestJSONEncodable(["code": code])
         case .deleteTimeCapsule:
+            return .requestPlain
+        case .fetchTimeCapsuleDetail:
+            return .requestPlain
+        case .fetchCollaborators:
             return .requestPlain
         }
     }
@@ -73,6 +87,10 @@ extension TimeCapsuleTargetType: BaseTargetType {
         case .joinRequest:
             return true
         case .deleteTimeCapsule:
+            return true
+        case .fetchTimeCapsuleDetail:
+            return true
+        case .fetchCollaborators:
             return true
         }
     }

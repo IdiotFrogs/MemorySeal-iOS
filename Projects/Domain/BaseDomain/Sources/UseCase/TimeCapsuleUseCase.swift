@@ -13,6 +13,8 @@ public protocol TimeCapsuleUseCase {
     func inviteToTimeCapsule(capsuleId: Int) async throws -> String
     func joinRequest(code: String) async throws
     func deleteTimeCapsule(capsuleId: Int) async throws
+    func fetchTimeCapsuleDetail(capsuleId: Int) async throws -> TimeCapsuleDetailEntity
+    func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity]
 }
 
 public final class DefaultTimeCapsuleUseCase: TimeCapsuleUseCase {
@@ -40,5 +42,13 @@ public final class DefaultTimeCapsuleUseCase: TimeCapsuleUseCase {
 
     public func deleteTimeCapsule(capsuleId: Int) async throws {
         try await timeCapsuleRepository.deleteTimeCapsule(capsuleId: capsuleId)
+    }
+
+    public func fetchTimeCapsuleDetail(capsuleId: Int) async throws -> TimeCapsuleDetailEntity {
+        return try await timeCapsuleRepository.fetchTimeCapsuleDetail(capsuleId: capsuleId)
+    }
+
+    public func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity] {
+        return try await timeCapsuleRepository.fetchCollaborators(capsuleId: capsuleId)
     }
 }

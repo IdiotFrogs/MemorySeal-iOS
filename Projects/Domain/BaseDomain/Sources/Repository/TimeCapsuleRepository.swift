@@ -13,4 +13,6 @@ public protocol TimeCapsuleRepository {
     func inviteToTimeCapsule(capsuleId: Int) async throws -> String
     func joinRequest(code: String) async throws
     func deleteTimeCapsule(capsuleId: Int) async throws
+    func fetchTimeCapsuleDetail(capsuleId: Int) async throws -> TimeCapsuleDetailEntity
+    func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity]
 }

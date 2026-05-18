@@ -9,6 +9,7 @@
 import UIKit
 import SnapKit
 
+import BaseDomain
 import DesignSystem
 
 public final class MemoryDescriptionCollectionViewCell: UICollectionViewCell {
@@ -48,6 +49,30 @@ public final class MemoryDescriptionCollectionViewCell: UICollectionViewCell {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    public func configure(detail: TimeCapsuleDetailEntity) {
+        memoryTitleLabel.text = detail.title
+        memoryDateLabel.text = Self.dateRangeText(
+            createdAt: detail.createdAt,
+            openedAt: detail.openedAt
+        )
+        memoryDescriptionLabel.text = detail.description
+    }
+
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy. MM. dd. (EEE)"
+        return formatter
+    }()
+
+    private static func dateRangeText(createdAt: Date, openedAt: Date?) -> String {
+        let start = dateFormatter.string(from: createdAt)
+        if let openedAt {
+            return "\(start) ~ \(dateFormatter.string(from: openedAt))"
+        }
+        return "\(start) ~ 오픈일"
     }
 }
 

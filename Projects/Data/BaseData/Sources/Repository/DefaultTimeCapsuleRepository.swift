@@ -51,4 +51,28 @@ public final class DefaultTimeCapsuleRepository: TimeCapsuleRepository {
         let result = await provider.request(.deleteTimeCapsule(capsuleId: capsuleId))
         try ResultHandler.handleResult(result: result, errorType: TimeCapsuleError.self)
     }
+
+    public func fetchTimeCapsuleDetail(capsuleId: Int) async throws -> TimeCapsuleDetailEntity {
+        let result = await provider.request(.fetchTimeCapsuleDetail(capsuleId: capsuleId))
+
+        let responseDTO = try ResultHandler.handleResult(
+            result: result,
+            responseType: TimeCapsuleDetailResponseDTO.self,
+            errorType: TimeCapsuleError.self
+        )
+
+        return responseDTO.toDomain
+    }
+
+    public func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity] {
+        let result = await provider.request(.fetchCollaborators(capsuleId: capsuleId))
+
+        let responseDTOs = try ResultHandler.handleResult(
+            result: result,
+            responseType: [CollaboratorResponseDTO].self,
+            errorType: TimeCapsuleError.self
+        )
+
+        return responseDTOs.map { $0.toDomain }
+    }
 }

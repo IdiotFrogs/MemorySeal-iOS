@@ -9,6 +9,8 @@
 import RxSwift
 import RxCocoa
 
+import BaseDomain
+
 public final class MemoryViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
 
@@ -25,10 +27,16 @@ public final class MemoryViewModel {
     public let action: Action
 
     private let capsuleId: Int
+    private let timeCapsuleUseCase: TimeCapsuleUseCase
 
-    public init(action: Action, capsuleId: Int) {
+    public init(
+        action: Action,
+        capsuleId: Int,
+        timeCapsuleUseCase: TimeCapsuleUseCase
+    ) {
         self.action = action
         self.capsuleId = capsuleId
+        self.timeCapsuleUseCase = timeCapsuleUseCase
     }
 
     struct Input {
@@ -38,15 +46,21 @@ public final class MemoryViewModel {
     }
 
     struct Output {
-
+        let detail: BehaviorRelay<TimeCapsuleDetailEntity?>
+        let collaborators: BehaviorRelay<[CollaboratorEntity]>
     }
 
     func transform(_ input: Input) -> Output {
+        let detail = BehaviorRelay<TimeCapsuleDetailEntity?>(value: nil)
+        let collaborators = BehaviorRelay<[CollaboratorEntity]>(value: [])
 
         input.rxViewDidLoad
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-
+                self.requestMemoryData(
+                    detail: detail,
+                    collaborators: collaborators
+                )
             })
             .disposed(by: disposeBag)
 
@@ -64,7 +78,31 @@ public final class MemoryViewModel {
             })
             .disposed(by: disposeBag)
 
+        return Output(detail: detail, collaborators: collaborators)
+    }
+}
 
-        return Output()
+extension MemoryViewModel {
+    private func requestMemoryData(
+        detail: BehaviorRelay<TimeCapsuleDetailEntity?>,
+        collaborators: BehaviorRelay<[CollaboratorEntity]>
+    ) {
+        Task { [weak self] in
+            guard let self else { return }
+            async let detailFetch = try? self.timeCapsuleUseCase.fetchTimeCapsuleDetail(capsuleId: self.capsuleId)
+            async let collaboratorsFetch = try? self.timeCapsuleUseCase.fetchCollaborators(capsuleId: self.capsuleId)
+
+            let fetchedDetail = await detailFetch
+            let fetchedCollaborators = await collaboratorsFetch
+
+            await MainActor.run {
+                if let fetchedDetail {
+                    detail.accept(fetchedDetail)
+                }
+                if let fetchedCollaborators {
+                    collaborators.accept(fetchedCollaborators)
+                }
+            }
+        }
     }
 }

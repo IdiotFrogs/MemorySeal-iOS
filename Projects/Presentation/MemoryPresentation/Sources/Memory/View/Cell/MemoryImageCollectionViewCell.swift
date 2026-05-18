@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import Kingfisher
 
 import DesignSystem
 
@@ -50,6 +51,14 @@ final class MemoryImageCollectionViewCell: UICollectionViewCell {
         CATransaction.setDisableActions(true)
         gradientLayer.frame = memoryImageView.bounds
         CATransaction.commit()
+    }
+
+    func configure(imageUrl: String?) {
+        guard let urlString = imageUrl, let url = URL(string: urlString) else {
+            memoryImageView.image = nil
+            return
+        }
+        memoryImageView.kf.setImage(with: url)
     }
 }
 

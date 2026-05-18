@@ -14,7 +14,14 @@ import BaseDomain
 
 public final class MemoryDIContainer {
     private func makeMemoryViewModel(action: MemoryViewModel.Action, capsuleId: Int) -> MemoryViewModel {
-        return MemoryViewModel(action: action, capsuleId: capsuleId)
+        let provider = DefaultProvider<TimeCapsuleTargetType>()
+        let repository = DefaultTimeCapsuleRepository(provider: provider)
+        let useCase = DefaultTimeCapsuleUseCase(timeCapsuleRepository: repository)
+        return MemoryViewModel(
+            action: action,
+            capsuleId: capsuleId,
+            timeCapsuleUseCase: useCase
+        )
     }
 
     func makeMemoryViewController(action: MemoryViewModel.Action, capsuleId: Int) -> MemoryViewController {
