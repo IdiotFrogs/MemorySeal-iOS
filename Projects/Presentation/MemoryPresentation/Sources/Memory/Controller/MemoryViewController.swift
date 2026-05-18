@@ -17,20 +17,45 @@ public final class MemoryViewController: UIViewController {
     private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let didTapAddMemberButton: PublishRelay<Void> = .init()
     private let didTapManageButton: PublishRelay<Void> = .init()
+    private let didTapBuryTicketButton: PublishRelay<Void> = .init()
+    private let didTapSeeMessagesButton: PublishRelay<Void> = .init()
     private let disposeBag: DisposeBag = DisposeBag()
-    
+
     enum MemorySection: Int, CaseIterable {
         case memoryImage
         case memoryDescription
-        case memories
-        case headUser
-        case invitedUsers
+        case buryTicket
+        case myMessages
+        case members
     }
-    
+
     private let viewModel: MemoryViewModel
     private let memoriesHeaderViewReuseIdentifier: String = "MyMemoriesCollectionHeaderView"
     private let sectionSpacingReusableViewReuseIdentifier: String = "SectionSpacingReusableView"
-    
+
+    // MARK: - Floating Header
+    private let backButton: UIButton = {
+        let button = UIButton()
+        button.setImage(DesignSystemAsset.ImageAssets.navigationBarBackButton.image, for: .normal)
+        button.tintColor = .black
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.9)
+        button.layer.cornerRadius = 16
+        button.imageEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        return button
+    }()
+
+    private let menuButton: UIButton = {
+        let button = UIButton()
+        button.setImage(UIImage(systemName: "line.3.horizontal"), for: .normal)
+        button.tintColor = .black
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.9)
+        button.layer.cornerRadius = 16
+        return button
+    }()
+
+    private var backButtonWavyLayer: WavyStrokeLayer?
+    private var menuButtonWavyLayer: WavyStrokeLayer?
+
     private lazy var collectionView: UICollectionView = {
         let collectionView = UICollectionView(
             frame: .zero,
@@ -39,6 +64,7 @@ public final class MemoryViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.bounces = false
+        collectionView.contentInsetAdjustmentBehavior = .never
         collectionView.register(
             MyMemoriesCollectionHeaderView.self,
             forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
@@ -58,16 +84,12 @@ public final class MemoryViewController: UIViewController {
             forCellWithReuseIdentifier: MemoryDescriptionCollectionViewCell.reuseIdentifier
         )
         collectionView.register(
-            TextMemoryCollectionViewCell.self,
-            forCellWithReuseIdentifier: TextMemoryCollectionViewCell.reuseIdentifier
+            BuryTicketCollectionViewCell.self,
+            forCellWithReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier
         )
         collectionView.register(
-            VoiceMemoryCollectionViewCell.self,
-            forCellWithReuseIdentifier: VoiceMemoryCollectionViewCell.reuseIdentifier
-        )
-        collectionView.register(
-            MemoryHeadUserCollectionViewCell.self,
-            forCellWithReuseIdentifier: MemoryHeadUserCollectionViewCell.reuseIdentifier
+            MyMessagesCardsCollectionViewCell.self,
+            forCellWithReuseIdentifier: MyMessagesCardsCollectionViewCell.reuseIdentifier
         )
         collectionView.register(
             MemoryUserCollectionViewCell.self,
@@ -75,203 +97,181 @@ public final class MemoryViewController: UIViewController {
         )
         return collectionView
     }()
-    
+
     public override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
+        self.navigationController?.isNavigationBarHidden = true
         self.setDelegate()
-        
+
         self.addSubViews()
         self.setLayout()
+        self.setupFloatingButtonWavyLayers()
         self.bindViewModel()
-        
+        self.bindButtons()
+
         self.rxViewDidLoad.accept(())
     }
-    
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        syncWavyStrokeLayer(backButtonWavyLayer, to: backButton.bounds)
+        syncWavyStrokeLayer(menuButtonWavyLayer, to: menuButton.bounds)
+    }
+
+    private func setupFloatingButtonWavyLayers() {
+        backButtonWavyLayer = backButton.addWavyStrokeLayer(
+            strokeColor: .black,
+            lineWidth: 2,
+            cornerRadius: 16,
+            alignment: .outside
+        )
+        backButtonWavyLayer?.waveAmplitude = 1.5
+        backButtonWavyLayer?.waveSpacing = 8
+        backButtonWavyLayer?.setNeedsPathRefresh()
+
+        menuButtonWavyLayer = menuButton.addWavyStrokeLayer(
+            strokeColor: .black,
+            lineWidth: 2,
+            cornerRadius: 16,
+            alignment: .outside
+        )
+        menuButtonWavyLayer?.waveAmplitude = 1.5
+        menuButtonWavyLayer?.waveSpacing = 8
+        menuButtonWavyLayer?.setNeedsPathRefresh()
+    }
+
+    private func syncWavyStrokeLayer(_ layer: WavyStrokeLayer?, to bounds: CGRect) {
+        guard let layer else { return }
+        if layer.frame != bounds {
+            layer.frame = bounds
+        }
+        layer.setNeedsPathRefresh()
+    }
+
     public init(with viewModel: MemoryViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
 }
 
+// MARK: - Layout
 extension MemoryViewController {
     func createCollectionViewLayout() -> UICollectionViewLayout {
-        let sectionProvider = { (sectionIndex: Int, layoutEnvironment: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
+        let sectionProvider = { (sectionIndex: Int, _: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
             switch MemoryViewController.MemorySection(rawValue: sectionIndex) {
             case .memoryImage:
                 return self.getMemoryImageSectionLayout()
             case .memoryDescription:
                 return self.getMemoryDescriptionSectionLayout()
-            case .memories:
-                return self.getMemoriesSectionLayout()
-            case .headUser:
-                return self.getHeadUserSectionLayout()
-            case .invitedUsers:
-                return self.getUserSectionLayout()
+            case .buryTicket:
+                return self.getBuryTicketSectionLayout()
+            case .myMessages:
+                return self.getMyMessagesSectionLayout()
+            case .members:
+                return self.getMembersSectionLayout()
             default:
                 return nil
             }
         }
-        
-        let layout = UICollectionViewCompositionalLayout(sectionProvider: sectionProvider)
-        return layout
+        return UICollectionViewCompositionalLayout(sectionProvider: sectionProvider)
     }
-    
+
     private func getMemoryImageSectionLayout() -> NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
             heightDimension: .absolute(420)
         )
-        let item = NSCollectionLayoutItem(
-            layoutSize: itemSize
-        )
-        let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .absolute(420)
-        )
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: groupSize,
-            subitems: [item]
-        )
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.vertical(layoutSize: itemSize, subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(
-            top: -view.safeAreaInsets.top,
-            leading: 0.0,
-            bottom: 0.0,
-            trailing: 0.0
-        )
-        section.interGroupSpacing = 0.0
+        section.contentInsets = .zero
         return section
     }
-    
+
     private func getMemoryDescriptionSectionLayout() -> NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(128)
+            heightDimension: .estimated(160)
         )
-        let item = NSCollectionLayoutItem(
-            layoutSize: itemSize
-        )
-        let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(128)
-        )
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: groupSize,
-            subitems: [item]
-        )
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.vertical(layoutSize: itemSize, subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
-        let footerView = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: .init(
-                widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(16)
-            ),
-            elementKind: UICollectionView.elementKindSectionFooter,
-            alignment: .bottom
-        )
-        section.boundarySupplementaryItems = [footerView]
-        section.interGroupSpacing = 0.0
+        section.contentInsets = .zero
         return section
     }
-    
-    private func getMemoriesSectionLayout() -> NSCollectionLayoutSection {
+
+    private func getBuryTicketSectionLayout() -> NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(64)
+            heightDimension: .absolute(40)
         )
-        let item = NSCollectionLayoutItem(
-            layoutSize: itemSize
-        )
-        item.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
-        let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(64)
-        )
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: groupSize,
-            subitems: [item]
-        )
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.vertical(layoutSize: itemSize, subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
-        let headerView = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: .init(
+        section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 0, bottom: 28, trailing: 0)
+        return section
+    }
+
+    private func getMyMessagesSectionLayout() -> NSCollectionLayoutSection {
+        let itemSize = NSCollectionLayoutSize(
+            widthDimension: .fractionalWidth(1.0),
+            heightDimension: .estimated(80)
+        )
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let group = NSCollectionLayoutGroup.vertical(layoutSize: itemSize, subitems: [item])
+        let section = NSCollectionLayoutSection(group: group)
+        let header = NSCollectionLayoutBoundarySupplementaryItem(
+            layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
-                heightDimension: .estimated(65)
+                heightDimension: .absolute(24)
             ),
             elementKind: UICollectionView.elementKindSectionHeader,
             alignment: .top
         )
-        let footerView = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: .init(
-                widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(40)
-            ),
-            elementKind: UICollectionView.elementKindSectionFooter,
-            alignment: .bottom
-        )
-        footerView.contentInsets = NSDirectionalEdgeInsets(top: 24, leading: 0, bottom: 0, trailing: 0)
-        section.boundarySupplementaryItems = [headerView, footerView]
-        section.interGroupSpacing = 8.0
+        section.boundarySupplementaryItems = [header]
+        section.contentInsets = NSDirectionalEdgeInsets(top: 20, leading: 20, bottom: 28, trailing: 20)
+        section.interGroupSpacing = 20
         return section
     }
-    
-    private func getHeadUserSectionLayout() -> NSCollectionLayoutSection {
+
+    private func getMembersSectionLayout() -> NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(64)
+            widthDimension: .absolute(48),
+            heightDimension: .absolute(48)
         )
-        let item = NSCollectionLayoutItem(
-            layoutSize: itemSize
+        let item = NSCollectionLayoutItem(layoutSize: itemSize)
+        let groupWidth: CGFloat = 6 * 48 + 5 * 8
+        let group = NSCollectionLayoutGroup.horizontal(
+            layoutSize: NSCollectionLayoutSize(
+                widthDimension: .absolute(groupWidth),
+                heightDimension: .absolute(48)
+            ),
+            repeatingSubitem: item,
+            count: 6
         )
-        let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(64)
-        )
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: groupSize,
-            subitems: [item]
-        )
+        group.interItemSpacing = .fixed(8)
         let section = NSCollectionLayoutSection(group: group)
-        let headerView = NSCollectionLayoutBoundarySupplementaryItem(
-            layoutSize: .init(
+        let header = NSCollectionLayoutBoundarySupplementaryItem(
+            layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
-                heightDimension: .estimated(65)
+                heightDimension: .absolute(24)
             ),
             elementKind: UICollectionView.elementKindSectionHeader,
             alignment: .top
         )
-        section.boundarySupplementaryItems = [headerView]
-        section.interGroupSpacing = 8.0
-        return section
-    }
-    
-    private func getUserSectionLayout() -> NSCollectionLayoutSection {
-        let itemSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(48)
-        )
-        let item = NSCollectionLayoutItem(
-            layoutSize: itemSize
-        )
-        let groupSize = NSCollectionLayoutSize(
-            widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(64)
-        )
-        let group = NSCollectionLayoutGroup.vertical(
-            layoutSize: groupSize,
-            subitems: [item]
-        )
-        let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = .init(top: 16.0, leading: 0, bottom: 0, trailing: 0)
-        section.interGroupSpacing = 16.0
+        section.boundarySupplementaryItems = [header]
+        section.contentInsets = NSDirectionalEdgeInsets(top: 20, leading: 20, bottom: 24, trailing: 20)
+        section.interGroupSpacing = 8
         return section
     }
 }
 
+// MARK: - Bind
 extension MemoryViewController {
     private func bindViewModel() {
         let input = MemoryViewModel.Input(
@@ -281,118 +281,114 @@ extension MemoryViewController {
         )
         let _ = viewModel.transform(input)
     }
+
+    private func bindButtons() {
+        backButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
+
+        menuButton.rx.tap
+            .bind(to: didTapManageButton)
+            .disposed(by: disposeBag)
+    }
 }
 
+// MARK: - Subviews
 extension MemoryViewController {
     private func setDelegate() {
         collectionView.delegate = self
         collectionView.dataSource = self
     }
-    
+
     private func addSubViews() {
         view.addSubview(collectionView)
+        view.addSubview(backButton)
+        view.addSubview(menuButton)
     }
-    
+
     private func setLayout() {
         collectionView.snp.makeConstraints {
-            $0.top.leading.trailing.bottom.equalToSuperview()
+            $0.edges.equalToSuperview()
+        }
+
+        backButton.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            $0.leading.equalToSuperview().offset(20)
+            $0.width.height.equalTo(32)
+        }
+
+        menuButton.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            $0.trailing.equalToSuperview().inset(20)
+            $0.width.height.equalTo(32)
         }
     }
 }
 
+// MARK: - DataSource
 extension MemoryViewController: UICollectionViewDataSource {
-    public func numberOfSections(
-        in collectionView: UICollectionView
-    ) -> Int {
+    public func numberOfSections(in collectionView: UICollectionView) -> Int {
         return MemorySection.allCases.count
     }
-    
+
     public func collectionView(
         _ collectionView: UICollectionView,
         numberOfItemsInSection section: Int
     ) -> Int {
         switch MemorySection(rawValue: section) {
-        case .memoryImage:
+        case .memoryImage, .memoryDescription, .buryTicket, .myMessages:
             return 1
-        case .memoryDescription:
-            return 1
-        case .memories:
-            return 2
-        case .headUser:
-            return 1
-        case .invitedUsers:
-            return 4
+        case .members:
+            return 7
         default:
             return 0
         }
     }
-    
+
     public func collectionView(
         _ collectionView: UICollectionView,
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
         switch MemorySection(rawValue: indexPath.section) {
         case .memoryImage:
-            guard let cell = collectionView.dequeueReusableCell(
+            return collectionView.dequeueReusableCell(
                 withReuseIdentifier: MemoryImageCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            ) as? MemoryImageCollectionViewCell else { return .init() }
-
-            cell.manageButton.rx.tap
-                .bind(to: didTapManageButton)
-                .disposed(by: disposeBag)
-
-            return cell
+            )
         case .memoryDescription:
-            guard let cell = collectionView.dequeueReusableCell(
+            return collectionView.dequeueReusableCell(
                 withReuseIdentifier: MemoryDescriptionCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            ) as? MemoryDescriptionCollectionViewCell else { return .init() }
-            
-            return cell
-        case .memories:
-            let voice: Bool = false
-            
-            if voice {
-                guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: VoiceMemoryCollectionViewCell.reuseIdentifier,
-                    for: indexPath
-                ) as? VoiceMemoryCollectionViewCell else { return .init() }
-                
-                let urlString: String = "https://sample-files.com/audio/m4a/sample4.m4a"
-                guard let url: URL = URL(string: urlString) else { return .init() }
-                
-                cell.configure(url)
-                
-                return cell
-            } else {
-                guard let cell = collectionView.dequeueReusableCell(
-                    withReuseIdentifier: TextMemoryCollectionViewCell.reuseIdentifier,
-                    for: indexPath
-                ) as? TextMemoryCollectionViewCell else { return .init() }
-                
-                return cell
-            }
-        case .headUser:
+            )
+        case .buryTicket:
             guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: MemoryHeadUserCollectionViewCell.reuseIdentifier,
+                withReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            ) as? MemoryHeadUserCollectionViewCell else { return .init() }
-
+            ) as? BuryTicketCollectionViewCell else { return .init() }
+            cell.buryButton.rx.tap
+                .bind(to: didTapBuryTicketButton)
+                .disposed(by: cell.disposeBag)
             return cell
-        case .invitedUsers:
-            guard let cell = collectionView.dequeueReusableCell(
+        case .myMessages:
+            return collectionView.dequeueReusableCell(
+                withReuseIdentifier: MyMessagesCardsCollectionViewCell.reuseIdentifier,
+                for: indexPath
+            )
+        case .members:
+            return collectionView.dequeueReusableCell(
                 withReuseIdentifier: MemoryUserCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            ) as? MemoryUserCollectionViewCell else { return .init() }
-                
-            return cell
+            )
         default:
             return .init()
         }
     }
 }
 
+// MARK: - Delegate (supplementary views)
 extension MemoryViewController: UICollectionViewDelegate {
     public func collectionView(
         _ collectionView: UICollectionView,
@@ -400,57 +396,36 @@ extension MemoryViewController: UICollectionViewDelegate {
         at indexPath: IndexPath
     ) -> UICollectionReusableView {
         switch MemorySection(rawValue: indexPath.section) {
-        case .memoryDescription:
-            guard let footerView = collectionView.dequeueReusableSupplementaryView(
-                ofKind: UICollectionView.elementKindSectionFooter,
-                withReuseIdentifier: sectionSpacingReusableViewReuseIdentifier,
-                for: indexPath
-            ) as? MemorySectionSpacingReusableView else { return .init() }
-            
-            return footerView
-        case .memories:
-            switch kind {
-            case UICollectionView.elementKindSectionHeader:
-                guard let headerView = collectionView.dequeueReusableSupplementaryView(
-                    ofKind: UICollectionView.elementKindSectionHeader,
-                    withReuseIdentifier: memoriesHeaderViewReuseIdentifier,
-                    for: indexPath
-                ) as? MyMemoriesCollectionHeaderView else { return .init() }
-                
-                headerView.setStatus(.message)
-                
-                return headerView
-            case UICollectionView.elementKindSectionFooter:
-                guard let footerView = collectionView.dequeueReusableSupplementaryView(
-                    ofKind: UICollectionView.elementKindSectionFooter,
-                    withReuseIdentifier: sectionSpacingReusableViewReuseIdentifier,
-                    for: indexPath
-                ) as? MemorySectionSpacingReusableView else { return .init() }
-                
-                return footerView
-            default:
-                return .init()
-            }
-        case .headUser:
-            guard let headerView = collectionView.dequeueReusableSupplementaryView(
+        case .myMessages:
+            guard let header = collectionView.dequeueReusableSupplementaryView(
                 ofKind: UICollectionView.elementKindSectionHeader,
                 withReuseIdentifier: memoriesHeaderViewReuseIdentifier,
                 for: indexPath
             ) as? MyMemoriesCollectionHeaderView else { return .init() }
-            
-            headerView.setStatus(.member)
-            
-            headerView.didTapSeeOtherButton
+            header.setStatus(.message)
+            header.didTapSeeOtherButton
+                .withUnretained(self)
+                .subscribe(onNext: { (self, _) in
+                    self.didTapSeeMessagesButton.accept(())
+                })
+                .disposed(by: header.disposeBag)
+            return header
+        case .members:
+            guard let header = collectionView.dequeueReusableSupplementaryView(
+                ofKind: UICollectionView.elementKindSectionHeader,
+                withReuseIdentifier: memoriesHeaderViewReuseIdentifier,
+                for: indexPath
+            ) as? MyMemoriesCollectionHeaderView else { return .init() }
+            header.setStatus(.member)
+            header.didTapSeeOtherButton
                 .withUnretained(self)
                 .subscribe(onNext: { (self, _) in
                     self.didTapAddMemberButton.accept(())
                 })
-                .disposed(by: headerView.disposeBag)
-            
-            return headerView
+                .disposed(by: header.disposeBag)
+            return header
         default:
             return .init()
         }
-        
     }
 }
