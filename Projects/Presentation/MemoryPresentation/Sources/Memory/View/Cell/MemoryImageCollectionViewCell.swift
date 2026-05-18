@@ -8,114 +8,59 @@
 
 import UIKit
 import SnapKit
-import RxSwift
-import RxCocoa
 
 import DesignSystem
 
 final class MemoryImageCollectionViewCell: UICollectionViewCell {
-    let manageButton: UIButton = {
-        let button = UIButton()
-        button.layer.cornerRadius = 16
-        button.backgroundColor = .white.withAlphaComponent(0.9)
-        button.setTitle("관리", for: .normal)
-        button.setTitleColor(.black, for: .normal)
-        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-        return button
-    }()
-
     private let memoryImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.backgroundColor = .gray
-        imageView.image = DesignSystemAsset.ImageAssets.ticketDummyImage.image
+        imageView.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
         return imageView
     }()
-    
-    private let closeMemoryButton: UIButton = {
-        let button = UIButton()
-        button.layer.cornerRadius = 16
-        button.backgroundColor = .white
-        button.setImage(DesignSystemAsset.ImageAssets.iconXmarkBlack16.image, for: .normal)
-        return button
+
+    private let gradientLayer: CAGradientLayer = {
+        let layer = CAGradientLayer()
+        layer.colors = [
+            UIColor.black.withAlphaComponent(0.2).cgColor,
+            UIColor.black.withAlphaComponent(0).cgColor,
+            UIColor.black.withAlphaComponent(0).cgColor,
+            UIColor.black.withAlphaComponent(0.2).cgColor
+        ]
+        layer.locations = [0.0, 0.24, 0.697, 1.0]
+        return layer
     }()
-    
-    private let imageBlurView: UIVisualEffectView = {
-        let view = UIVisualEffectView()
-        view.effect = UIBlurEffect(style: .regular)
-        view.alpha = 0.5
-        return view
-    }()
-    
-    private let memoryEndDateLabel: UILabel = {
-        let label = UILabel()
-        label.text = "D-60"
-        label.textColor = .white
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 40)
-        return label
-    }()
-    
-    private let memoryPeriodLabel: UILabel = {
-        let label = UILabel()
-        label.text = "2025. 02. 20. (목) ~ 2025. 04. 20. (일)"
-        label.textColor = .white
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 12)
-        return label
-    }()
-    
+
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
+
         self.addSubViews()
         self.setLayout()
+        memoryImageView.layer.addSublayer(gradientLayer)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        gradientLayer.frame = memoryImageView.bounds
+        CATransaction.commit()
     }
 }
 
 extension MemoryImageCollectionViewCell {
     private func addSubViews() {
         addSubview(memoryImageView)
-        addSubview(closeMemoryButton)
-        addSubview(manageButton)
-        addSubview(imageBlurView)
-        addSubview(memoryPeriodLabel)
-        addSubview(memoryEndDateLabel)
     }
-    
+
     private func setLayout() {
         memoryImageView.snp.makeConstraints {
             $0.edges.equalToSuperview()
-        }
-        
-        closeMemoryButton.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(52)
-            $0.leading.equalToSuperview().offset(20)
-            $0.width.height.equalTo(32)
-        }
-
-        manageButton.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(52)
-            $0.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(32)
-            $0.width.equalTo(49)
-        }
-        
-        imageBlurView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(memoryImageView.snp.bottom)
-            $0.height.equalTo(110)
-        }
-        
-        memoryPeriodLabel.snp.makeConstraints {
-            $0.bottom.equalToSuperview().inset(24)
-            $0.leading.equalToSuperview().inset(20)
-        }
-        
-        memoryEndDateLabel.snp.makeConstraints {
-            $0.bottom.equalTo(memoryPeriodLabel.snp.top)
-            $0.leading.equalToSuperview().inset(20)
         }
     }
 }
