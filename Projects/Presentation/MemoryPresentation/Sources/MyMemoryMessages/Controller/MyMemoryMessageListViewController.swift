@@ -15,6 +15,10 @@ public final class MyMemoryMessageListViewController: UIViewController {
     private let type: MyMemoryMessageType
     private let disposeBag: DisposeBag = DisposeBag()
     private var items: [MyMemoryMessage] = []
+    private var isSelectionMode: Bool = false
+    private var selectedItemIds: Set<UUID> = []
+
+    public var onSelectionModeChanged: ((Bool) -> Void)?
 
     // MARK: - UI
 
@@ -32,7 +36,41 @@ public final class MyMemoryMessageListViewController: UIViewController {
             forCellWithReuseIdentifier: String(describing: MessagePhotoCardCell.self)
         )
         view.dataSource = self
+        view.delegate = self
         return view
+    }()
+
+    private let actionBarView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.isHidden = true
+        return view
+    }()
+
+    private let cancelButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("취소", for: .normal)
+        button.setTitleColor(UIColor(red: 69/255, green: 69/255, blue: 69/255, alpha: 1.0), for: .normal)
+        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
+        button.backgroundColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1.0)
+        button.layer.cornerRadius = 12
+        button.layer.borderWidth = 3
+        button.layer.borderColor = UIColor(red: 230/255, green: 230/255, blue: 230/255, alpha: 1.0).cgColor
+        button.clipsToBounds = true
+        return button
+    }()
+
+    private let deleteButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("삭제", for: .normal)
+        button.setTitleColor(UIColor(red: 218/255, green: 27/255, blue: 27/255, alpha: 0.35), for: .normal)
+        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
+        button.backgroundColor = UIColor(red: 243/255, green: 187/255, blue: 187/255, alpha: 1.0)
+        button.layer.cornerRadius = 12
+        button.layer.borderWidth = 3
+        button.layer.borderColor = UIColor(red: 243/255, green: 187/255, blue: 187/255, alpha: 1.0).cgColor
+        button.clipsToBounds = true
+        return button
     }()
 
     // MARK: - Init
@@ -57,6 +95,33 @@ public final class MyMemoryMessageListViewController: UIViewController {
         bindViewModel()
         bindButton()
     }
+
+    // MARK: - Public
+
+    public func enterSelectionMode() {
+        guard !isSelectionMode else { return }
+        isSelectionMode = true
+        selectedItemIds.removeAll()
+        actionBarView.isHidden = false
+        updateDeleteButtonState()
+        updateCollectionViewLayoutConstraints()
+        collectionView.reloadData()
+        onSelectionModeChanged?(true)
+    }
+
+    public func exitSelectionMode() {
+        guard isSelectionMode else { return }
+        isSelectionMode = false
+        selectedItemIds.removeAll()
+        actionBarView.isHidden = true
+        updateCollectionViewLayoutConstraints()
+        collectionView.reloadData()
+        onSelectionModeChanged?(false)
+    }
+
+    public var isInSelectionMode: Bool {
+        return isSelectionMode
+    }
 }
 
 // MARK: - Setup
@@ -70,6 +135,9 @@ extension MyMemoryMessageListViewController {
     private func addSubviews() {
         view.addSubview(bannerView)
         view.addSubview(collectionView)
+        view.addSubview(actionBarView)
+        actionBarView.addSubview(cancelButton)
+        actionBarView.addSubview(deleteButton)
     }
 
     private func setLayout() {
@@ -78,10 +146,38 @@ extension MyMemoryMessageListViewController {
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
-        collectionView.snp.makeConstraints {
+        actionBarView.snp.makeConstraints {
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom)
+            $0.height.equalTo(80)
+        }
+
+        cancelButton.snp.makeConstraints {
+            $0.leading.equalToSuperview().inset(20)
+            $0.top.equalToSuperview().inset(16)
+            $0.height.equalTo(48)
+        }
+
+        deleteButton.snp.makeConstraints {
+            $0.leading.equalTo(cancelButton.snp.trailing).offset(12)
+            $0.trailing.equalToSuperview().inset(20)
+            $0.top.equalToSuperview().inset(16)
+            $0.height.equalTo(48)
+            $0.width.equalTo(cancelButton)
+        }
+
+        updateCollectionViewLayoutConstraints()
+    }
+
+    private func updateCollectionViewLayoutConstraints() {
+        collectionView.snp.remakeConstraints {
             $0.top.equalTo(bannerView.snp.bottom).offset(16)
             $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalToSuperview()
+            if isSelectionMode {
+                $0.bottom.equalTo(actionBarView.snp.top)
+            } else {
+                $0.bottom.equalToSuperview()
+            }
         }
     }
 }
@@ -92,8 +188,13 @@ extension MyMemoryMessageListViewController {
     private func bindViewModel() {
         viewModel.messages(of: type)
             .drive(onNext: { [weak self] items in
-                self?.items = items
-                self?.collectionView.reloadData()
+                guard let self else { return }
+                self.items = items
+                self.selectedItemIds = self.selectedItemIds.filter { id in
+                    items.contains(where: { $0.id == id })
+                }
+                self.updateDeleteButtonState()
+                self.collectionView.reloadData()
             })
             .disposed(by: disposeBag)
     }
@@ -101,6 +202,38 @@ extension MyMemoryMessageListViewController {
     private func bindButton() {
         bannerView.onPreviewTap = { [weak self] in
             self?.showBannerPreview()
+        }
+
+        cancelButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.exitSelectionMode()
+            })
+            .disposed(by: disposeBag)
+
+        deleteButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                guard !self.selectedItemIds.isEmpty else { return }
+                self.viewModel.deleteMessages(withIds: self.selectedItemIds)
+                self.exitSelectionMode()
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func updateDeleteButtonState() {
+        let hasSelection = !selectedItemIds.isEmpty
+        deleteButton.isEnabled = hasSelection
+        let activeColor = UIColor(red: 237/255, green: 30/255, blue: 47/255, alpha: 1.0)
+        let disabledColor = UIColor(red: 243/255, green: 187/255, blue: 187/255, alpha: 1.0)
+        if hasSelection {
+            deleteButton.backgroundColor = activeColor
+            deleteButton.layer.borderColor = activeColor.cgColor
+            deleteButton.setTitleColor(.white, for: .normal)
+        } else {
+            deleteButton.backgroundColor = disabledColor
+            deleteButton.layer.borderColor = disabledColor.cgColor
+            deleteButton.setTitleColor(UIColor(red: 218/255, green: 27/255, blue: 27/255, alpha: 0.35), for: .normal)
         }
     }
 }
@@ -125,23 +258,52 @@ extension MyMemoryMessageListViewController {
     }
 
     private func showItemPreview(for message: MyMemoryMessage) {
-        let alert: UIAlertController
         switch message.type {
         case .text:
-            alert = UIAlertController(
-                title: "메시지 미리보기",
-                message: message.textContent ?? "",
-                preferredStyle: .alert
-            )
+            let modal = MessageDetailModalViewController(messageText: message.textContent ?? "")
+            modal.onEditTap = { [weak self] text in
+                guard let self else { return }
+                let sheet = MessageInputBottomSheet(initialText: text)
+                sheet.didSubmitText
+                    .subscribe(onNext: { [weak self] newText in
+                        let updated = MyMemoryMessage(type: .text, textContent: newText, imageData: nil)
+                        self?.viewModel.appendMessage(updated)
+                    })
+                    .disposed(by: self.disposeBag)
+                self.present(sheet, animated: true)
+            }
+            present(modal, animated: true)
         case .photo:
-            alert = UIAlertController(
+            let alert = UIAlertController(
                 title: "사진 미리보기",
                 message: nil,
                 preferredStyle: .alert
             )
+            alert.addAction(UIAlertAction(title: "닫기", style: .default))
+            present(alert, animated: true)
         }
-        alert.addAction(UIAlertAction(title: "닫기", style: .default))
-        present(alert, animated: true)
+    }
+}
+
+// MARK: - Delegate
+
+extension MyMemoryMessageListViewController: UICollectionViewDelegate {
+    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard indexPath.item < items.count else { return }
+        let message = items[indexPath.item]
+
+        if isSelectionMode {
+            if selectedItemIds.contains(message.id) {
+                selectedItemIds.remove(message.id)
+            } else {
+                selectedItemIds.insert(message.id)
+            }
+            updateDeleteButtonState()
+            collectionView.reloadItems(at: [indexPath])
+            return
+        }
+
+        showItemPreview(for: message)
     }
 }
 
@@ -161,6 +323,10 @@ extension MyMemoryMessageListViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as? MessageTextCardCell
             cell?.configure(with: message, index: indexPath.item + 1)
+            cell?.setSelection(
+                isSelectionMode: isSelectionMode,
+                isSelected: selectedItemIds.contains(message.id)
+            )
             return cell ?? UICollectionViewCell()
         case .photo:
             let cell = collectionView.dequeueReusableCell(
@@ -168,9 +334,10 @@ extension MyMemoryMessageListViewController: UICollectionViewDataSource {
                 for: indexPath
             ) as? MessagePhotoCardCell
             cell?.configure(with: message)
-            cell?.onPreviewTap = { [weak self] in
-                self?.showItemPreview(for: message)
-            }
+            cell?.setSelection(
+                isSelectionMode: isSelectionMode,
+                isSelected: selectedItemIds.contains(message.id)
+            )
             return cell ?? UICollectionViewCell()
         }
     }

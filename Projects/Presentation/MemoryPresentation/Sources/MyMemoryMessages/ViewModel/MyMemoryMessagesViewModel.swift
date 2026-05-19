@@ -24,4 +24,10 @@ public final class MyMemoryMessagesViewModel {
     public func appendMessage(_ message: MyMemoryMessage) {
         messages.accept(messages.value + [message])
     }
+
+    public func deleteMessages(withIds ids: Set<UUID>) {
+        guard !ids.isEmpty else { return }
+        let remaining = messages.value.filter { !ids.contains($0.id) }
+        messages.accept(remaining)
+    }
 }
