@@ -6,6 +6,21 @@ import DesignSystem
 
 public final class MessageTextCardCell: UICollectionViewCell {
 
+    private let selectionIconView: UIImageView = {
+        let view = UIImageView()
+        view.contentMode = .scaleAspectFit
+        view.isHidden = true
+        return view
+    }()
+
+    private let rowStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 16
+        stack.alignment = .center
+        return stack
+    }()
+
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .white
@@ -55,6 +70,8 @@ public final class MessageTextCardCell: UICollectionViewCell {
         titleLabel.text = nil
         bodyLabel.attributedText = nil
         bodyLabel.text = nil
+        selectionIconView.isHidden = true
+        selectionIconView.image = nil
     }
 
     public func configure(with message: MyMemoryMessage, index: Int) {
@@ -72,13 +89,29 @@ public final class MessageTextCardCell: UICollectionViewCell {
             attributes: attributes
         )
     }
+
+    public func setSelection(isSelectionMode: Bool, isSelected: Bool) {
+        selectionIconView.isHidden = !isSelectionMode
+        guard isSelectionMode else {
+            selectionIconView.image = nil
+            return
+        }
+        let name = isSelected ? "MessageSelectedIcon" : "MessageUnselectedIcon"
+        selectionIconView.image = UIImage(
+            named: name,
+            in: DesignSystemResources.bundle,
+            with: nil
+        )
+    }
 }
 
 // MARK: - Subviews
 
 extension MessageTextCardCell {
     private func addSubviews() {
-        contentView.addSubview(containerView)
+        contentView.addSubview(rowStack)
+        rowStack.addArrangedSubview(selectionIconView)
+        rowStack.addArrangedSubview(containerView)
         containerView.addSubview(stackView)
         stackView.addArrangedSubview(titleLabel)
         stackView.addArrangedSubview(bodyLabel)
@@ -89,8 +122,11 @@ extension MessageTextCardCell {
 
 extension MessageTextCardCell {
     private func setLayout() {
-        containerView.snp.makeConstraints {
+        rowStack.snp.makeConstraints {
             $0.edges.equalToSuperview()
+        }
+        selectionIconView.snp.makeConstraints {
+            $0.size.equalTo(16)
         }
         stackView.snp.makeConstraints {
             $0.top.bottom.equalToSuperview().inset(12)

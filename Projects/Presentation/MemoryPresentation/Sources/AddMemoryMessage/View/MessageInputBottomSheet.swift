@@ -89,7 +89,10 @@ public final class MessageInputBottomSheet: UIViewController {
 
     // MARK: - Init
 
-    public init() {
+    private let initialText: String
+
+    public init(initialText: String = "") {
+        self.initialText = initialText
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .overFullScreen
         modalTransitionStyle = .crossDissolve
@@ -107,6 +110,10 @@ public final class MessageInputBottomSheet: UIViewController {
         setLayout()
         bindKeyboard()
         bindActions()
+        if !initialText.isEmpty {
+            textView.text = initialText
+            placeholderLabel.isHidden = true
+        }
     }
 
     public override func viewDidAppear(_ animated: Bool) {

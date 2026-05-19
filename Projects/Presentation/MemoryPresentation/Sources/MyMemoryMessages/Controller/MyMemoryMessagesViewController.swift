@@ -48,6 +48,18 @@ public final class MyMemoryMessagesViewController: TabmanViewController {
         return view
     }()
 
+    private let trashButton: UIButton = {
+        let button = UIButton()
+        let image = UIImage(
+            named: "TrashIcon",
+            in: DesignSystemResources.bundle,
+            with: nil
+        )
+        button.setImage(image, for: .normal)
+        button.tintColor = DesignSystemAsset.ColorAssests.grey5.color
+        return button
+    }()
+
     private let customContainerView: UIView = UIView()
 
     private let tabManBar: TMBar.ButtonBar = {
@@ -104,6 +116,8 @@ public final class MyMemoryMessagesViewController: TabmanViewController {
         setInitialValues()
         addSubviews()
         setLayout()
+        configureNavigationButtons()
+        configureChildSelectionMode()
         bindButton()
 
         addBar(
@@ -163,6 +177,26 @@ extension MyMemoryMessagesViewController {
     }
 }
 
+// MARK: - Navigation Buttons
+
+extension MyMemoryMessagesViewController {
+    private func configureNavigationButtons() {
+        navigationView.addButton(trashButton)
+        trashButton.snp.makeConstraints {
+            $0.width.height.equalTo(24)
+        }
+    }
+
+    private func configureChildSelectionMode() {
+        for child in listViewControllers {
+            guard let listVC = child as? MyMemoryMessageListViewController else { continue }
+            listVC.onSelectionModeChanged = { [weak self] isSelecting in
+                self?.floatingButton.isHidden = isSelecting
+            }
+        }
+    }
+}
+
 // MARK: - Binding
 
 extension MyMemoryMessagesViewController {
@@ -171,6 +205,13 @@ extension MyMemoryMessagesViewController {
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
+
+        trashButton.rx.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.handleTrashButtonTap()
             })
             .disposed(by: disposeBag)
 
@@ -187,6 +228,19 @@ extension MyMemoryMessagesViewController {
                 }
             })
             .disposed(by: disposeBag)
+    }
+
+    private func handleTrashButtonTap() {
+        let index = currentIndex ?? 0
+        guard index < listViewControllers.count,
+              let listVC = listViewControllers[index] as? MyMemoryMessageListViewController
+        else { return }
+
+        if listVC.isInSelectionMode {
+            listVC.exitSelectionMode()
+        } else {
+            listVC.enterSelectionMode()
+        }
     }
 }
 

@@ -5,7 +5,6 @@ import DesignSystem
 // MARK: - MessagePhotoCardCell
 
 public final class MessagePhotoCardCell: UICollectionViewCell {
-    public var onPreviewTap: (() -> Void)?
 
     private let thumbnailImageView: UIImageView = {
         let view = UIImageView()
@@ -13,7 +12,30 @@ public final class MessagePhotoCardCell: UICollectionViewCell {
         view.contentMode = .scaleAspectFill
         view.clipsToBounds = true
         view.layer.cornerRadius = 12
-        view.isUserInteractionEnabled = true
+        return view
+    }()
+
+    private let selectionBorderView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            style: .stroked(
+                color: DesignSystemAsset.ColorAssests.primaryNormal.color,
+                lineWidth: 4
+            )
+        )
+        view.waveCornerRadius = 14
+        view.waveAmplitude = 1.5
+        view.waveSpacing = 8
+        view.strokeAlignment = .outside
+        view.isHidden = true
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        return view
+    }()
+
+    private let selectionIconView: UIImageView = {
+        let view = UIImageView()
+        view.contentMode = .scaleAspectFit
+        view.isHidden = true
         return view
     }()
 
@@ -21,7 +43,6 @@ public final class MessagePhotoCardCell: UICollectionViewCell {
         super.init(frame: frame)
         addSubviews()
         setLayout()
-        addTapGesture()
     }
 
     public required init?(coder: NSCoder) {
@@ -30,8 +51,10 @@ public final class MessagePhotoCardCell: UICollectionViewCell {
 
     public override func prepareForReuse() {
         super.prepareForReuse()
-        onPreviewTap = nil
         thumbnailImageView.image = nil
+        selectionIconView.isHidden = true
+        selectionIconView.image = nil
+        selectionBorderView.isHidden = true
     }
 
     public func configure(with message: MyMemoryMessage) {
@@ -40,8 +63,19 @@ public final class MessagePhotoCardCell: UICollectionViewCell {
         }
     }
 
-    @objc private func thumbnailTapped() {
-        onPreviewTap?()
+    public func setSelection(isSelectionMode: Bool, isSelected: Bool) {
+        selectionIconView.isHidden = !isSelectionMode
+        selectionBorderView.isHidden = !(isSelectionMode && isSelected)
+        guard isSelectionMode else {
+            selectionIconView.image = nil
+            return
+        }
+        let name = isSelected ? "PhotoSelectedIcon" : "PhotoUnselectedIcon"
+        selectionIconView.image = UIImage(
+            named: name,
+            in: DesignSystemResources.bundle,
+            with: nil
+        )
     }
 }
 
@@ -50,11 +84,8 @@ public final class MessagePhotoCardCell: UICollectionViewCell {
 extension MessagePhotoCardCell {
     private func addSubviews() {
         contentView.addSubview(thumbnailImageView)
-    }
-
-    private func addTapGesture() {
-        let gesture = UITapGestureRecognizer(target: self, action: #selector(thumbnailTapped))
-        thumbnailImageView.addGestureRecognizer(gesture)
+        contentView.addSubview(selectionBorderView)
+        contentView.addSubview(selectionIconView)
     }
 }
 
@@ -63,7 +94,14 @@ extension MessagePhotoCardCell {
 extension MessagePhotoCardCell {
     private func setLayout() {
         thumbnailImageView.snp.makeConstraints {
-            $0.edges.equalToSuperview().inset(2)
+            $0.edges.equalToSuperview().inset(4)
+        }
+        selectionBorderView.snp.makeConstraints {
+            $0.edges.equalTo(thumbnailImageView)
+        }
+        selectionIconView.snp.makeConstraints {
+            $0.top.leading.equalTo(thumbnailImageView).inset(10)
+            $0.size.equalTo(16)
         }
     }
 }
