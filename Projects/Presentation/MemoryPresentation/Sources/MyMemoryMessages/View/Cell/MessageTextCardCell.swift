@@ -1,0 +1,100 @@
+import UIKit
+import SnapKit
+import DesignSystem
+
+// MARK: - MessageTextCardCell
+
+public final class MessageTextCardCell: UICollectionViewCell {
+
+    private let containerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .white
+        view.layer.cornerRadius = 12
+        view.layer.borderWidth = 2
+        view.layer.borderColor = UIColor(red: 245/255, green: 245/255, blue: 245/255, alpha: 1.0).cgColor
+        view.clipsToBounds = true
+        return view
+    }()
+
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
+        label.textColor = UIColor(red: 26/255, green: 26/255, blue: 26/255, alpha: 1.0)
+        return label
+    }()
+
+    private let bodyLabel: UILabel = {
+        let label = UILabel()
+        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 14)
+        label.textColor = UIColor(red: 69/255, green: 69/255, blue: 69/255, alpha: 1.0)
+        label.numberOfLines = 2
+        label.lineBreakMode = .byTruncatingTail
+        return label
+    }()
+
+    private let stackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 4
+        stack.alignment = .fill
+        return stack
+    }()
+
+    override public init(frame: CGRect) {
+        super.init(frame: frame)
+        addSubviews()
+        setLayout()
+    }
+
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    public override func prepareForReuse() {
+        super.prepareForReuse()
+        titleLabel.text = nil
+        bodyLabel.attributedText = nil
+        bodyLabel.text = nil
+    }
+
+    public func configure(with message: MyMemoryMessage, index: Int) {
+        titleLabel.text = "메세지 \(index)"
+
+        let style = NSMutableParagraphStyle()
+        style.lineHeightMultiple = 1.5
+        let attributes: [NSAttributedString.Key: Any] = [
+            .paragraphStyle: style,
+            .font: DesignSystemFontFamily.Pretendard.regular.font(size: 14),
+            .foregroundColor: UIColor(red: 69/255, green: 69/255, blue: 69/255, alpha: 1.0)
+        ]
+        bodyLabel.attributedText = NSAttributedString(
+            string: message.textContent ?? "",
+            attributes: attributes
+        )
+    }
+}
+
+// MARK: - Subviews
+
+extension MessageTextCardCell {
+    private func addSubviews() {
+        contentView.addSubview(containerView)
+        containerView.addSubview(stackView)
+        stackView.addArrangedSubview(titleLabel)
+        stackView.addArrangedSubview(bodyLabel)
+    }
+}
+
+// MARK: - Layout
+
+extension MessageTextCardCell {
+    private func setLayout() {
+        containerView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        stackView.snp.makeConstraints {
+            $0.top.bottom.equalToSuperview().inset(12)
+            $0.leading.trailing.equalToSuperview().inset(16)
+        }
+    }
+}
