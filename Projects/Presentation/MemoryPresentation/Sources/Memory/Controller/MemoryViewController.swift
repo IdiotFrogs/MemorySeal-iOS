@@ -277,7 +277,8 @@ extension MemoryViewController {
         let input = MemoryViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
             didTapAddMemberButton: didTapAddMemberButton,
-            didTapManageButton: didTapManageButton
+            didTapManageButton: didTapManageButton,
+            didTapSeeMessagesButton: didTapSeeMessagesButton
         )
         let _ = viewModel.transform(input)
     }

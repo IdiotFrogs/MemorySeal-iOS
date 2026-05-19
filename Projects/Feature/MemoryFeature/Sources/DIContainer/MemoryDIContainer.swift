@@ -1,11 +1,3 @@
-//
-//  MemoryDIContainer.swift
-//  AppFeature
-//
-//  Created by 선민재 on 7/28/25.
-//  Copyright © 2025 MemorySeal. All rights reserved.
-//
-
 import Foundation
 
 import MemoryPresentation
@@ -51,5 +43,17 @@ public final class MemoryDIContainer {
 
     func makeManageTicketViewController(action: ManageTicketViewModel.Action, capsuleId: Int, ticketName: String) -> ManageTicketViewController {
         return ManageTicketViewController(with: makeManageTicketViewModel(action: action, capsuleId: capsuleId, ticketName: ticketName))
+    }
+
+    // MARK: - MyMemoryMessages
+
+    public func makeMyMemoryMessagesViewController() -> MyMemoryMessagesViewController {
+        let viewModel = MyMemoryMessagesViewModel()
+        let textListVC = MyMemoryMessageListViewController(type: .text, viewModel: viewModel)
+        let photoListVC = MyMemoryMessageListViewController(type: .photo, viewModel: viewModel)
+        return MyMemoryMessagesViewController(
+            viewControllers: [textListVC, photoListVC],
+            with: viewModel
+        )
     }
 }

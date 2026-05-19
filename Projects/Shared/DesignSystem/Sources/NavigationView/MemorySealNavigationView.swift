@@ -42,6 +42,10 @@ public final class MemorySealNavigationView: UIView {
     public func setTitle(_ text: String?) {
         titleLabel.text = text
     }
+
+    public func setTitleFont(_ font: UIFont) {
+        titleLabel.font = font
+    }
     
     public func addButton(_ button: UIButton) {
         buttonStackView.addArrangedSubview(button)

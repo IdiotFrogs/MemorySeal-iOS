@@ -1,10 +1,3 @@
-//
-//  MemoryCoordinator.swift
-//  ProjectDescriptionHelpers
-//
-//  Created by 선민재 on 7/28/25.
-//
-
 import UIKit
 
 import MemoryPresentation
@@ -27,7 +20,8 @@ public final class MemoryCoordinator {
     public func start() {
         let memoryAction = MemoryViewModel.Action(
             moveToAddMember: moveToAddMember,
-            moveToManageTicket: moveToManageTicket
+            moveToManageTicket: moveToManageTicket,
+            moveToMyMemoryMessages: moveToMyMemoryMessages
         )
         let memoryViewController = memoryDIContainer.makeMemoryViewController(action: memoryAction, capsuleId: capsuleId)
 
@@ -46,7 +40,6 @@ public final class MemoryCoordinator {
     }
 
     public func moveToManageTicket() {
-        // TODO: ticketName은 추후 디테일 API 연동 시 실제 값으로 교체
         let manageAction = ManageTicketViewModel.Action(didDeleteTimeCapsule: didDeleteTimeCapsule)
         let viewController = memoryDIContainer.makeManageTicketViewController(action: manageAction, capsuleId: capsuleId, ticketName: "티켓 이름")
         self.navigationController.pushViewController(
@@ -57,5 +50,12 @@ public final class MemoryCoordinator {
 
     public func didDeleteTimeCapsule() {
         self.navigationController.popToRootViewController(animated: true)
+    }
+
+    // MARK: - MyMemoryMessages
+
+    public func moveToMyMemoryMessages() {
+        let vc = memoryDIContainer.makeMyMemoryMessagesViewController()
+        navigationController.pushViewController(vc, animated: true)
     }
 }
