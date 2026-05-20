@@ -120,6 +120,8 @@ public final class MyMemoryMessagesViewController: TabmanViewController {
         configureChildSelectionMode()
         bindButton()
 
+        viewModel.fetchContents()
+
         addBar(
             tabManBar,
             dataSource: self,

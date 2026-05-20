@@ -3,6 +3,8 @@ import Foundation
 import MemoryPresentation
 import BaseData
 import BaseDomain
+import MemoryData
+import MemoryDomain
 
 public final class MemoryDIContainer {
     private func makeMemoryViewModel(action: MemoryViewModel.Action, capsuleId: Int) -> MemoryViewModel {
@@ -47,13 +49,27 @@ public final class MemoryDIContainer {
 
     // MARK: - MyMemoryMessages
 
-    public func makeMyMemoryMessagesViewController() -> MyMemoryMessagesViewController {
-        let viewModel = MyMemoryMessagesViewModel()
+    public func makeMyMemoryMessagesViewController(capsuleId: Int) -> MyMemoryMessagesViewController {
+        let viewModel = makeMyMemoryMessagesViewModel(capsuleId: capsuleId)
         let textListVC = MyMemoryMessageListViewController(type: .text, viewModel: viewModel)
         let photoListVC = MyMemoryMessageListViewController(type: .photo, viewModel: viewModel)
         return MyMemoryMessagesViewController(
             viewControllers: [textListVC, photoListVC],
             with: viewModel
+        )
+    }
+
+    private func makeMyMemoryMessagesViewModel(capsuleId: Int) -> MyMemoryMessagesViewModel {
+        let provider = DefaultProvider<CapsuleContentTargetType>()
+        let userDefaultStorage = DefaultUserDefaultStorage()
+        let repository = DefaultCapsuleContentRepository(
+            provider: provider,
+            userDefaultStorage: userDefaultStorage
+        )
+        let useCase = DefaultCapsuleContentUseCase(capsuleContentRepository: repository)
+        return MyMemoryMessagesViewModel(
+            capsuleId: capsuleId,
+            capsuleContentUseCase: useCase
         )
     }
 }
