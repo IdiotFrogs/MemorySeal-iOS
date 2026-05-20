@@ -31,4 +31,29 @@ public final class DefaultCapsuleContentRepository: CapsuleContentRepository {
     public func fetchCurrentUserId() -> Int? {
         return userDefaultStorage.get(forKey: .userId) as? Int
     }
+
+    public func createTextContent(capsuleId: Int, content: String) async throws -> CapsuleContent {
+        let requestDTO = CreateContentRequestDTO(content: content)
+        let result = await provider.request(.createTextContent(capsuleId: capsuleId, request: requestDTO))
+
+        let responseDTO = try ResultHandler.handleResult(
+            result: result,
+            responseType: CreateCapsuleContentResponseDTO.self,
+            errorType: CapsuleContentError.self
+        )
+
+        return responseDTO.toDomain
+    }
+
+    public func createPhotoContent(capsuleId: Int, images: [Data]) async throws -> CapsuleContent {
+        let result = await provider.request(.createPhotoContent(capsuleId: capsuleId, images: images))
+
+        let responseDTO = try ResultHandler.handleResult(
+            result: result,
+            responseType: CreateCapsuleContentResponseDTO.self,
+            errorType: CapsuleContentError.self
+        )
+
+        return responseDTO.toDomain
+    }
 }

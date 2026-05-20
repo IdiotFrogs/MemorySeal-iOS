@@ -5,6 +5,8 @@ import BaseData
 
 public enum CapsuleContentTargetType {
     case fetchCapsuleContents(capsuleId: Int)
+    case createTextContent(capsuleId: Int, request: CreateContentRequestDTO)
+    case createPhotoContent(capsuleId: Int, images: [Data])
 }
 
 extension CapsuleContentTargetType: BaseTargetType {
@@ -12,6 +14,9 @@ extension CapsuleContentTargetType: BaseTargetType {
         switch self {
         case .fetchCapsuleContents(let capsuleId):
             return "/api/time-capsule-content/\(capsuleId)/contents"
+        case .createTextContent(let capsuleId, _),
+             .createPhotoContent(let capsuleId, _):
+            return "/api/time-capsule-content/\(capsuleId)"
         }
     }
 
@@ -19,6 +24,8 @@ extension CapsuleContentTargetType: BaseTargetType {
         switch self {
         case .fetchCapsuleContents:
             return .get
+        case .createTextContent, .createPhotoContent:
+            return .post
         }
     }
 
@@ -26,6 +33,26 @@ extension CapsuleContentTargetType: BaseTargetType {
         switch self {
         case .fetchCapsuleContents:
             return .requestPlain
+
+        case .createTextContent(_, let request):
+            let jsonData = (try? JSONEncoder().encode(request)) ?? Data()
+            let requestPart = MultipartFormData(
+                provider: .data(jsonData),
+                name: "request",
+                mimeType: "application/json"
+            )
+            return .uploadMultipart([requestPart])
+
+        case .createPhotoContent(_, let images):
+            let parts = images.enumerated().map { index, data in
+                MultipartFormData(
+                    provider: .data(data),
+                    name: "files",
+                    fileName: "photo_\(index).jpg",
+                    mimeType: "image/jpeg"
+                )
+            }
+            return .uploadMultipart(parts)
         }
     }
 
@@ -35,7 +62,7 @@ extension CapsuleContentTargetType: BaseTargetType {
 
     public var isNeededAccessToken: Bool {
         switch self {
-        case .fetchCapsuleContents:
+        case .fetchCapsuleContents, .createTextContent, .createPhotoContent:
             return true
         }
     }

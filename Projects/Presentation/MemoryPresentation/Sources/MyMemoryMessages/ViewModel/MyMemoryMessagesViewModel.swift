@@ -60,9 +60,36 @@ public final class MyMemoryMessagesViewModel {
             .asDriver(onErrorJustReturn: [])
     }
 
-    // MARK: - Write (placeholder)
+    // MARK: - Create
 
-    public func appendMessage(_ message: MyMemoryMessage) {}
+    public func createTextContent(_ text: String) {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let created = try await capsuleContentUseCase.createText(capsuleId: capsuleId, content: text)
+                await MainActor.run {
+                    self.contents.accept(self.contents.value + [created])
+                }
+            } catch {
+                print("createTextContent error:", error)
+            }
+        }
+    }
+
+    public func createPhotoContent(_ images: [Data]) {
+        guard !images.isEmpty else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let created = try await capsuleContentUseCase.createPhotos(capsuleId: capsuleId, images: images)
+                await MainActor.run {
+                    self.contents.accept(self.contents.value + [created])
+                }
+            } catch {
+                print("createPhotoContent error:", error)
+            }
+        }
+    }
 
     // MARK: - Delete
 

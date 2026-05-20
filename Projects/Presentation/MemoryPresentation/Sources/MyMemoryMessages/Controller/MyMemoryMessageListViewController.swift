@@ -17,6 +17,8 @@ public final class MyMemoryMessageListViewController: UIViewController {
     private let type: MyMemoryMessageType
     private let disposeBag: DisposeBag = DisposeBag()
 
+    
+    
     private var textItems: [CapsuleContent] = []
     private var photoUrls: [String] = []
 
@@ -301,8 +303,7 @@ extension MyMemoryMessageListViewController {
             let sheet = MessageInputBottomSheet(initialText: text)
             sheet.didSubmitText
                 .subscribe(onNext: { [weak self] newText in
-                    let updated = MyMemoryMessage(type: .text, textContent: newText, imageData: nil)
-                    self?.viewModel.appendMessage(updated)
+                    self?.viewModel.createTextContent(newText)
                 })
                 .disposed(by: self.disposeBag)
             self.present(sheet, animated: true)

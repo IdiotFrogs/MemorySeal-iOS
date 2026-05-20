@@ -31,3 +31,17 @@ struct CapsuleContentResponseDTO: Decodable {
         }
     }
 }
+
+struct CreateCapsuleContentResponseDTO: Decodable {
+    let contentId: Int
+    let content: String?
+    let attachedFileUrls: [String]?
+
+    var toDomain: CapsuleContent {
+        if let content = content, !content.isEmpty {
+            return .text(id: contentId, content: content)
+        } else {
+            return .photo(id: contentId, imageUrls: attachedFileUrls ?? [])
+        }
+    }
+}
