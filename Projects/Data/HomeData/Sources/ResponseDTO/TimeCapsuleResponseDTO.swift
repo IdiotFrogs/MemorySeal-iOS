@@ -5,7 +5,7 @@ import BaseDomain
 struct TimeCapsuleResponseDTO: Decodable {
     let timeCapsuleId: Int
     let title: String
-    let openedAt: String
+    let openedAt: String?
     let timeCapsuleStatus: String
     let role: String
     let imageUrl: String?
@@ -13,7 +13,7 @@ struct TimeCapsuleResponseDTO: Decodable {
     var toDomain: TimeCapsuleEntity {
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        let date = dateFormatter.date(from: openedAt) ?? Date()
+        let date = openedAt.flatMap { dateFormatter.date(from: $0) }
 
         return .init(
             timeCapsuleId: timeCapsuleId,
