@@ -14,6 +14,7 @@ let project = Project.makeModule(
     dependencies: [
         .Presentation.MemoryPresentation,
         .Data.BaseData,
-        .Data.MemoryData
+        .Data.MemoryData,
+        .Domain.CalendarDomain
     ]
 )
