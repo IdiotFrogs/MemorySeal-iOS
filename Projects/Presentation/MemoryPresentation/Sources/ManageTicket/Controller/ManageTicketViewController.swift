@@ -17,37 +17,39 @@ public final class ManageTicketViewController: UIViewController {
     private let viewModel: ManageTicketViewModel
     private let disposeBag: DisposeBag = DisposeBag()
     private let didConfirmDelete: PublishRelay<Void> = .init()
+    private let didConfirmLeave: PublishRelay<Void> = .init()
 
     // MARK: - Navigation
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
-        view.setTitle("관리")
+        view.setTitle("티켓 관리")
+        view.setTitleFont(DesignSystemFontFamily.Pretendard.bold.font(size: 20))
         return view
     }()
 
-    // MARK: - Delete Button
-    private let deleteTicketButton: UIButton = {
-        let button = UIButton()
-        button.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
-        button.layer.cornerRadius = 10
-
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "trash")?.withTintColor(
-            DesignSystemAsset.ColorAssests.grey4.color,
-            renderingMode: .alwaysOriginal
-        )
-        config.imagePadding = 8
-        config.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
-
-        var titleAttr = AttributedString("티켓 삭제")
-        titleAttr.font = DesignSystemFontFamily.Pretendard.semiBold.font(size: 16)
-        titleAttr.foregroundColor = DesignSystemAsset.ColorAssests.grey4.color
-        config.attributedTitle = titleAttr
-
-        button.configuration = config
-        button.contentHorizontalAlignment = .leading
-        return button
+    // MARK: - Menu
+    private let menuStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 0
+        stackView.alignment = .fill
+        return stackView
     }()
+
+    private let memberRow: ManageTicketMenuRowView = ManageTicketMenuRowView(
+        iconName: "ManageTicketMemberIcon",
+        title: "멤버"
+    )
+
+    private let exitTicketRow: ManageTicketMenuRowView = ManageTicketMenuRowView(
+        iconName: "ManageTicketExitIcon",
+        title: "티켓 나가기"
+    )
+
+    private let deleteTicketRow: ManageTicketMenuRowView = ManageTicketMenuRowView(
+        iconName: "ManageTicketTrashIcon",
+        title: "티켓 삭제"
+    )
 
     public init(with viewModel: ManageTicketViewModel) {
         self.viewModel = viewModel
@@ -73,7 +75,8 @@ public final class ManageTicketViewController: UIViewController {
 extension ManageTicketViewController {
     private func bindViewModel() {
         let input = ManageTicketViewModel.Input(
-            didConfirmDelete: didConfirmDelete
+            didConfirmDelete: didConfirmDelete,
+            didConfirmLeave: didConfirmLeave
         )
         let _ = viewModel.transform(input)
 
@@ -86,10 +89,17 @@ extension ManageTicketViewController {
     }
 
     private func bindButtons() {
-        deleteTicketButton.rx.tap
+        deleteTicketRow.tap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.showDeleteDialog()
+            })
+            .disposed(by: disposeBag)
+
+        exitTicketRow.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.didConfirmLeave.accept(())
             })
             .disposed(by: disposeBag)
     }
@@ -125,7 +135,11 @@ extension ManageTicketViewController {
 extension ManageTicketViewController {
     private func addSubviews() {
         view.addSubview(navigationView)
-        view.addSubview(deleteTicketButton)
+        view.addSubview(menuStackView)
+
+        menuStackView.addArrangedSubview(memberRow)
+        menuStackView.addArrangedSubview(exitTicketRow)
+        menuStackView.addArrangedSubview(deleteTicketRow)
     }
 
     private func setLayout() {
@@ -135,10 +149,9 @@ extension ManageTicketViewController {
             $0.height.equalTo(56)
         }
 
-        deleteTicketButton.snp.makeConstraints {
-            $0.top.equalTo(navigationView.snp.bottom).offset(8)
+        menuStackView.snp.makeConstraints {
+            $0.top.equalTo(navigationView.snp.bottom)
             $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(56)
         }
     }
 }

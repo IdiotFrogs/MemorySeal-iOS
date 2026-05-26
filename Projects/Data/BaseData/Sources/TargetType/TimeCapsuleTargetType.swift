@@ -11,9 +11,7 @@ import Moya
 
 public enum TimeCapsuleTargetType {
     case fetchMyTimeCapsules
-    case inviteToTimeCapsule(capsuleId: Int)
     case joinRequest(code: String)
-    case deleteTimeCapsule(capsuleId: Int)
 }
 
 extension TimeCapsuleTargetType: BaseTargetType {
@@ -21,12 +19,8 @@ extension TimeCapsuleTargetType: BaseTargetType {
         switch self {
         case .fetchMyTimeCapsules:
             return "/time-capsules/my"
-        case .inviteToTimeCapsule(let capsuleId):
-            return "/time-capsules/\(capsuleId)/invite"
         case .joinRequest:
             return "/time-capsules/join-request"
-        case .deleteTimeCapsule(let capsuleId):
-            return "/time-capsules/\(capsuleId)"
         }
     }
 
@@ -34,12 +28,8 @@ extension TimeCapsuleTargetType: BaseTargetType {
         switch self {
         case .fetchMyTimeCapsules:
             return .get
-        case .inviteToTimeCapsule:
-            return .post
         case .joinRequest:
             return .post
-        case .deleteTimeCapsule:
-            return .delete
         }
     }
 
@@ -47,12 +37,8 @@ extension TimeCapsuleTargetType: BaseTargetType {
         switch self {
         case .fetchMyTimeCapsules:
             return .requestPlain
-        case .inviteToTimeCapsule:
-            return .requestPlain
         case .joinRequest(let code):
             return .requestJSONEncodable(["code": code])
-        case .deleteTimeCapsule:
-            return .requestPlain
         }
     }
 
@@ -68,11 +54,7 @@ extension TimeCapsuleTargetType: BaseTargetType {
         switch self {
         case .fetchMyTimeCapsules:
             return true
-        case .inviteToTimeCapsule:
-            return true
         case .joinRequest:
-            return true
-        case .deleteTimeCapsule:
             return true
         }
     }

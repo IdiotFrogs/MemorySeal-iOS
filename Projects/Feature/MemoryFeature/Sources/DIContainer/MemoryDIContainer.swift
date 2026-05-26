@@ -22,24 +22,24 @@ public final class MemoryDIContainer {
     }
 
     private func makeAddMemberViewModel(capsuleId: Int) -> AddMemberViewModel {
-        let provider = DefaultProvider<TimeCapsuleTargetType>()
-        let repository = DefaultTimeCapsuleRepository(provider: provider)
-        let useCase = DefaultTimeCapsuleUseCase(timeCapsuleRepository: repository)
+        let provider = DefaultProvider<AddMemberTargetType>()
+        let repository = DefaultAddMemberRepository(provider: provider)
+        let useCase = DefaultAddMemberUseCase(addMemberRepository: repository)
         return AddMemberViewModel(
             capsuleId: capsuleId,
-            timeCapsuleUseCase: useCase
+            addMemberUseCase: useCase
         )
     }
 
     private func makeManageTicketViewModel(action: ManageTicketViewModel.Action, capsuleId: Int, ticketName: String) -> ManageTicketViewModel {
-        let provider = DefaultProvider<TimeCapsuleTargetType>()
-        let repository = DefaultTimeCapsuleRepository(provider: provider)
-        let useCase = DefaultTimeCapsuleUseCase(timeCapsuleRepository: repository)
+        let provider = DefaultProvider<ManageTicketTargetType>()
+        let repository = DefaultManageTicketRepository(provider: provider)
+        let useCase = DefaultManageTicketUseCase(manageTicketRepository: repository)
         return ManageTicketViewModel(
             action: action,
             capsuleId: capsuleId,
             ticketName: ticketName,
-            timeCapsuleUseCase: useCase
+            manageTicketUseCase: useCase
         )
     }
 
