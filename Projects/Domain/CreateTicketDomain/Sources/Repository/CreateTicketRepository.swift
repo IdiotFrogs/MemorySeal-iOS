@@ -9,5 +9,5 @@
 import Foundation
 
 public protocol CreateTicketRepository {
-    func createTicket(title: String, description: String?, openedAt: Date, mainImage: Data) async throws
+    func createTicket(title: String, description: String?, mainImage: Data) async throws
 }

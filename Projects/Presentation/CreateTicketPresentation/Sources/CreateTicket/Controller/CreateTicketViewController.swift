@@ -28,27 +28,16 @@ public final class CreateTicketViewController: UIViewController {
     private let viewModel: CreateTicketViewModel
     private let disposeBag: DisposeBag = DisposeBag()
 
-    private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let imageSelectedRelay: PublishRelay<UIImage> = .init()
-    private let selectedDateRelay: PublishRelay<Date> = .init()
-    private var currentCalendarDates: [CalendarDateModel] = []
 
     private var ticketImageWavyLayer: WavyStrokeLayer?
     private var ticketTitleWavyLayer: WavyStrokeLayer?
     private var descriptionWavyLayer: WavyStrokeLayer?
-    private var calendarWavyLayer: WavyStrokeLayer?
 
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
         view.setTitle("타임 티켓 생성하기")
         return view
-    }()
-
-    private let scrollView: UIScrollView = {
-        let scrollView = UIScrollView()
-        scrollView.backgroundColor = .clear
-        scrollView.showsHorizontalScrollIndicator = false
-        return scrollView
     }()
 
     private let photoTitleLabel: UILabel = {
@@ -121,20 +110,6 @@ public final class CreateTicketViewController: UIViewController {
         return label
     }()
 
-    private let calendarTitleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "오픈 날짜"
-        label.textColor = DesignSystemAsset.ColorAssests.grey3.color
-        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 12)
-        return label
-    }()
-
-    private let calendarView: MemorySealCalendarView = {
-        let view = MemorySealCalendarView()
-        view.layer.cornerRadius = 12
-        return view
-    }()
-
     private let createButtonWavyBackground: WavyStrokeView = {
         let view = WavyStrokeView(
             fillColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
@@ -175,11 +150,10 @@ public final class CreateTicketViewController: UIViewController {
         self.setupWavyStrokeLayers()
 
         self.bindViewModel()
-        self.bindScrollView()
+        self.bindSView()
         self.bindTextView()
         self.bindTextFieldFocus()
         self.bindImagePicker()
-        self.rxViewDidLoad.accept(())
     }
 
     public override func viewDidLayoutSubviews() {
@@ -187,7 +161,6 @@ public final class CreateTicketViewController: UIViewController {
         syncWavyStrokeLayer(ticketImageWavyLayer, to: ticketImageContainer.bounds)
         syncWavyStrokeLayer(ticketTitleWavyLayer, to: ticketTitleTextField.bounds)
         syncWavyStrokeLayer(descriptionWavyLayer, to: descriptionTextView.bounds)
-        syncWavyStrokeLayer(calendarWavyLayer, to: calendarView.bounds)
     }
 
     private func syncWavyStrokeLayer(_ layer: WavyStrokeLayer?, to bounds: CGRect) {
@@ -209,63 +182,13 @@ public final class CreateTicketViewController: UIViewController {
 extension CreateTicketViewController {
     private func bindViewModel() {
         let input = CreateTicketViewModel.Input(
-            rxViewDidLoad: rxViewDidLoad,
             navigationViewBackButtonDidTap: navigationView.backButtonDidTap,
-            previousMonthButtonDidTap: calendarView.previousMonthButtonDidTap,
-            nextMonthButtonDidTap: calendarView.nextMonthButtonDidTap,
             createButtonDidTap: createButton.rx.tap,
             titleText: ticketTitleTextField.rx.text,
             descriptionText: descriptionTextView.rx.text,
-            selectedImage: imageSelectedRelay,
-            selectedDate: selectedDateRelay
+            selectedImage: imageSelectedRelay
         )
         let output = viewModel.transform(input)
-
-        output.currentMonth
-            .withUnretained(self)
-            .subscribe(onNext: { (self, date) in
-                self.calendarView.setTitleLabel(date: date)
-            })
-            .disposed(by: disposeBag)
-
-        output.calendarDates
-            .withUnretained(self)
-            .subscribe(onNext: { (self, dates) in
-                self.currentCalendarDates = dates
-            })
-            .disposed(by: disposeBag)
-
-        output.calendarDates
-            .bind(to: calendarView.collectionView.rx.items(
-                cellIdentifier: MemorySealCalendarCollectionViewCell.reuseIdentifier,
-                cellType: MemorySealCalendarCollectionViewCell.self
-            )) { (index, item, cell) in
-                let dateFormatter = DateFormatter()
-                dateFormatter.locale = Locale(identifier: "en_US")
-                dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
-                dateFormatter.dateFormat = "d"
-                let dateText: String = dateFormatter.string(from: item.date)
-
-                cell.configure(
-                    dateText: dateText,
-                    isCurrentMonth: item.isInCurrentMonth,
-                    isToday: item.isToday
-                )
-
-                if index > 30 {
-                    self.calendarView.remakeCollectionViewLayout()
-                }
-            }
-            .disposed(by: disposeBag)
-
-        calendarView.collectionView.rx.itemSelected
-            .withUnretained(self)
-            .subscribe(onNext: { (self, indexPath) in
-                guard indexPath.item < self.currentCalendarDates.count else { return }
-                let date = self.currentCalendarDates[indexPath.item].date
-                self.selectedDateRelay.accept(date)
-            })
-            .disposed(by: disposeBag)
 
         output.canCreate
             .drive(with: self) { (self, canCreate) in
@@ -295,17 +218,10 @@ extension CreateTicketViewController {
         }
     }
 
-    private func bindScrollView() {
-        scrollView.rx.contentOffset
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.view.endEditing(true)
-            })
-            .disposed(by: disposeBag)
-
+    private func bindSView() {
         let backgroundTap = UITapGestureRecognizer()
         backgroundTap.cancelsTouchesInView = false
-        scrollView.addGestureRecognizer(backgroundTap)
+        view.addGestureRecognizer(backgroundTap)
 
         backgroundTap.rx.event
             .withUnretained(self)
@@ -458,17 +374,6 @@ extension CreateTicketViewController {
             cornerRadius: 12,
             alignment: .outside
         )
-        calendarWavyLayer = calendarView.addWavyStrokeLayer(
-            strokeColor: inactiveColor,
-            lineWidth: 3,
-            cornerRadius: 12,
-            alignment: .outside
-        )
-
-        calendarView.onLayoutSubviews = { [weak self] in
-            guard let self else { return }
-            self.syncWavyStrokeLayer(self.calendarWavyLayer, to: self.calendarView.bounds)
-        }
 
         descriptionTextView.onLayoutSubviews = { [weak self] in
             guard let self else { return }
@@ -478,24 +383,20 @@ extension CreateTicketViewController {
 
     private func addSubviews() {
         view.addSubview(navigationView)
-        view.addSubview(scrollView)
 
-        scrollView.addSubview(photoTitleLabel)
-        scrollView.addSubview(ticketImageContainer)
+        view.addSubview(photoTitleLabel)
+        view.addSubview(ticketImageContainer)
         ticketImageContainer.addSubview(ticketImageView)
 
-        scrollView.addSubview(ticketTitleLabel)
-        scrollView.addSubview(ticketTitleTextField)
+        view.addSubview(ticketTitleLabel)
+        view.addSubview(ticketTitleTextField)
 
-        scrollView.addSubview(descriptionTitleLabel)
-        scrollView.addSubview(descriptionTextView)
-        scrollView.addSubview(descriptionPlaceholderLabel)
+        view.addSubview(descriptionTitleLabel)
+        view.addSubview(descriptionTextView)
+        view.addSubview(descriptionPlaceholderLabel)
 
-        scrollView.addSubview(calendarTitleLabel)
-        scrollView.addSubview(calendarView)
-
-        scrollView.addSubview(createButtonWavyBackground)
-        scrollView.addSubview(createButton)
+        view.addSubview(createButtonWavyBackground)
+        view.addSubview(createButton)
     }
 
     private func setLayout() {
@@ -505,16 +406,8 @@ extension CreateTicketViewController {
             $0.height.equalTo(56)
         }
 
-        scrollView.snp.makeConstraints {
-            $0.top.equalTo(navigationView.snp.bottom)
-            $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom)
-            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading)
-            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing)
-            $0.width.equalTo(view.frame.width)
-        }
-
         photoTitleLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(24)
+            $0.top.equalTo(navigationView.snp.bottom).offset(12)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(26)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(26)
         }
@@ -560,23 +453,10 @@ extension CreateTicketViewController {
             $0.leading.equalTo(descriptionTextView.snp.leading).offset(15)
         }
 
-        calendarTitleLabel.snp.makeConstraints {
-            $0.top.equalTo(descriptionTextView.snp.bottom).offset(16)
-            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(26)
-            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(26)
-        }
-
-        calendarView.snp.makeConstraints {
-            $0.top.equalTo(calendarTitleLabel.snp.bottom).offset(8)
-            $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
-            $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
-        }
-
         createButton.snp.makeConstraints {
-            $0.top.equalTo(calendarView.snp.bottom).offset(24)
             $0.leading.equalTo(view.safeAreaLayoutGuide.snp.leading).offset(20)
             $0.trailing.equalTo(view.safeAreaLayoutGuide.snp.trailing).inset(20)
-            $0.bottom.equalTo(scrollView.snp.bottom).inset(24)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).inset(24)
             $0.height.equalTo(48)
         }
 

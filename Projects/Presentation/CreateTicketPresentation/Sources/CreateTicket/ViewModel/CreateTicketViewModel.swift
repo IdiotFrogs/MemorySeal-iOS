@@ -10,7 +10,6 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-import CalendarDomain
 import CreateTicketDomain
 import DesignSystem
 
@@ -24,42 +23,29 @@ public final class CreateTicketViewModel {
     }
 
     private let disposeBag: DisposeBag = DisposeBag()
-    private let calendarUseCase: CalendarUseCase
     private let createTicketUseCase: CreateTicketUseCase
 
     public let action: Action
 
     private var storedImage: UIImage?
-    private var storedDate: Date = Date().kstNow
-
-    private let currentMonth: BehaviorRelay<Date> = .init(value: Date().kstNow)
-    private let calendarDates: PublishRelay<[CalendarDateModel]> = .init()
 
     public init(
-        calendarUseCase: CalendarUseCase,
         createTicketUseCase: CreateTicketUseCase,
         action: Action
     ) {
-        self.calendarUseCase = calendarUseCase
         self.createTicketUseCase = createTicketUseCase
         self.action = action
     }
 
     struct Input {
-        let rxViewDidLoad: PublishRelay<Void>
         let navigationViewBackButtonDidTap: ControlEvent<Void>
-        let previousMonthButtonDidTap: ControlEvent<Void>
-        let nextMonthButtonDidTap: ControlEvent<Void>
         let createButtonDidTap: ControlEvent<Void>
         let titleText: ControlProperty<String?>
         let descriptionText: ControlProperty<String?>
         let selectedImage: PublishRelay<UIImage>
-        let selectedDate: PublishRelay<Date>
     }
 
     struct Output {
-        let currentMonth: BehaviorRelay<Date>
-        let calendarDates: PublishRelay<[CalendarDateModel]>
         let isLoading: BehaviorRelay<Bool>
         let canCreate: Driver<Bool>
     }
@@ -68,41 +54,10 @@ public final class CreateTicketViewModel {
         let isLoading = BehaviorRelay<Bool>(value: false)
         let imageSelectedRelay = BehaviorRelay<Bool>(value: false)
 
-        input.rxViewDidLoad
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.requestCalendarDates(date: Date().kstNow)
-            })
-            .disposed(by: disposeBag)
-
         input.navigationViewBackButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.action.popViewController()
-            })
-            .disposed(by: disposeBag)
-
-        input.previousMonthButtonDidTap
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                var calendar = Calendar(identifier: .gregorian)
-                calendar.locale = Locale(identifier: "en_US")
-                calendar.timeZone = TimeZone(abbreviation: "UTC") ?? .current
-                if let previousMonth = calendar.date(byAdding: .month, value: -1, to: self.currentMonth.value) {
-                    self.requestCalendarDates(date: previousMonth)
-                }
-            })
-            .disposed(by: disposeBag)
-
-        input.nextMonthButtonDidTap
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                var calendar = Calendar(identifier: .gregorian)
-                calendar.locale = Locale(identifier: "en_US")
-                calendar.timeZone = TimeZone(abbreviation: "UTC") ?? .current
-                if let nextMonth = calendar.date(byAdding: .month, value: 1, to: self.currentMonth.value) {
-                    self.requestCalendarDates(date: nextMonth)
-                }
             })
             .disposed(by: disposeBag)
 
@@ -111,13 +66,6 @@ public final class CreateTicketViewModel {
             .subscribe(onNext: { (self, image) in
                 self.storedImage = image
                 imageSelectedRelay.accept(true)
-            })
-            .disposed(by: disposeBag)
-
-        input.selectedDate
-            .withUnretained(self)
-            .subscribe(onNext: { (self, date) in
-                self.storedDate = date
             })
             .disposed(by: disposeBag)
 
@@ -135,7 +83,6 @@ public final class CreateTicketViewModel {
                 self.requestCreateTicket(
                     title: title,
                     description: desc,
-                    openedAt: self.storedDate,
                     mainImage: imageData,
                     isLoading: isLoading
                 )
@@ -156,8 +103,6 @@ public final class CreateTicketViewModel {
         .asDriver(onErrorJustReturn: false)
 
         return Output(
-            currentMonth: currentMonth,
-            calendarDates: calendarDates,
             isLoading: isLoading,
             canCreate: canCreate
         )
@@ -165,16 +110,9 @@ public final class CreateTicketViewModel {
 }
 
 extension CreateTicketViewModel {
-    private func requestCalendarDates(date: Date) {
-        let calendarDates: [CalendarDateModel] = calendarUseCase.generateCalendarDates(for: date)
-        self.calendarDates.accept(calendarDates)
-        self.currentMonth.accept(date)
-    }
-
     private func requestCreateTicket(
         title: String,
         description: String?,
-        openedAt: Date,
         mainImage: Data,
         isLoading: BehaviorRelay<Bool>
     ) {
@@ -184,7 +122,6 @@ extension CreateTicketViewModel {
                 try await createTicketUseCase.execute(
                     title: title,
                     description: description,
-                    openedAt: openedAt,
                     mainImage: mainImage
                 )
                 await MainActor.run {
