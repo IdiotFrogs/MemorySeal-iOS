@@ -7,6 +7,7 @@ public enum CapsuleContentTargetType {
     case fetchCapsuleContents(capsuleId: Int)
     case createTextContent(capsuleId: Int, request: CreateContentRequestDTO)
     case createPhotoContent(capsuleId: Int, images: [Data])
+    case deleteContent(contentId: Int)
 }
 
 extension CapsuleContentTargetType: BaseTargetType {
@@ -17,6 +18,8 @@ extension CapsuleContentTargetType: BaseTargetType {
         case .createTextContent(let capsuleId, _),
              .createPhotoContent(let capsuleId, _):
             return "/api/time-capsule-content/\(capsuleId)"
+        case .deleteContent(let contentId):
+            return "/api/time-capsule-content/\(contentId)"
         }
     }
 
@@ -26,6 +29,8 @@ extension CapsuleContentTargetType: BaseTargetType {
             return .get
         case .createTextContent, .createPhotoContent:
             return .post
+        case .deleteContent:
+            return .delete
         }
     }
 
@@ -53,6 +58,9 @@ extension CapsuleContentTargetType: BaseTargetType {
                 )
             }
             return .uploadMultipart(parts)
+
+        case .deleteContent:
+            return .requestPlain
         }
     }
 
@@ -62,7 +70,7 @@ extension CapsuleContentTargetType: BaseTargetType {
 
     public var isNeededAccessToken: Bool {
         switch self {
-        case .fetchCapsuleContents, .createTextContent, .createPhotoContent:
+        case .fetchCapsuleContents, .createTextContent, .createPhotoContent, .deleteContent:
             return true
         }
     }

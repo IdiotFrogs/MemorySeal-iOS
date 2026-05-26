@@ -95,25 +95,54 @@ public final class MyMemoryMessagesViewModel {
 
     public func deleteTextContents(_ ids: Set<Int>) {
         guard !ids.isEmpty else { return }
-        let remaining = contents.value.filter { item in
-            if case .text(let id, _) = item {
-                return !ids.contains(id)
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                for id in ids {
+                    try await capsuleContentUseCase.delete(contentId: id)
+                }
+                await MainActor.run {
+                    let remaining = self.contents.value.filter { item in
+                        if case .text(let id, _) = item {
+                            return !ids.contains(id)
+                        }
+                        return true
+                    }
+                    self.contents.accept(remaining)
+                }
+            } catch {
+                print("deleteTextContents error:", error)
             }
-            return true
         }
-        contents.accept(remaining)
     }
 
     public func deletePhotoUrls(_ urls: Set<String>) {
         guard !urls.isEmpty else { return }
-        let updated = contents.value.compactMap { item -> CapsuleContent? in
+        let contentIds: Set<Int> = Set(contents.value.compactMap { item -> Int? in
             if case .photo(let id, let imageUrls) = item {
-                let remaining = imageUrls.filter { !urls.contains($0) }
-                if remaining.isEmpty { return nil }
-                return .photo(id: id, imageUrls: remaining)
+                return imageUrls.contains(where: { urls.contains($0) }) ? id : nil
             }
-            return item
+            return nil
+        })
+        guard !contentIds.isEmpty else { return }
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                for id in contentIds {
+                    try await capsuleContentUseCase.delete(contentId: id)
+                }
+                await MainActor.run {
+                    let remaining = self.contents.value.filter { item in
+                        if case .photo(let id, _) = item {
+                            return !contentIds.contains(id)
+                        }
+                        return true
+                    }
+                    self.contents.accept(remaining)
+                }
+            } catch {
+                print("deletePhotoUrls error:", error)
+            }
         }
-        contents.accept(updated)
     }
 }

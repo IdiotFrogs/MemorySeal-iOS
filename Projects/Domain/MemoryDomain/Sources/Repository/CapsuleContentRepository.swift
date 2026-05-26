@@ -5,4 +5,5 @@ public protocol CapsuleContentRepository {
     func fetchCurrentUserId() -> Int?
     func createTextContent(capsuleId: Int, content: String) async throws -> CapsuleContent
     func createPhotoContent(capsuleId: Int, images: [Data]) async throws -> CapsuleContent
+    func deleteContent(contentId: Int) async throws
 }
