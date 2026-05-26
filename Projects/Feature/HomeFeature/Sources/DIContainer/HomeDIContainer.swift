@@ -8,27 +8,14 @@
 
 import Foundation
 import UIKit
+
 import HomePresentation
 import BaseData
 import BaseDomain
+import HomeData
+import HomeDomain
 
 public final class HomeDIContainer {
-    private func makeTimeCapsuleProvider() -> DefaultProvider<TimeCapsuleTargetType> {
-        return DefaultProvider<TimeCapsuleTargetType>()
-    }
-
-    private func makeTimeCapsuleRepository() -> TimeCapsuleRepository {
-        return DefaultTimeCapsuleRepository(
-            provider: makeTimeCapsuleProvider()
-        )
-    }
-
-    private func makeTimeCapsuleUseCase() -> TimeCapsuleUseCase {
-        return DefaultTimeCapsuleUseCase(
-            timeCapsuleRepository: makeTimeCapsuleRepository()
-        )
-    }
-
     private func makeHomeTabmanViewModel(action: HomeTabmanViewModel.Action) -> HomeTabmanViewModel {
         return HomeTabmanViewModel(action: action)
     }
@@ -44,9 +31,12 @@ public final class HomeDIContainer {
     }
 
     private func makeHomeViewModel(action: HomeViewModel.Action, role: TimeCapsuleRole) -> HomeViewModel {
+        let provider = DefaultProvider<HomeTargetType>()
+        let repository = DefaultHomeRepository(provider: provider)
+        let useCase = DefaultHomeUseCase(homeRepository: repository)
         return HomeViewModel(
             action: action,
-            timeCapsuleUseCase: makeTimeCapsuleUseCase(),
+            homeUseCase: useCase,
             role: role
         )
     }
@@ -56,9 +46,10 @@ public final class HomeDIContainer {
     }
 
     private func makeEnterTicketViewModel() -> EnterTicketViewModel {
-        return EnterTicketViewModel(
-            timeCapsuleUseCase: makeTimeCapsuleUseCase()
-        )
+        let provider = DefaultProvider<EnterTicketTargetType>()
+        let repository = DefaultEnterTicketRepository(provider: provider)
+        let useCase = DefaultEnterTicketUseCase(enterTicketRepository: repository)
+        return EnterTicketViewModel(enterTicketUseCase: useCase)
     }
 
     func makeEnterTicketViewController() -> EnterTicketViewController {

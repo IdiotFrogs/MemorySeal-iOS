@@ -1,14 +1,8 @@
-//
-//  TimeCapsuleError.swift
-//  BaseDomain
-//
-//  Created by 선민재 on 3/20/26.
-//  Copyright © 2026 MemorySeal. All rights reserved.
-//
-
 import Foundation
 
-public enum TimeCapsuleError: DomainError, LocalizedError {
+import BaseDomain
+
+public enum EnterTicketError: DomainError, LocalizedError {
     case defaultError
     case invalidInviteCode
     case timeCapsuleNotFound

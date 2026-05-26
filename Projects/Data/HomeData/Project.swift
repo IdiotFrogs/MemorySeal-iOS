@@ -1,19 +1,11 @@
-//
-//  Project.swift
-//  Manifests
-//
-//  Created by 선민재 on 5/19/25.
-//
-
 import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "HomeFeature",
+    name: "HomeData",
     product: .staticFramework,
     dependencies: [
-        .Presentation.HomePresentation,
         .Data.BaseData,
-        .Data.HomeData
+        .Domain.HomeDomain
     ]
 )

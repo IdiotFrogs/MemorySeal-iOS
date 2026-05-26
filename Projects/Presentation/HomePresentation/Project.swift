@@ -12,7 +12,8 @@ let project = Project.makeModule(
     name: "HomePresentation",
     product: .staticFramework,
     dependencies: [
-        .Presentation.BasePresentation
+        .Presentation.BasePresentation,
+        .Domain.HomeDomain
     ],
     resources: ["Resources/**"]
 )

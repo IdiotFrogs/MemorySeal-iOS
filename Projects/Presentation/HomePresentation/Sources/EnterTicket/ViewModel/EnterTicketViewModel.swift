@@ -9,11 +9,11 @@
 import RxSwift
 import RxCocoa
 
-import BaseDomain
+import HomeDomain
 
 public final class EnterTicketViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
-    private let timeCapsuleUseCase: TimeCapsuleUseCase
+    private let enterTicketUseCase: EnterTicketUseCase
 
     struct Input {
         let didTapEnterButton: PublishRelay<String>
@@ -34,7 +34,7 @@ public final class EnterTicketViewModel {
                 Task { [weak self] in
                     guard let self else { return }
                     do {
-                        try await self.timeCapsuleUseCase.joinRequest(code: code)
+                        try await self.enterTicketUseCase.joinRequest(code: code)
                         await MainActor.run {
                             joinSuccess.accept(())
                         }
@@ -53,7 +53,7 @@ public final class EnterTicketViewModel {
         )
     }
 
-    public init(timeCapsuleUseCase: TimeCapsuleUseCase) {
-        self.timeCapsuleUseCase = timeCapsuleUseCase
+    public init(enterTicketUseCase: EnterTicketUseCase) {
+        self.enterTicketUseCase = enterTicketUseCase
     }
 }

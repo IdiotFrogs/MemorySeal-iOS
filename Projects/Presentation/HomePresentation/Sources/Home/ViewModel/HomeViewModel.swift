@@ -11,6 +11,7 @@ import RxSwift
 import RxCocoa
 
 import BaseDomain
+import HomeDomain
 
 public final class HomeViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
@@ -25,7 +26,7 @@ public final class HomeViewModel {
 
     public let action: Action
 
-    private let timeCapsuleUseCase: TimeCapsuleUseCase
+    private let homeUseCase: HomeUseCase
     private let role: TimeCapsuleRole
 
     private let memoryList: BehaviorRelay<[TimeCapsuleEntity]> = .init(value: [])
@@ -46,7 +47,7 @@ public final class HomeViewModel {
             .subscribe(onNext: { (self, _) in
                 Task {
                     do {
-                        let capsules = try await self.timeCapsuleUseCase.fetchMyTimeCapsules(role: self.role)
+                        let capsules = try await self.homeUseCase.fetchMyTimeCapsules(role: self.role)
                         await MainActor.run {
                             self.memoryList.accept(capsules)
                         }
@@ -73,11 +74,11 @@ public final class HomeViewModel {
 
     public init(
         action: Action,
-        timeCapsuleUseCase: TimeCapsuleUseCase,
+        homeUseCase: HomeUseCase,
         role: TimeCapsuleRole
     ) {
         self.action = action
-        self.timeCapsuleUseCase = timeCapsuleUseCase
+        self.homeUseCase = homeUseCase
         self.role = role
     }
 }
