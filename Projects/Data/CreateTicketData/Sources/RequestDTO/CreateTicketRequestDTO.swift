@@ -11,11 +11,9 @@ import Foundation
 public struct CreateTicketRequestDTO: Encodable {
     let title: String
     let description: String?
-    let openedAt: String
 
-    public init(title: String, description: String?, openedAt: String) {
+    public init(title: String, description: String?) {
         self.title = title
         self.description = description
-        self.openedAt = openedAt
     }
 }

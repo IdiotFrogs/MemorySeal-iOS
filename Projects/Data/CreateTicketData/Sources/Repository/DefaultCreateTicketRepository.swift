@@ -22,21 +22,14 @@ public final class DefaultCreateTicketRepository: CreateTicketRepository {
     public func createTicket(
         title: String,
         description: String?,
-        openedAt: Date,
         mainImage: Data
     ) async throws {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
 
         let requestDTO = CreateTicketRequestDTO(
             title: title,
-            description: description,
-            openedAt: dateFormatter.string(from: openedAt)
+            description: description
         )
         
-        print(requestDTO)
-
         let result = await provider.request(.createTicket(requestDTO, mainImage: mainImage))
 
         try ResultHandler.handleResult(

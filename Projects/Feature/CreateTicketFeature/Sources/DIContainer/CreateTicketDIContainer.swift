@@ -8,16 +8,12 @@
 
 import Foundation
 
-import CalendarDomain
 import CreateTicketDomain
 import CreateTicketData
 import BaseData
 import CreateTicketPresentation
 
 public final class CreateTicketDIContainer {
-    private func makeCalendarUseCase() -> CalendarUseCase {
-        return DefaultCalendarUseCase()
-    }
 
     private func makeCreateTicketProvider() -> DefaultProvider<CreateTicketTargetType> {
         return DefaultProvider<CreateTicketTargetType>()
@@ -33,7 +29,6 @@ public final class CreateTicketDIContainer {
 
     private func makeCreateTicketViewModel(action: CreateTicketViewModel.Action) -> CreateTicketViewModel {
         return CreateTicketViewModel(
-            calendarUseCase: makeCalendarUseCase(),
             createTicketUseCase: makeCreateTicketUseCase(),
             action: action
         )
