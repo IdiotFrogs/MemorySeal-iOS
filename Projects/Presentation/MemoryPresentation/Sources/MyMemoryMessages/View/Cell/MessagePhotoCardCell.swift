@@ -1,5 +1,7 @@
 import UIKit
 import SnapKit
+import Kingfisher
+
 import DesignSystem
 
 // MARK: - MessagePhotoCardCell
@@ -51,16 +53,16 @@ public final class MessagePhotoCardCell: UICollectionViewCell {
 
     public override func prepareForReuse() {
         super.prepareForReuse()
+        thumbnailImageView.kf.cancelDownloadTask()
         thumbnailImageView.image = nil
         selectionIconView.isHidden = true
         selectionIconView.image = nil
         selectionBorderView.isHidden = true
     }
 
-    public func configure(with message: MyMemoryMessage) {
-        if let data = message.imageData, let image = UIImage(data: data) {
-            thumbnailImageView.image = image
-        }
+    public func configure(with imageUrl: String) {
+        let url = URL(string: imageUrl)
+        thumbnailImageView.kf.setImage(with: url)
     }
 
     public func setSelection(isSelectionMode: Bool, isSelected: Bool) {

@@ -12,7 +12,8 @@ let project = Project.makeModule(
     name: "MemoryPresentation",
     product: .staticFramework,
     dependencies: [
-        .Presentation.BasePresentation
+        .Presentation.BasePresentation,
+        .Domain.MemoryDomain
     ],
     resources: ["Resources/**"]
 )

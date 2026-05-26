@@ -120,6 +120,8 @@ public final class MyMemoryMessagesViewController: TabmanViewController {
         configureChildSelectionMode()
         bindButton()
 
+        viewModel.fetchContents()
+
         addBar(
             tabManBar,
             dataSource: self,
@@ -252,8 +254,7 @@ extension MyMemoryMessagesViewController {
         sheet.didSubmitText
             .withUnretained(self)
             .subscribe(onNext: { (self, text) in
-                let message = MyMemoryMessage(type: .text, textContent: text, imageData: nil)
-                self.viewModel.appendMessage(message)
+                self.viewModel.createTextContent(text)
             })
             .disposed(by: disposeBag)
         present(sheet, animated: true)
@@ -290,11 +291,8 @@ extension MyMemoryMessagesViewController: PHPickerViewControllerDelegate {
 
         group.notify(queue: .main) { [weak self] in
             guard let self else { return }
-            for data in orderedData {
-                guard let data else { continue }
-                let message = MyMemoryMessage(type: .photo, textContent: nil, imageData: data)
-                self.viewModel.appendMessage(message)
-            }
+            let images = orderedData.compactMap { $0 }
+            self.viewModel.createPhotoContent(images)
         }
     }
 

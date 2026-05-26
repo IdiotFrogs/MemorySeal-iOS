@@ -1,6 +1,8 @@
 import UIKit
 import SnapKit
+
 import DesignSystem
+import MemoryDomain
 
 // MARK: - MessageTextCardCell
 
@@ -74,8 +76,15 @@ public final class MessageTextCardCell: UICollectionViewCell {
         selectionIconView.image = nil
     }
 
-    public func configure(with message: MyMemoryMessage, index: Int) {
+    public func configure(with content: CapsuleContent, index: Int) {
         titleLabel.text = "메세지 \(index)"
+
+        let text: String
+        if case .text(_, let value) = content {
+            text = value
+        } else {
+            text = ""
+        }
 
         let style = NSMutableParagraphStyle()
         style.lineHeightMultiple = 1.5
@@ -85,7 +94,7 @@ public final class MessageTextCardCell: UICollectionViewCell {
             .foregroundColor: UIColor(red: 69/255, green: 69/255, blue: 69/255, alpha: 1.0)
         ]
         bodyLabel.attributedText = NSAttributedString(
-            string: message.textContent ?? "",
+            string: text,
             attributes: attributes
         )
     }

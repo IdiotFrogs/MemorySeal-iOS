@@ -55,7 +55,7 @@ public final class MemoryCoordinator {
     // MARK: - MyMemoryMessages
 
     public func moveToMyMemoryMessages() {
-        let vc = memoryDIContainer.makeMyMemoryMessagesViewController()
+        let vc = memoryDIContainer.makeMyMemoryMessagesViewController(capsuleId: capsuleId)
         navigationController.pushViewController(vc, animated: true)
     }
 }
