@@ -40,7 +40,10 @@ public final class MemoryCoordinator {
     }
 
     public func moveToManageTicket() {
-        let manageAction = ManageTicketViewModel.Action(didDeleteTimeCapsule: didDeleteTimeCapsule)
+        let manageAction = ManageTicketViewModel.Action(
+            didDeleteTimeCapsule: didDeleteTimeCapsule,
+            didLeaveTimeCapsule: didLeaveTimeCapsule
+        )
         let viewController = memoryDIContainer.makeManageTicketViewController(action: manageAction, capsuleId: capsuleId, ticketName: "티켓 이름")
         self.navigationController.pushViewController(
             viewController,
@@ -49,6 +52,10 @@ public final class MemoryCoordinator {
     }
 
     public func didDeleteTimeCapsule() {
+        self.navigationController.popToRootViewController(animated: true)
+    }
+
+    public func didLeaveTimeCapsule() {
         self.navigationController.popToRootViewController(animated: true)
     }
 

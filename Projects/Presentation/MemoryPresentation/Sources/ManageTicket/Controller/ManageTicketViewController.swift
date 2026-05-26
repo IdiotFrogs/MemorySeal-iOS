@@ -17,6 +17,7 @@ public final class ManageTicketViewController: UIViewController {
     private let viewModel: ManageTicketViewModel
     private let disposeBag: DisposeBag = DisposeBag()
     private let didConfirmDelete: PublishRelay<Void> = .init()
+    private let didConfirmLeave: PublishRelay<Void> = .init()
 
     // MARK: - Navigation
     private let navigationView: MemorySealNavigationView = {
@@ -74,7 +75,8 @@ public final class ManageTicketViewController: UIViewController {
 extension ManageTicketViewController {
     private func bindViewModel() {
         let input = ManageTicketViewModel.Input(
-            didConfirmDelete: didConfirmDelete
+            didConfirmDelete: didConfirmDelete,
+            didConfirmLeave: didConfirmLeave
         )
         let _ = viewModel.transform(input)
 
@@ -91,6 +93,13 @@ extension ManageTicketViewController {
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.showDeleteDialog()
+            })
+            .disposed(by: disposeBag)
+
+        exitTicketRow.tap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.didConfirmLeave.accept(())
             })
             .disposed(by: disposeBag)
     }
