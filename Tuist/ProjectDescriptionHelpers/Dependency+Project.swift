@@ -47,6 +47,11 @@ public extension TargetDependency.Data {
         target: "MemoryData",
         path: .relativeToRoot("Projects/Data/MemoryData")
     )
+
+    static let HomeData = TargetDependency.project(
+        target: "HomeData",
+        path: .relativeToRoot("Projects/Data/HomeData")
+    )
 }
 
 public extension TargetDependency.Domain {
@@ -84,6 +89,11 @@ public extension TargetDependency.Domain {
     static let MemoryDomain = TargetDependency.project(
         target: "MemoryDomain",
         path: .relativeToRoot("Projects/Domain/MemoryDomain")
+    )
+
+    static let HomeDomain = TargetDependency.project(
+        target: "HomeDomain",
+        path: .relativeToRoot("Projects/Domain/HomeDomain")
     )
 }
 

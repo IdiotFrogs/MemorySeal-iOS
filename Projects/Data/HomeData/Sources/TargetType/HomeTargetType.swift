@@ -1,26 +1,17 @@
-//
-//  TimeCapsuleTargetType.swift
-//  BaseData
-//
-//  Created by 선민재 on 3/20/26.
-//  Copyright © 2026 MemorySeal. All rights reserved.
-//
-
 import Foundation
 import Moya
 
-public enum TimeCapsuleTargetType {
+import BaseData
+
+public enum HomeTargetType {
     case fetchMyTimeCapsules
-    case joinRequest(code: String)
 }
 
-extension TimeCapsuleTargetType: BaseTargetType {
+extension HomeTargetType: BaseTargetType {
     public var path: String {
         switch self {
         case .fetchMyTimeCapsules:
             return "/time-capsules/my"
-        case .joinRequest:
-            return "/time-capsules/join-request"
         }
     }
 
@@ -28,8 +19,6 @@ extension TimeCapsuleTargetType: BaseTargetType {
         switch self {
         case .fetchMyTimeCapsules:
             return .get
-        case .joinRequest:
-            return .post
         }
     }
 
@@ -37,8 +26,6 @@ extension TimeCapsuleTargetType: BaseTargetType {
         switch self {
         case .fetchMyTimeCapsules:
             return .requestPlain
-        case .joinRequest(let code):
-            return .requestJSONEncodable(["code": code])
         }
     }
 
@@ -53,8 +40,6 @@ extension TimeCapsuleTargetType: BaseTargetType {
     public var isNeededAccessToken: Bool {
         switch self {
         case .fetchMyTimeCapsules:
-            return true
-        case .joinRequest:
             return true
         }
     }
