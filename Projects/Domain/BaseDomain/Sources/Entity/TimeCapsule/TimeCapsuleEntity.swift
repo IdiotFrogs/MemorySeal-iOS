@@ -22,7 +22,7 @@ public enum TimeCapsuleRole: String {
 public struct TimeCapsuleEntity {
     public let timeCapsuleId: Int
     public let title: String
-    public let openedAt: Date
+    public let openedAt: Date?
     public let timeCapsuleStatus: TimeCapsuleStatus
     public let role: TimeCapsuleRole
     public let imageUrl: String?
@@ -30,7 +30,7 @@ public struct TimeCapsuleEntity {
     public init(
         timeCapsuleId: Int,
         title: String,
-        openedAt: Date,
+        openedAt: Date?,
         timeCapsuleStatus: TimeCapsuleStatus,
         role: TimeCapsuleRole,
         imageUrl: String? = nil
