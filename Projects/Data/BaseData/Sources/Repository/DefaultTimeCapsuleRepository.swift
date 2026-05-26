@@ -34,21 +34,4 @@ public final class DefaultTimeCapsuleRepository: TimeCapsuleRepository {
         let result = await provider.request(.joinRequest(code: code))
         try ResultHandler.handleResult(result: result, errorType: TimeCapsuleError.self)
     }
-
-    public func inviteToTimeCapsule(capsuleId: Int) async throws -> String {
-        let result = await provider.request(.inviteToTimeCapsule(capsuleId: capsuleId))
-
-        let responseDTO = try ResultHandler.handleResult(
-            result: result,
-            responseType: InviteCodeResponseDTO.self,
-            errorType: TimeCapsuleError.self
-        )
-
-        return responseDTO.code
-    }
-
-    public func deleteTimeCapsule(capsuleId: Int) async throws {
-        let result = await provider.request(.deleteTimeCapsule(capsuleId: capsuleId))
-        try ResultHandler.handleResult(result: result, errorType: TimeCapsuleError.self)
-    }
 }

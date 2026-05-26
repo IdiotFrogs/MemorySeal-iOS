@@ -10,20 +10,20 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-import BaseDomain
+import MemoryDomain
 
 public final class AddMemberViewModel {
     private let disposeBag = DisposeBag()
 
     private let capsuleId: Int
-    private let timeCapsuleUseCase: TimeCapsuleUseCase
+    private let addMemberUseCase: AddMemberUseCase
 
     public init(
         capsuleId: Int,
-        timeCapsuleUseCase: TimeCapsuleUseCase
+        addMemberUseCase: AddMemberUseCase
     ) {
         self.capsuleId = capsuleId
-        self.timeCapsuleUseCase = timeCapsuleUseCase
+        self.addMemberUseCase = addMemberUseCase
     }
 
     struct Input {
@@ -64,7 +64,7 @@ public final class AddMemberViewModel {
                 Task { [weak self] in
                     guard let self else { return }
                     do {
-                        let code = try await self.timeCapsuleUseCase.inviteToTimeCapsule(
+                        let code = try await self.addMemberUseCase.inviteToTimeCapsule(
                             capsuleId: self.capsuleId
                         )
                         await MainActor.run {

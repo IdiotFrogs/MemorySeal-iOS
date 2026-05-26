@@ -9,7 +9,6 @@
 import RxSwift
 import RxCocoa
 
-import BaseDomain
 import MemoryDomain
 
 public final class ManageTicketViewModel {
@@ -31,7 +30,6 @@ public final class ManageTicketViewModel {
     public let action: Action
 
     private let capsuleId: Int
-    private let timeCapsuleUseCase: TimeCapsuleUseCase
     private let manageTicketUseCase: ManageTicketUseCase
     let ticketName: String
 
@@ -39,13 +37,11 @@ public final class ManageTicketViewModel {
         action: Action,
         capsuleId: Int,
         ticketName: String,
-        timeCapsuleUseCase: TimeCapsuleUseCase,
         manageTicketUseCase: ManageTicketUseCase
     ) {
         self.action = action
         self.capsuleId = capsuleId
         self.ticketName = ticketName
-        self.timeCapsuleUseCase = timeCapsuleUseCase
         self.manageTicketUseCase = manageTicketUseCase
     }
 
@@ -68,7 +64,7 @@ public final class ManageTicketViewModel {
             .subscribe(onNext: { (self, _) in
                 Task {
                     do {
-                        try await self.timeCapsuleUseCase.deleteTimeCapsule(capsuleId: self.capsuleId)
+                        try await self.manageTicketUseCase.deleteTimeCapsule(capsuleId: self.capsuleId)
                         await MainActor.run {
                             deleteResult.accept(true)
                             self.action.didDeleteTimeCapsule()
