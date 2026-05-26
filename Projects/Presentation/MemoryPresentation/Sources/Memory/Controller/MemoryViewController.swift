@@ -278,7 +278,8 @@ extension MemoryViewController {
             rxViewDidLoad: rxViewDidLoad,
             didTapAddMemberButton: didTapAddMemberButton,
             didTapManageButton: didTapManageButton,
-            didTapSeeMessagesButton: didTapSeeMessagesButton
+            didTapSeeMessagesButton: didTapSeeMessagesButton,
+            didTapBuryTicketButton: didTapBuryTicketButton
         )
         let _ = viewModel.transform(input)
     }

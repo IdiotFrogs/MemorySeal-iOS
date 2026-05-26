@@ -16,15 +16,18 @@ public final class MemoryViewModel {
         public let moveToAddMember: () -> Void
         public let moveToManageTicket: () -> Void
         public let moveToMyMemoryMessages: () -> Void
+        public let moveToBuryTicket: () -> Void
 
         public init(
             moveToAddMember: @escaping () -> Void,
             moveToManageTicket: @escaping () -> Void,
-            moveToMyMemoryMessages: @escaping () -> Void
+            moveToMyMemoryMessages: @escaping () -> Void,
+            moveToBuryTicket: @escaping () -> Void
         ) {
             self.moveToAddMember = moveToAddMember
             self.moveToManageTicket = moveToManageTicket
             self.moveToMyMemoryMessages = moveToMyMemoryMessages
+            self.moveToBuryTicket = moveToBuryTicket
         }
     }
 
@@ -42,6 +45,7 @@ public final class MemoryViewModel {
         let didTapAddMemberButton: PublishRelay<Void>
         let didTapManageButton: PublishRelay<Void>
         let didTapSeeMessagesButton: PublishRelay<Void>
+        let didTapBuryTicketButton: PublishRelay<Void>
     }
 
     struct Output {
@@ -75,6 +79,13 @@ public final class MemoryViewModel {
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.action.moveToMyMemoryMessages()
+            })
+            .disposed(by: disposeBag)
+
+        input.didTapBuryTicketButton
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.action.moveToBuryTicket()
             })
             .disposed(by: disposeBag)
 

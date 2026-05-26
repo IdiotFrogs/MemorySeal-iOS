@@ -5,6 +5,7 @@ import BaseData
 import BaseDomain
 import MemoryData
 import MemoryDomain
+import CalendarDomain
 
 public final class MemoryDIContainer {
     private func makeMemoryViewModel(action: MemoryViewModel.Action, capsuleId: Int) -> MemoryViewModel {
@@ -45,6 +46,25 @@ public final class MemoryDIContainer {
 
     func makeManageTicketViewController(action: ManageTicketViewModel.Action, capsuleId: Int, ticketName: String) -> ManageTicketViewController {
         return ManageTicketViewController(with: makeManageTicketViewModel(action: action, capsuleId: capsuleId, ticketName: ticketName))
+    }
+
+    // MARK: - BuryTicket
+
+    private func makeBuryTicketViewModel(action: BuryTicketViewModel.Action, capsuleId: Int) -> BuryTicketViewModel {
+        let calendarUseCase = DefaultCalendarUseCase()
+        let provider = DefaultProvider<BuryTicketTargetType>()
+        let repository = DefaultBuryTicketRepository(provider: provider)
+        let buryTicketUseCase = DefaultBuryTicketUseCase(buryTicketRepository: repository)
+        return BuryTicketViewModel(
+            action: action,
+            capsuleId: capsuleId,
+            calendarUseCase: calendarUseCase,
+            buryTicketUseCase: buryTicketUseCase
+        )
+    }
+
+    func makeBuryTicketViewController(action: BuryTicketViewModel.Action, capsuleId: Int) -> BuryTicketViewController {
+        return BuryTicketViewController(with: makeBuryTicketViewModel(action: action, capsuleId: capsuleId))
     }
 
     // MARK: - MyMemoryMessages

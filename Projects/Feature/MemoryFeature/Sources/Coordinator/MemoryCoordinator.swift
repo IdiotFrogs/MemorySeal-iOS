@@ -21,7 +21,8 @@ public final class MemoryCoordinator {
         let memoryAction = MemoryViewModel.Action(
             moveToAddMember: moveToAddMember,
             moveToManageTicket: moveToManageTicket,
-            moveToMyMemoryMessages: moveToMyMemoryMessages
+            moveToMyMemoryMessages: moveToMyMemoryMessages,
+            moveToBuryTicket: moveToBuryTicket
         )
         let memoryViewController = memoryDIContainer.makeMemoryViewController(action: memoryAction, capsuleId: capsuleId)
 
@@ -29,6 +30,19 @@ public final class MemoryCoordinator {
             memoryViewController,
             animated: true
         )
+    }
+
+    public func moveToBuryTicket() {
+        let buryAction = BuryTicketViewModel.Action(
+            dismiss: { [weak self] in
+                self?.navigationController.presentedViewController?.dismiss(animated: true)
+            }
+        )
+        let viewController = memoryDIContainer.makeBuryTicketViewController(
+            action: buryAction,
+            capsuleId: capsuleId
+        )
+        self.navigationController.present(viewController, animated: true)
     }
 
     public func moveToAddMember() {
