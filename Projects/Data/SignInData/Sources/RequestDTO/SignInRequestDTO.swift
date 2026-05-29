@@ -11,12 +11,15 @@ import Foundation
 public struct SignInRequestDTO: Encodable {
     let idToken: String
     let authorizationCode: String?
+    let fcmToken: String?
     
     public init(
         idToken: String,
-        authorizationCode: String? = nil
+        authorizationCode: String? = nil,
+        fcmToken: String?
     ) {
         self.idToken = idToken
         self.authorizationCode = authorizationCode
+        self.fcmToken = fcmToken
     }
 }

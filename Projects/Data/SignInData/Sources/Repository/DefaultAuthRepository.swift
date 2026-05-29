@@ -31,8 +31,13 @@ public final class DefaultAuthRepository: AuthRepository {
     }
 
     public func fetchSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws {
-
-        let requestDTO: SignInRequestDTO = .init(idToken: idToken, authorizationCode: authorizationCode)
+        let fcmToken: String? = keyChainStorage.read(forKey: .fcmToken)
+        
+        let requestDTO: SignInRequestDTO = .init(
+            idToken: idToken,
+            authorizationCode: authorizationCode,
+            fcmToken: fcmToken
+        )
 
         let result = await authProvider.request(.signIn(requestDTO, type: type))
 

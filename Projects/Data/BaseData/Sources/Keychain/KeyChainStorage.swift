@@ -11,6 +11,7 @@ import Foundation
 public enum KeyChainKeys: String {
     case accessToken
     case refreshToken
+    case fcmToken
 }
 
 public protocol KeyChainStorage {
