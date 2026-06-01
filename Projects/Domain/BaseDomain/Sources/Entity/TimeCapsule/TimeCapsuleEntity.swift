@@ -23,6 +23,7 @@ public struct TimeCapsuleEntity {
     public let timeCapsuleId: Int
     public let title: String
     public let openedAt: Date?
+    public let createdAt: Date?
     public let timeCapsuleStatus: TimeCapsuleStatus
     public let role: TimeCapsuleRole
     public let imageUrl: String?
@@ -31,6 +32,7 @@ public struct TimeCapsuleEntity {
         timeCapsuleId: Int,
         title: String,
         openedAt: Date?,
+        createdAt: Date? = nil,
         timeCapsuleStatus: TimeCapsuleStatus,
         role: TimeCapsuleRole,
         imageUrl: String? = nil
@@ -38,6 +40,7 @@ public struct TimeCapsuleEntity {
         self.timeCapsuleId = timeCapsuleId
         self.title = title
         self.openedAt = openedAt
+        self.createdAt = createdAt
         self.timeCapsuleStatus = timeCapsuleStatus
         self.role = role
         self.imageUrl = imageUrl
