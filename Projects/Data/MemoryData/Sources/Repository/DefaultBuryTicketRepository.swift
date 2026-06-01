@@ -11,13 +11,8 @@ public final class DefaultBuryTicketRepository: BuryTicketRepository {
         self.provider = provider
     }
 
-    public func buryTimeCapsule(capsuleId: Int, openedAt: Date) async throws {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        formatter.timeZone = TimeZone(abbreviation: "UTC")
-        let openedAtString = formatter.string(from: openedAt)
-
-        let requestDTO = BuryTicketRequestDTO(openedAt: openedAtString)
+    public func buryTimeCapsule(capsuleId: Int, openedAt: String) async throws {
+        let requestDTO = BuryTicketRequestDTO(openedAt: openedAt)
         let result = await provider.request(
             .buryTimeCapsule(capsuleId: capsuleId, requestDTO: requestDTO)
         )

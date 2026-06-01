@@ -24,6 +24,7 @@ public final class HomeViewController: UIViewController {
         collectionViewFlowLayout.scrollDirection = .vertical
         collectionViewFlowLayout.itemSize = UICollectionViewFlowLayout.automaticSize
         collectionViewFlowLayout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
+        collectionViewFlowLayout.minimumLineSpacing = 20
         let collectionView = UICollectionView(
             frame: .zero,
             collectionViewLayout: collectionViewFlowLayout

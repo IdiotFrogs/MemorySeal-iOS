@@ -22,18 +22,19 @@ final class TicketCollectionViewCell: UICollectionViewCell {
         static let strokeLineWidth: CGFloat = 4
         static let imageInset: CGFloat = 24
         static let imageCornerRadius: CGFloat = 12
-        static let headerHorizontalInset: CGFloat = 24
+        static let headerHorizontalInset: CGFloat = 20
         static let headerVerticalInset: CGFloat = 20
-        static let headerContentSpacing: CGFloat = 12
-        static let leftStackSpacing: CGFloat = 6
+        static let leftStackSpacing: CGFloat = 8
         static let buriedBadgeCornerRadius: CGFloat = 12
         static let buriedBadgeIconSize: CGFloat = 16
-        static let buriedBadgeLeading: CGFloat = 10
-        static let buriedBadgeTrailing: CGFloat = 12
-        static let buriedBadgeVerticalPadding: CGFloat = 8
-        static let buriedBadgeInnerSpacing: CGFloat = 2
-        static let activeTitleFontSize: CGFloat = 16
-        static let buriedTitleFontSize: CGFloat = 20
+        static let buriedBadgeLeading: CGFloat = 6
+        static let buriedBadgeTrailing: CGFloat = 8
+        static let buriedBadgeVerticalPadding: CGFloat = 6
+        static let buriedBadgeInnerSpacing: CGFloat = 4
+        static let contentFixedHeight: CGFloat = 328
+        static let activeTitleFontSize: CGFloat = 24
+        static let buriedTitleFontSize: CGFloat = 24
+        static let buriedBadgeAlpha: CGFloat = 0.6
     }
 
     // MARK: - Header (top)
@@ -48,14 +49,6 @@ final class TicketCollectionViewCell: UICollectionViewCell {
         return view
     }()
 
-    private let endDateLabel: UILabel = {
-        let label = UILabel()
-        label.text = "D-5"
-        label.textColor = .black
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 28)
-        return label
-    }()
-
     private let ticketTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "제목입니다."
@@ -68,8 +61,8 @@ final class TicketCollectionViewCell: UICollectionViewCell {
 
     private let ticketCreatedAtLabel: UILabel = {
         let label = UILabel()
-        label.text = "2025.05.25"
-        label.textColor = DesignSystemAsset.ColorAssests.grey4.color
+        label.text = "2025. 05. 25."
+        label.textColor = DesignSystemAsset.ColorAssests.grey4.color.withAlphaComponent(0.6)
         label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 14)
         label.setContentHuggingPriority(.required, for: .horizontal)
         label.setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -84,22 +77,14 @@ final class TicketCollectionViewCell: UICollectionViewCell {
         return stack
     }()
 
-    private let rightStackView: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.alignment = .center
-        stack.setContentHuggingPriority(.required, for: .horizontal)
-        stack.setContentCompressionResistancePriority(.required, for: .horizontal)
-        return stack
-    }()
-
     // MARK: - Buried Badge
 
     private let buriedBadgeView: UIView = {
         let view = UIView()
-        view.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
+        view.backgroundColor = UIColor(hex: "#CFF2D8")
         view.layer.cornerRadius = Layout.buriedBadgeCornerRadius
         view.layer.cornerCurve = .continuous
+        view.alpha = Layout.buriedBadgeAlpha
         view.setContentHuggingPriority(.required, for: .horizontal)
         view.setContentCompressionResistancePriority(.required, for: .horizontal)
         return view
@@ -107,7 +92,7 @@ final class TicketCollectionViewCell: UICollectionViewCell {
 
     private let buriedLockImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = DesignSystemAsset.ImageAssets.lockGrey16.image
+        imageView.image = DesignSystemAsset.ImageAssets.shovelFill16.image
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -115,8 +100,8 @@ final class TicketCollectionViewCell: UICollectionViewCell {
     private let buriedTextLabel: UILabel = {
         let label = UILabel()
         label.text = "묻어짐"
-        label.textColor = DesignSystemAsset.ColorAssests.grey4.color
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 12)
+        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
+        label.font = DesignSystemFontFamily.Pretendard.semiBold.font(size: 12)
         return label
     }()
 
@@ -186,51 +171,44 @@ extension TicketCollectionViewCell {
 
         switch entity.timeCapsuleStatus {
         case .buried:
-            applyBuriedState()
+            applyBuriedState(createdAt: entity.createdAt)
         case .opened, .beforeBuried:
-            applyActiveState(openedAt: entity.openedAt)
+            applyActiveState(createdAt: entity.createdAt)
         }
 
         loadImage(from: entity.imageUrl)
     }
 
-    private func applyActiveState(openedAt: Date?) {
+    private func applyActiveState(createdAt: Date?) {
         ticketTitleLabel.font = DesignSystemFontFamily.Pretendard.bold.font(size: Layout.activeTitleFontSize)
         buriedBadgeView.isHidden = true
 
-        guard let openedAt else {
-            endDateLabel.isHidden = true
+        guard let createdAt else {
             ticketCreatedAtLabel.isHidden = true
             return
         }
 
-        endDateLabel.isHidden = false
         ticketCreatedAtLabel.isHidden = false
 
-        let calendar = Calendar.current
-        let now = calendar.startOfDay(for: Date())
-        let target = calendar.startOfDay(for: openedAt)
-        let days = calendar.dateComponents([.day], from: now, to: target).day ?? 0
-
-        if days > 0 {
-            endDateLabel.text = "D-\(days)"
-        } else if days == 0 {
-            endDateLabel.text = "D-Day"
-        } else {
-            endDateLabel.text = "D+\(abs(days))"
-        }
-
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy.MM.dd"
-        ticketCreatedAtLabel.text = dateFormatter.string(from: openedAt)
+        dateFormatter.dateFormat = "yyyy. MM. dd."
+        ticketCreatedAtLabel.text = dateFormatter.string(from: createdAt)
     }
 
-    private func applyBuriedState() {
+    private func applyBuriedState(createdAt: Date?) {
         ticketTitleLabel.font = DesignSystemFontFamily.Pretendard.bold.font(size: Layout.buriedTitleFontSize)
-
-        endDateLabel.isHidden = true
-        ticketCreatedAtLabel.isHidden = true
         buriedBadgeView.isHidden = false
+
+        guard let createdAt else {
+            ticketCreatedAtLabel.isHidden = true
+            return
+        }
+
+        ticketCreatedAtLabel.isHidden = false
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy. MM. dd."
+        ticketCreatedAtLabel.text = dateFormatter.string(from: createdAt)
     }
 
     private func loadImage(from urlString: String?) {
@@ -253,15 +231,13 @@ extension TicketCollectionViewCell {
     private func addSubviews() {
         contentView.addSubview(ticketHeaderView)
 
-        leftStackView.addArrangedSubview(endDateLabel)
-        leftStackView.addArrangedSubview(ticketTitleLabel)
-        ticketHeaderView.addSubview(leftStackView)
-
         buriedBadgeView.addSubview(buriedLockImageView)
         buriedBadgeView.addSubview(buriedTextLabel)
-        rightStackView.addArrangedSubview(ticketCreatedAtLabel)
-        rightStackView.addArrangedSubview(buriedBadgeView)
-        ticketHeaderView.addSubview(rightStackView)
+
+        leftStackView.addArrangedSubview(buriedBadgeView)
+        leftStackView.addArrangedSubview(ticketTitleLabel)
+        leftStackView.addArrangedSubview(ticketCreatedAtLabel)
+        ticketHeaderView.addSubview(leftStackView)
 
         contentView.addSubview(ticketContentView)
         ticketContentView.addSubview(ticketImageView)
@@ -276,12 +252,7 @@ extension TicketCollectionViewCell {
             $0.top.equalToSuperview().offset(Layout.headerVerticalInset)
             $0.leading.equalToSuperview().offset(Layout.headerHorizontalInset)
             $0.bottom.equalToSuperview().inset(Layout.headerVerticalInset)
-            $0.trailing.lessThanOrEqualTo(rightStackView.snp.leading).offset(-Layout.headerContentSpacing)
-        }
-
-        rightStackView.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
-            $0.trailing.equalToSuperview().inset(Layout.headerHorizontalInset)
+            $0.trailing.lessThanOrEqualToSuperview().inset(Layout.headerHorizontalInset)
         }
 
         buriedLockImageView.snp.makeConstraints {
@@ -301,7 +272,7 @@ extension TicketCollectionViewCell {
             $0.top.equalTo(ticketHeaderView.snp.bottom).offset(-7)
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview()
-            $0.height.equalTo(ticketContentView.snp.width)
+            $0.height.equalTo(Layout.contentFixedHeight)
         }
 
         ticketImageView.snp.makeConstraints {
