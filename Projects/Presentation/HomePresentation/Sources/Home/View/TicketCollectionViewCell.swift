@@ -33,7 +33,8 @@ final class TicketCollectionViewCell: UICollectionViewCell {
         static let buriedBadgeInnerSpacing: CGFloat = 4
         static let contentFixedHeight: CGFloat = 328
         static let activeTitleFontSize: CGFloat = 24
-        static let buriedTitleFontSize: CGFloat = 20
+        static let buriedTitleFontSize: CGFloat = 24
+        static let buriedBadgeAlpha: CGFloat = 0.6
     }
 
     // MARK: - Header (top)
@@ -83,6 +84,7 @@ final class TicketCollectionViewCell: UICollectionViewCell {
         view.backgroundColor = UIColor(hex: "#CFF2D8")
         view.layer.cornerRadius = Layout.buriedBadgeCornerRadius
         view.layer.cornerCurve = .continuous
+        view.alpha = Layout.buriedBadgeAlpha
         view.setContentHuggingPriority(.required, for: .horizontal)
         view.setContentCompressionResistancePriority(.required, for: .horizontal)
         return view
@@ -90,7 +92,7 @@ final class TicketCollectionViewCell: UICollectionViewCell {
 
     private let buriedLockImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = DesignSystemAsset.ImageAssets.lockGrey16.image
+        imageView.image = DesignSystemAsset.ImageAssets.shovelFill16.image
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -98,7 +100,7 @@ final class TicketCollectionViewCell: UICollectionViewCell {
     private let buriedTextLabel: UILabel = {
         let label = UILabel()
         label.text = "묻어짐"
-        label.textColor = DesignSystemAsset.ColorAssests.grey4.color
+        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
         label.font = DesignSystemFontFamily.Pretendard.semiBold.font(size: 12)
         return label
     }()
@@ -169,19 +171,19 @@ extension TicketCollectionViewCell {
 
         switch entity.timeCapsuleStatus {
         case .buried:
-            applyBuriedState(openedAt: entity.openedAt)
+            applyBuriedState(createdAt: entity.createdAt)
         case .opened, .beforeBuried:
-            applyActiveState(openedAt: entity.openedAt)
+            applyActiveState(createdAt: entity.createdAt)
         }
 
         loadImage(from: entity.imageUrl)
     }
 
-    private func applyActiveState(openedAt: Date?) {
+    private func applyActiveState(createdAt: Date?) {
         ticketTitleLabel.font = DesignSystemFontFamily.Pretendard.bold.font(size: Layout.activeTitleFontSize)
         buriedBadgeView.isHidden = true
 
-        guard let openedAt else {
+        guard let createdAt else {
             ticketCreatedAtLabel.isHidden = true
             return
         }
@@ -190,14 +192,14 @@ extension TicketCollectionViewCell {
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy. MM. dd."
-        ticketCreatedAtLabel.text = dateFormatter.string(from: openedAt)
+        ticketCreatedAtLabel.text = dateFormatter.string(from: createdAt)
     }
 
-    private func applyBuriedState(openedAt: Date?) {
+    private func applyBuriedState(createdAt: Date?) {
         ticketTitleLabel.font = DesignSystemFontFamily.Pretendard.bold.font(size: Layout.buriedTitleFontSize)
         buriedBadgeView.isHidden = false
 
-        guard let openedAt else {
+        guard let createdAt else {
             ticketCreatedAtLabel.isHidden = true
             return
         }
@@ -206,7 +208,7 @@ extension TicketCollectionViewCell {
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy. MM. dd."
-        ticketCreatedAtLabel.text = dateFormatter.string(from: openedAt)
+        ticketCreatedAtLabel.text = dateFormatter.string(from: createdAt)
     }
 
     private func loadImage(from urlString: String?) {
