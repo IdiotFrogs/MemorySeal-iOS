@@ -79,6 +79,13 @@ public final class DialogView: UIView {
 
     private let confirmButtonContainer = UIView()
 
+    private let wavyBackground: WavyStrokeView = {
+        let view = WavyStrokeView(fillColor: .white)
+        view.waveCornerRadius = 24
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
     private let buttonStackView: UIStackView = {
         let stack = UIStackView()
         stack.axis = .horizontal
@@ -99,18 +106,42 @@ public final class DialogView: UIView {
 
     public init(
         title: String,
-        message: String,
-        cancelTitle: String,
+        message: String? = nil,
+        cancelTitle: String? = nil,
         confirmTitle: String
     ) {
         super.init(frame: .zero)
-        titleLabel.text = title
-        messageLabel.text = message
-        cancelButton.setTitle(cancelTitle, for: .normal)
+
+        if cancelTitle == nil {
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineHeightMultiple = 1.5
+            paragraphStyle.alignment = .center
+            titleLabel.attributedText = NSAttributedString(
+                string: title,
+                attributes: [
+                    .font: DesignSystemFontFamily.Pretendard.bold.font(size: 20),
+                    .foregroundColor: UIColor.black,
+                    .paragraphStyle: paragraphStyle
+                ]
+            )
+        } else {
+            titleLabel.text = title
+        }
+
+        if let message = message {
+            messageLabel.text = message
+        } else {
+            messageLabel.isHidden = true
+        }
+
+        if let cancelTitle = cancelTitle {
+            cancelButton.setTitle(cancelTitle, for: .normal)
+        } else {
+            cancelButtonContainer.isHidden = true
+        }
         confirmButton.setTitle(confirmTitle, for: .normal)
 
-        self.backgroundColor = .white
-        self.layer.cornerRadius = 24
+        self.backgroundColor = .clear
 
         self.addSubviews()
         self.setLayout()
@@ -124,8 +155,8 @@ public final class DialogView: UIView {
     public static func show(
         on view: UIView,
         title: String,
-        message: String,
-        cancelTitle: String,
+        message: String? = nil,
+        cancelTitle: String? = nil,
         confirmTitle: String
     ) -> DialogView {
         let dialog = DialogView(
@@ -183,6 +214,8 @@ public final class DialogView: UIView {
 
 extension DialogView {
     private func addSubviews() {
+        addSubview(wavyBackground)
+
         textStackView.addArrangedSubview(titleLabel)
         textStackView.addArrangedSubview(messageLabel)
 
@@ -199,6 +232,10 @@ extension DialogView {
     }
 
     private func setLayout() {
+        wavyBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
         textStackView.snp.makeConstraints {
             $0.top.equalToSuperview().inset(28)
             $0.leading.trailing.equalToSuperview().inset(24)

@@ -9,12 +9,12 @@
 import Foundation
 
 public struct ErrorResponseEntity: Equatable {
-    public let status: String
+    public let status: Int
     public let error: String
     public let message: String
     public let path: String
 
-    public init(status: String, error: String, message: String, path: String) {
+    public init(status: Int, error: String, message: String, path: String) {
         self.status = status
         self.error = error
         self.message = message
