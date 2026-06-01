@@ -5,7 +5,7 @@ import BaseData
 
 public enum CapsuleContentTargetType {
     case fetchCapsuleContents(capsuleId: Int)
-    case createTextContent(capsuleId: Int, request: CreateContentRequestDTO)
+    case createTextContent(capsuleId: Int, content: String)
     case createPhotoContent(capsuleId: Int, images: [Data])
     case deleteContent(contentId: Int)
 }
@@ -39,14 +39,13 @@ extension CapsuleContentTargetType: BaseTargetType {
         case .fetchCapsuleContents:
             return .requestPlain
 
-        case .createTextContent(_, let request):
-            let jsonData = (try? JSONEncoder().encode(request)) ?? Data()
-            let requestPart = MultipartFormData(
-                provider: .data(jsonData),
-                name: "request",
-                mimeType: "application/json"
+        case .createTextContent(_, let content):
+            let contentPart = MultipartFormData(
+                provider: .data(content.data(using: .utf8) ?? Data()),
+                name: "content",
+                mimeType: "text/plain"
             )
-            return .uploadMultipart([requestPart])
+            return .uploadMultipart([contentPart])
 
         case .createPhotoContent(_, let images):
             let parts = images.enumerated().map { index, data in

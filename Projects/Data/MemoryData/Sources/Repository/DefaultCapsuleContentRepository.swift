@@ -33,8 +33,7 @@ public final class DefaultCapsuleContentRepository: CapsuleContentRepository {
     }
 
     public func createTextContent(capsuleId: Int, content: String) async throws -> CapsuleContent {
-        let requestDTO = CreateContentRequestDTO(content: content)
-        let result = await provider.request(.createTextContent(capsuleId: capsuleId, request: requestDTO))
+        let result = await provider.request(.createTextContent(capsuleId: capsuleId, content: content))
 
         let responseDTO = try ResultHandler.handleResult(
             result: result,
