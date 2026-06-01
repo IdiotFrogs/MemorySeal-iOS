@@ -10,6 +10,13 @@ import UIKit
 import SnapKit
 
 public final class MemorySealCalendarCollectionViewCell: UICollectionViewCell {
+    private static let sealGreen = UIColor(
+        red: 0x04 / 255.0,
+        green: 0x8F / 255.0,
+        blue: 0x27 / 255.0,
+        alpha: 1.0
+    )
+
     private let selectedWavyBackground: WavyStrokeView = {
         let view = WavyStrokeView(
             fillColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
@@ -23,19 +30,35 @@ public final class MemorySealCalendarCollectionViewCell: UICollectionViewCell {
         return view
     }()
 
-    private let dateButton: UIButton = {
-        let button = UIButton()
-        button.setTitleColor(DesignSystemAsset.ColorAssests.grey5.color, for: .normal)
-        button.setTitleColor(DesignSystemAsset.ColorAssests.grey2.color, for: .disabled)
-        button.setTitleColor(.white, for: .selected)
-        button.setBackgroundColor(color: .clear, forState: .normal)
-        button.setBackgroundColor(color: .clear, forState: .disabled)
-        button.setBackgroundColor(color: .clear, forState: .selected)
-        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-        button.layer.cornerRadius = 8
-        button.isUserInteractionEnabled = false
-        return button
+    private let dateLabel: UILabel = {
+        let label = UILabel()
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
+        label.textAlignment = .center
+        return label
     }()
+
+    private let sealLabel: UILabel = {
+        let label = UILabel()
+        label.text = "봉인일"
+        label.font = DesignSystemFontFamily.Pretendard.semiBold.font(size: 11)
+        label.textColor = MemorySealCalendarCollectionViewCell.sealGreen
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+
+    private let contentStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.distribution = .fill
+        stack.spacing = 0
+        stack.isUserInteractionEnabled = false
+        return stack
+    }()
+
+    private var isInCurrentMonth: Bool = true
+    private var isTodayDate: Bool = false
 
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -54,39 +77,35 @@ public final class MemorySealCalendarCollectionViewCell: UICollectionViewCell {
     override public func prepareForReuse() {
         super.prepareForReuse()
 
-        self.dateButton.setBackgroundColor(color: .clear, forState: .normal)
         self.selectedWavyBackground.isHidden = true
+        self.sealLabel.isHidden = true
+        self.isInCurrentMonth = true
+        self.isTodayDate = false
         self.isUserInteractionEnabled = true
     }
 
     override public var isSelected: Bool {
         didSet {
-            dateButton.isSelected = isSelected
             selectedWavyBackground.isHidden = !isSelected
+            updateAppearance()
         }
     }
 
     public func configure(dateText: String, isCurrentMonth: Bool, isToday: Bool) {
-        dateButton.setTitle(dateText, for: .normal)
-        dateButton.isEnabled = isCurrentMonth
-
-        if isCurrentMonth == false {
-            isUserInteractionEnabled = false
-        }
-
-        if isToday {
-            dateButton.setBackgroundColor(
-                color: DesignSystemAsset.ColorAssests.grey1.color,
-                forState: .normal
-            )
-        }
+        dateLabel.text = dateText
+        self.isInCurrentMonth = isCurrentMonth
+        self.isTodayDate = isToday
+        self.isUserInteractionEnabled = isCurrentMonth
+        updateAppearance()
     }
 }
 
 extension MemorySealCalendarCollectionViewCell {
     private func addSubviews() {
         addSubview(selectedWavyBackground)
-        addSubview(dateButton)
+        contentStackView.addArrangedSubview(dateLabel)
+        contentStackView.addArrangedSubview(sealLabel)
+        addSubview(contentStackView)
     }
 
     private func setLayout() {
@@ -94,8 +113,25 @@ extension MemorySealCalendarCollectionViewCell {
             $0.edges.equalToSuperview()
         }
 
-        dateButton.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+        contentStackView.snp.makeConstraints {
+            $0.center.equalToSuperview()
+            $0.leading.trailing.lessThanOrEqualToSuperview()
+        }
+    }
+
+    private func updateAppearance() {
+        if isSelected {
+            dateLabel.textColor = .white
+            sealLabel.isHidden = true
+        } else if isTodayDate {
+            dateLabel.textColor = MemorySealCalendarCollectionViewCell.sealGreen
+            sealLabel.isHidden = false
+        } else if isInCurrentMonth == false {
+            dateLabel.textColor = DesignSystemAsset.ColorAssests.grey2.color
+            sealLabel.isHidden = true
+        } else {
+            dateLabel.textColor = DesignSystemAsset.ColorAssests.grey5.color
+            sealLabel.isHidden = true
         }
     }
 }

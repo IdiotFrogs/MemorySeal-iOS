@@ -23,11 +23,9 @@ public final class BuryTicketViewController: UIViewController {
         return view
     }()
 
-    private let containerView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 12
-        view.clipsToBounds = true
+    private let containerView: WavyStrokeView = {
+        let view = WavyStrokeView(fillColor: .white)
+        view.waveCornerRadius = 12
         return view
     }()
 
@@ -42,18 +40,32 @@ public final class BuryTicketViewController: UIViewController {
 
     private let descriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "한번 묻은 티켓은 오픈일까지 다시 오픈,\n수정 할 수 없습니다."
-        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
-        label.textColor = DesignSystemAsset.ColorAssests.grey3.color
+        let text = "한번 묻은 티켓은 오픈일까지 다시 오픈,\n수정 할 수 없습니다."
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineHeightMultiple = 1.5
+        label.attributedText = NSAttributedString(
+            string: text,
+            attributes: [
+                .font: DesignSystemFontFamily.Pretendard.regular.font(size: 16),
+                .foregroundColor: DesignSystemAsset.ColorAssests.grey3.color,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
         label.numberOfLines = 0
         return label
     }()
 
-    private let calendarView: MemorySealCalendarView = {
-        let view = MemorySealCalendarView()
-        view.layer.cornerRadius = 12
-        view.layer.borderWidth = 1
-        view.layer.borderColor = DesignSystemAsset.ColorAssests.grey1.color.cgColor
+    private let calendarView: MemorySealCalendarView = MemorySealCalendarView()
+
+    private let cancelButtonBackground: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.grey1.color,
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .inside
+        view.isUserInteractionEnabled = false
         return view
     }()
 
@@ -62,9 +74,20 @@ public final class BuryTicketViewController: UIViewController {
         button.setTitle("취소", for: .normal)
         button.setTitleColor(DesignSystemAsset.ColorAssests.grey4.color, for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
-        button.layer.cornerRadius = 12
+        button.backgroundColor = .clear
         return button
+    }()
+
+    private let buryButtonBackground: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            strokeColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .inside
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     private let buryButton: UIButton = {
@@ -72,8 +95,7 @@ public final class BuryTicketViewController: UIViewController {
         button.setTitle("묻기", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
-        button.layer.cornerRadius = 12
+        button.backgroundColor = .clear
         return button
     }()
 
@@ -122,6 +144,8 @@ extension BuryTicketViewController {
         containerView.addSubview(titleLabel)
         containerView.addSubview(descriptionLabel)
         containerView.addSubview(calendarView)
+        cancelButton.insertSubview(cancelButtonBackground, at: 0)
+        buryButton.insertSubview(buryButtonBackground, at: 0)
         buttonStackView.addArrangedSubview(cancelButton)
         buttonStackView.addArrangedSubview(buryButton)
         containerView.addSubview(buttonStackView)
@@ -150,6 +174,14 @@ extension BuryTicketViewController {
         calendarView.snp.makeConstraints {
             $0.top.equalTo(descriptionLabel.snp.bottom).offset(32)
             $0.leading.trailing.equalToSuperview().inset(20)
+        }
+
+        cancelButtonBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
+        buryButtonBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
         }
 
         buttonStackView.snp.makeConstraints {
@@ -242,13 +274,11 @@ extension BuryTicketViewController {
 
     private func applyBuryButtonState(enabled: Bool) {
         buryButton.isEnabled = enabled
-        if enabled {
-            buryButton.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
-            buryButton.setTitleColor(.white, for: .normal)
-        } else {
-            buryButton.backgroundColor = DesignSystemAsset.ColorAssests.primaryLight.color
-            buryButton.setTitleColor(.white, for: .normal)
-        }
+        let color: UIColor = enabled
+            ? DesignSystemAsset.ColorAssests.primaryNormal.color
+            : DesignSystemAsset.ColorAssests.primaryLight.color
+        buryButtonBackground.style = .filledStroked(fill: color, stroke: color, lineWidth: 3)
+        buryButton.setTitleColor(.white, for: .normal)
     }
 
     private func bindDimView() {
