@@ -9,6 +9,8 @@
 import UIKit
 import SnapKit
 import Kingfisher
+import RxSwift
+import RxCocoa
 
 import DesignSystem
 
@@ -19,6 +21,8 @@ public enum AddMemberRole {
 }
 
 final class AddMemberCollectionViewCell: UICollectionViewCell {
+
+    private let profileContainerView: UIView = UIView()
 
     private let userImageView: UIImageView = {
         let imageView = UIImageView()
@@ -76,6 +80,30 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
         return stack
     }()
 
+    private let contentStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 12
+        return stack
+    }()
+
+    private let moreButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.setImage(
+            DesignSystemAsset.ImageAssets.meatballIcon.image,
+            for: .normal
+        )
+        button.imageView?.contentMode = .scaleAspectFit
+        return button
+    }()
+
+    var moreButtonDidTap: ControlEvent<Void> {
+        return moreButton.rx.tap
+    }
+
+    private(set) var disposeBag: DisposeBag = DisposeBag()
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         self.backgroundColor = .white
@@ -86,6 +114,11 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        disposeBag = DisposeBag()
     }
 
     func configure(
@@ -103,6 +136,8 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
         } else {
             userImageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
         }
+
+        moreButton.isHidden = (role == .me)
 
         switch role {
         case .none:
@@ -129,36 +164,43 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
 
 extension AddMemberCollectionViewCell {
     private func addSubviews() {
-        contentView.addSubview(userImageView)
-        contentView.addSubview(profileWavyBorder)
-        contentView.addSubview(nameLabel)
+        profileContainerView.addSubview(userImageView)
+        profileContainerView.addSubview(profileWavyBorder)
 
         badgeStackView.addArrangedSubview(badgeIconImageView)
         badgeStackView.addArrangedSubview(badgeLabel)
         badgeContainerView.addSubview(badgeStackView)
-        contentView.addSubview(badgeContainerView)
+
+        contentStackView.addArrangedSubview(profileContainerView)
+        contentStackView.addArrangedSubview(badgeContainerView)
+        contentStackView.addArrangedSubview(nameLabel)
+        contentView.addSubview(contentStackView)
+        contentView.addSubview(moreButton)
     }
 
     private func setLayout() {
         userImageView.snp.makeConstraints {
-            $0.leading.equalToSuperview()
-            $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(40)
+            $0.edges.equalToSuperview()
         }
 
         profileWavyBorder.snp.makeConstraints {
             $0.edges.equalTo(userImageView)
         }
 
-        nameLabel.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
-            $0.leading.equalTo(userImageView.snp.trailing).offset(16)
+        profileContainerView.snp.makeConstraints {
+            $0.width.height.equalTo(40)
         }
 
-        badgeContainerView.snp.makeConstraints {
+        moreButton.snp.makeConstraints {
+            $0.trailing.equalToSuperview()
             $0.centerY.equalToSuperview()
-            $0.leading.equalTo(nameLabel.snp.trailing).offset(8)
-            $0.trailing.lessThanOrEqualToSuperview()
+            $0.width.height.equalTo(24)
+        }
+
+        contentStackView.snp.makeConstraints {
+            $0.leading.equalToSuperview()
+            $0.centerY.equalToSuperview()
+            $0.trailing.lessThanOrEqualTo(moreButton.snp.leading).offset(-16)
         }
 
         badgeStackView.snp.makeConstraints {

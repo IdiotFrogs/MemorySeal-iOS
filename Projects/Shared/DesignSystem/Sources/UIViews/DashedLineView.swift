@@ -20,15 +20,27 @@ public final class DashedLineView: UIView {
         layer.addSublayer(shapeLayer)
     }
 
+    public init(lineColor: UIColor, lineWidth: CGFloat, dashPattern: [NSNumber]) {
+        super.init(frame: .zero)
+        shapeLayer.strokeColor = lineColor.cgColor
+        shapeLayer.lineWidth = lineWidth
+        shapeLayer.lineDashPattern = dashPattern
+        shapeLayer.fillColor = nil
+        shapeLayer.lineCap = .round
+        layer.addSublayer(shapeLayer)
+    }
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
     public override func layoutSubviews() {
         super.layoutSubviews()
+        shapeLayer.frame = bounds
         let path = UIBezierPath()
-        path.move(to: CGPoint(x: 0, y: 0))
-        path.addLine(to: CGPoint(x: bounds.width, y: 0))
+        let y = bounds.midY
+        path.move(to: CGPoint(x: 0, y: y))
+        path.addLine(to: CGPoint(x: bounds.width, y: y))
         shapeLayer.path = path.cgPath
     }
 }

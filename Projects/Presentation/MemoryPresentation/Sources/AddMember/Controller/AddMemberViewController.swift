@@ -158,7 +158,7 @@ extension AddMemberViewController {
             .bind(to: collectionView.rx.items(
                 cellIdentifier: AddMemberCollectionViewCell.reuseIdentifier,
                 cellType: AddMemberCollectionViewCell.self
-            )) { (_, collaborator, cell) in
+            )) { [weak self] (_, collaborator, cell) in
                 let role: AddMemberRole
                 if collaborator.isMe {
                     role = .me
@@ -172,6 +172,14 @@ extension AddMemberViewController {
                     profileImageUrl: collaborator.profileImageUrl,
                     role: role
                 )
+
+                cell.moreButtonDidTap
+                    .withUnretained(cell)
+                    .subscribe(onNext: { (_, _) in
+                        guard let self else { return }
+                        self.showMemberMoreSheet(for: collaborator)
+                    })
+                    .disposed(by: cell.disposeBag)
             }
             .disposed(by: disposeBag)
 
@@ -187,6 +195,22 @@ extension AddMemberViewController {
             .withUnretained(self)
             .subscribe(onNext: { (self, message) in
                 ToastView.show(on: self.view, message: message)
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func showMemberMoreSheet(for collaborator: CollaboratorEntity) {
+        let sheet = MemberMoreSheetView.show(on: self.view)
+
+        sheet.delegateButtonDidTap
+            .subscribe(onNext: { [weak sheet] in
+                sheet?.dismiss()
+            })
+            .disposed(by: disposeBag)
+
+        sheet.kickButtonDidTap
+            .subscribe(onNext: { [weak sheet] in
+                sheet?.dismiss()
             })
             .disposed(by: disposeBag)
     }
