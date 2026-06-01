@@ -32,29 +32,34 @@ public final class AddMemberViewModel {
     }
 
     struct Output {
-        let memberList: PublishRelay<[String]>
+        let memberList: PublishRelay<[CollaboratorEntity]>
         let inviteCode: PublishRelay<String>
         let errorToast: PublishRelay<String>
     }
 
     func transform(_ input: Input) -> Output {
-        let memberList: PublishRelay<[String]> = .init()
+        let memberList: PublishRelay<[CollaboratorEntity]> = .init()
         let inviteCode: PublishRelay<String> = .init()
         let errorToast: PublishRelay<String> = .init()
 
         input.rxViewDidLoad
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                memberList.accept([
-                    "유저 1",
-                    "유저 2",
-                    "유저 3",
-                    "유저 4",
-                    "유저 5",
-                    "유저 6",
-                    "유저 7",
-                    "유저 8"
-                ])
+                Task { [weak self] in
+                    guard let self else { return }
+                    do {
+                        let collaborators = try await self.addMemberUseCase.fetchCollaborators(
+                            capsuleId: self.capsuleId
+                        )
+                        await MainActor.run {
+                            memberList.accept(collaborators)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorToast.accept("멤버 목록을 불러올 수 없습니다")
+                        }
+                    }
+                }
             })
             .disposed(by: disposeBag)
 

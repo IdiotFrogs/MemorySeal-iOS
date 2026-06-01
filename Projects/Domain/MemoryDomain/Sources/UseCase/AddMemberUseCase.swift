@@ -2,6 +2,7 @@ import Foundation
 
 public protocol AddMemberUseCase {
     func inviteToTimeCapsule(capsuleId: Int) async throws -> String
+    func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity]
 }
 
 public final class DefaultAddMemberUseCase: AddMemberUseCase {
@@ -13,5 +14,9 @@ public final class DefaultAddMemberUseCase: AddMemberUseCase {
 
     public func inviteToTimeCapsule(capsuleId: Int) async throws -> String {
         return try await addMemberRepository.inviteToTimeCapsule(capsuleId: capsuleId)
+    }
+
+    public func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity] {
+        return try await addMemberRepository.fetchCollaborators(capsuleId: capsuleId)
     }
 }
