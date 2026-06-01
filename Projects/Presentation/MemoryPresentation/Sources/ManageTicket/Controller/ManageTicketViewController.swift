@@ -78,12 +78,32 @@ extension ManageTicketViewController {
             didConfirmDelete: didConfirmDelete,
             didConfirmLeave: didConfirmLeave
         )
-        let _ = viewModel.transform(input)
+        let output = viewModel.transform(input)
 
         navigationView.backButtonDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.navigationController?.popViewController(animated: true)
+            })
+            .disposed(by: disposeBag)
+
+        output.hostCannotLeave
+            .emit(with: self) { (self, _) in
+                self.showHostCannotLeaveDialog()
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func showHostCannotLeaveDialog() {
+        let dialog = DialogView.show(
+            on: self.view,
+            title: "방장은 방장 권한을 위임 혹은\n티켓에 아무도 없을때 티켓을\n나가실 수 있어요.",
+            confirmTitle: "확인"
+        )
+
+        dialog.confirmButtonDidTap
+            .subscribe(onNext: {
+                dialog.dismiss()
             })
             .disposed(by: disposeBag)
     }

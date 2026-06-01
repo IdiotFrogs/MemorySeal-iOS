@@ -11,14 +11,14 @@ import Foundation
 import BaseDomain
 
 struct ErrorResponseDTO: Decodable {
-    let status: String?
+    let status: Int?
     let error: String?
     let message: String?
     let path: String?
 
     var toDomain: ErrorResponseEntity {
         return .init(
-            status: status ?? "",
+            status: status ?? 0,
             error: error ?? "",
             message: message ?? "",
             path: path ?? ""

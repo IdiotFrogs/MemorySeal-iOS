@@ -53,11 +53,13 @@ public final class ManageTicketViewModel {
     struct Output {
         let deleteResult: Driver<Bool>
         let leaveResult: Driver<Bool>
+        let hostCannotLeave: Signal<Void>
     }
 
     func transform(_ input: Input) -> Output {
         let deleteResult = PublishRelay<Bool>()
         let leaveResult = PublishRelay<Bool>()
+        let hostCannotLeave = PublishRelay<Void>()
 
         input.didConfirmDelete
             .withUnretained(self)
@@ -88,6 +90,16 @@ public final class ManageTicketViewModel {
                             leaveResult.accept(true)
                             self.action.didLeaveTimeCapsule()
                         }
+                    } catch let error as ManageTicketError {
+                        await MainActor.run {
+                            switch error {
+                            case .hostCannotLeave:
+                                hostCannotLeave.accept(())
+                            case .defaultError:
+                                break
+                            }
+                            leaveResult.accept(false)
+                        }
                     } catch {
                         await MainActor.run {
                             leaveResult.accept(false)
@@ -99,7 +111,8 @@ public final class ManageTicketViewModel {
 
         return Output(
             deleteResult: deleteResult.asDriver(onErrorJustReturn: false),
-            leaveResult: leaveResult.asDriver(onErrorJustReturn: false)
+            leaveResult: leaveResult.asDriver(onErrorJustReturn: false),
+            hostCannotLeave: hostCannotLeave.asSignal()
         )
     }
 }
