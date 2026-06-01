@@ -12,10 +12,21 @@ public final class DefaultBuryTicketRepository: BuryTicketRepository {
     }
 
     public func buryTimeCapsule(capsuleId: Int, openedAt: Date) async throws {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(abbreviation: "UTC") ?? .current
+        let components = calendar.dateComponents(
+            [.nanosecond],
+            from: openedAt
+        )
+        let nanoseconds = components.nanosecond ?? 0
+
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.timeZone = TimeZone(abbreviation: "UTC")
-        let openedAtString = formatter.string(from: openedAt)
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        let basePart = formatter.string(from: openedAt)
+
+        let openedAtString = String(format: "%@.%09d", basePart, nanoseconds)
 
         let requestDTO = BuryTicketRequestDTO(openedAt: openedAtString)
         let result = await provider.request(
