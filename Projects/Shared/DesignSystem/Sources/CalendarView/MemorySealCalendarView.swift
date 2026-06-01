@@ -20,6 +20,17 @@ final public class MemorySealCalendarView: UIView {
         onLayoutSubviews?()
     }
 
+    private let wavyBorder: WavyStrokeView = {
+        let view = WavyStrokeView(
+            strokeColor: DesignSystemAsset.ColorAssests.grey1.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .inside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "2025년 6월"
@@ -156,14 +167,19 @@ extension MemorySealCalendarView {
     }
     
     private func addSubviews() {
+        addSubview(wavyBorder)
         addSubview(titleLabel)
         addSubview(nextMonthButton)
         addSubview(previousMonthButton)
         addSubview(weekStackView)
         addSubview(collectionView)
     }
-    
+
     private func setLayout() {
+        wavyBorder.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
         previousMonthButton.snp.makeConstraints {
             $0.top.equalToSuperview().offset(24)
             $0.leading.equalToSuperview().offset(20)
@@ -191,7 +207,7 @@ extension MemorySealCalendarView {
             $0.top.equalTo(weekStackView.snp.bottom)
             $0.leading.trailing.equalToSuperview().inset(12)
             $0.height.greaterThanOrEqualTo(200)
-            $0.bottom.equalToSuperview().inset(12)
+            $0.bottom.equalToSuperview().inset(16)
         }
     }
 }
