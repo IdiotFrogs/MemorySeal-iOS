@@ -18,6 +18,7 @@ public final class AddMemberViewController: UIViewController {
     private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let didTapCopyInviteCode: PublishRelay<Void> = .init()
     private let didTapShareLink: PublishRelay<Void> = .init()
+    private let didConfirmDelegateHost: PublishRelay<Int> = .init()
     private let disposeBag = DisposeBag()
 
     private let viewModel: AddMemberViewModel
@@ -145,7 +146,8 @@ extension AddMemberViewController {
     private func bindViewModel() {
         let input = AddMemberViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
-            didTapCopyInviteCode: didTapCopyInviteCode
+            didTapCopyInviteCode: didTapCopyInviteCode,
+            didConfirmDelegateHost: didConfirmDelegateHost
         )
         let output = viewModel.transform(input)
 
@@ -197,20 +199,54 @@ extension AddMemberViewController {
                 ToastView.show(on: self.view, message: message)
             })
             .disposed(by: disposeBag)
+
+        output.delegateHostSuccess
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                ToastView.show(on: self.view, message: "방장 위임이 완료되었습니다.", position: .top)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func showMemberMoreSheet(for collaborator: CollaboratorEntity) {
         let sheet = MemberMoreSheetView.show(on: self.view)
 
         sheet.delegateButtonDidTap
-            .subscribe(onNext: { [weak sheet] in
-                sheet?.dismiss()
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                sheet.dismiss { [weak self] in
+                    self?.showDelegateHostDialog(for: collaborator)
+                }
             })
             .disposed(by: disposeBag)
 
         sheet.kickButtonDidTap
             .subscribe(onNext: { [weak sheet] in
                 sheet?.dismiss()
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func showDelegateHostDialog(for collaborator: CollaboratorEntity) {
+        let title = "\u{201C}\(collaborator.nickname)\u{201D}님에게\n방장을 위임하시겠습니까?"
+        let dialog = DialogView.show(
+            on: self.view,
+            title: title,
+            cancelTitle: "취소",
+            confirmTitle: "위임"
+        )
+
+        dialog.confirmButtonDidTap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                dialog.dismiss()
+                self.didConfirmDelegateHost.accept(collaborator.userId)
+            })
+            .disposed(by: disposeBag)
+
+        dialog.cancelButtonDidTap
+            .subscribe(onNext: { [weak dialog] in
+                dialog?.dismiss()
             })
             .disposed(by: disposeBag)
     }

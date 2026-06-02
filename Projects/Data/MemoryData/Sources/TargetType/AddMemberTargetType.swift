@@ -6,6 +6,7 @@ import BaseData
 public enum AddMemberTargetType {
     case inviteToTimeCapsule(capsuleId: Int)
     case fetchCollaborators(capsuleId: Int)
+    case delegateHost(capsuleId: Int, targetUserId: Int)
 }
 
 extension AddMemberTargetType: BaseTargetType {
@@ -15,6 +16,8 @@ extension AddMemberTargetType: BaseTargetType {
             return "/time-capsules/\(capsuleId)/invite"
         case .fetchCollaborators(let capsuleId):
             return "/time-capsules/\(capsuleId)/collaborators"
+        case .delegateHost(let capsuleId, let targetUserId):
+            return "/time-capsules/\(capsuleId)/delegation/\(targetUserId)"
         }
     }
 
@@ -24,12 +27,14 @@ extension AddMemberTargetType: BaseTargetType {
             return .post
         case .fetchCollaborators:
             return .get
+        case .delegateHost:
+            return .put
         }
     }
 
     public var task: Moya.Task {
         switch self {
-        case .inviteToTimeCapsule, .fetchCollaborators:
+        case .inviteToTimeCapsule, .fetchCollaborators, .delegateHost:
             return .requestPlain
         }
     }
@@ -40,7 +45,7 @@ extension AddMemberTargetType: BaseTargetType {
 
     public var isNeededAccessToken: Bool {
         switch self {
-        case .inviteToTimeCapsule, .fetchCollaborators:
+        case .inviteToTimeCapsule, .fetchCollaborators, .delegateHost:
             return true
         }
     }

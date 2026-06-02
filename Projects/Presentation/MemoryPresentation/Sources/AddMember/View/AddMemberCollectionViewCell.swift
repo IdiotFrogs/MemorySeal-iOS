@@ -53,9 +53,16 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
 
     private let badgeContainerView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 12
-        view.clipsToBounds = true
         view.isHidden = true
+        return view
+    }()
+
+    private let badgeWavyBackground: WavyStrokeView = {
+        let view = WavyStrokeView(fillColor: .clear)
+        view.waveCornerRadius = 30
+        view.waveAmplitude = 1.0
+        view.waveSpacing = 4
+        view.isUserInteractionEnabled = false
         return view
     }()
 
@@ -144,17 +151,16 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
             badgeContainerView.isHidden = true
         case .me:
             badgeContainerView.isHidden = false
-            badgeContainerView.backgroundColor = UIColor(hex: "#CFF2D8")
+            badgeWavyBackground.style = .filled(color: UIColor(hex: "#CFF2D8") ?? .systemGreen)
             badgeIconImageView.isHidden = true
             badgeLabel.text = "나"
             badgeLabel.font = DesignSystemFontFamily.Pretendard.bold.font(size: 12)
             badgeLabel.textColor = UIColor(hex: "#048F27")
         case .host:
             badgeContainerView.isHidden = false
-            badgeContainerView.backgroundColor = UIColor(hex: "#F5F5F5")
+            badgeWavyBackground.style = .filled(color: UIColor(hex: "#F5F5F5") ?? .systemGray6)
             badgeIconImageView.isHidden = false
-            badgeIconImageView.image = UIImage(systemName: "crown.fill")
-            badgeIconImageView.tintColor = DesignSystemAsset.ColorAssests.grey4.color
+            badgeIconImageView.image = DesignSystemAsset.ImageAssets.crownFillIcon.image
             badgeLabel.text = "방장"
             badgeLabel.font = DesignSystemFontFamily.Pretendard.semiBold.font(size: 12)
             badgeLabel.textColor = DesignSystemAsset.ColorAssests.grey4.color
@@ -169,6 +175,7 @@ extension AddMemberCollectionViewCell {
 
         badgeStackView.addArrangedSubview(badgeIconImageView)
         badgeStackView.addArrangedSubview(badgeLabel)
+        badgeContainerView.addSubview(badgeWavyBackground)
         badgeContainerView.addSubview(badgeStackView)
 
         contentStackView.addArrangedSubview(profileContainerView)
@@ -203,6 +210,10 @@ extension AddMemberCollectionViewCell {
             $0.trailing.lessThanOrEqualTo(moreButton.snp.leading).offset(-16)
         }
 
+        badgeWavyBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
         badgeStackView.snp.makeConstraints {
             $0.edges.equalToSuperview().inset(
                 UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
@@ -210,7 +221,7 @@ extension AddMemberCollectionViewCell {
         }
 
         badgeIconImageView.snp.makeConstraints {
-            $0.width.height.equalTo(12)
+            $0.width.height.equalTo(14)
         }
     }
 }

@@ -29,18 +29,21 @@ public final class AddMemberViewModel {
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
         let didTapCopyInviteCode: PublishRelay<Void>
+        let didConfirmDelegateHost: PublishRelay<Int>
     }
 
     struct Output {
         let memberList: PublishRelay<[CollaboratorEntity]>
         let inviteCode: PublishRelay<String>
         let errorToast: PublishRelay<String>
+        let delegateHostSuccess: PublishRelay<Void>
     }
 
     func transform(_ input: Input) -> Output {
         let memberList: PublishRelay<[CollaboratorEntity]> = .init()
         let inviteCode: PublishRelay<String> = .init()
         let errorToast: PublishRelay<String> = .init()
+        let delegateHostSuccess: PublishRelay<Void> = .init()
 
         input.rxViewDidLoad
             .withUnretained(self)
@@ -84,10 +87,37 @@ public final class AddMemberViewModel {
             })
             .disposed(by: disposeBag)
 
+        input.didConfirmDelegateHost
+            .withUnretained(self)
+            .subscribe(onNext: { (self, targetUserId) in
+                Task { [weak self] in
+                    guard let self else { return }
+                    do {
+                        try await self.addMemberUseCase.delegateHost(
+                            capsuleId: self.capsuleId,
+                            targetUserId: targetUserId
+                        )
+                        let updated = try await self.addMemberUseCase.fetchCollaborators(
+                            capsuleId: self.capsuleId
+                        )
+                        await MainActor.run {
+                            delegateHostSuccess.accept(())
+                            memberList.accept(updated)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorToast.accept("방장 위임에 실패했습니다")
+                        }
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+
         return .init(
             memberList: memberList,
             inviteCode: inviteCode,
-            errorToast: errorToast
+            errorToast: errorToast,
+            delegateHostSuccess: delegateHostSuccess
         )
     }
 }

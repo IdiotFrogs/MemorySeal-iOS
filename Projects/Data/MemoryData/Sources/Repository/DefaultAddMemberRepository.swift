@@ -26,12 +26,17 @@ public final class DefaultAddMemberRepository: AddMemberRepository {
     public func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity] {
         let result = await provider.request(.fetchCollaborators(capsuleId: capsuleId))
 
-        let responseDTOs = try ResultHandler.handleResult(
+        let responseDTO = try ResultHandler.handleResult(
             result: result,
-            responseType: [CollaboratorResponseDTO].self,
+            responseType: CollaboratorListResponseDTO.self,
             errorType: AddMemberError.self
         )
 
-        return responseDTOs.map { $0.toDomain }
+        return responseDTO.content.map { $0.toDomain }
+    }
+
+    public func delegateHost(capsuleId: Int, targetUserId: Int) async throws {
+        let result = await provider.request(.delegateHost(capsuleId: capsuleId, targetUserId: targetUserId))
+        try ResultHandler.handleResult(result: result, errorType: AddMemberError.self)
     }
 }
