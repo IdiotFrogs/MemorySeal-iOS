@@ -30,6 +30,7 @@ public final class AddMemberViewModel {
         let rxViewDidLoad: PublishRelay<Void>
         let didTapCopyInviteCode: PublishRelay<Void>
         let didConfirmDelegateHost: PublishRelay<Int>
+        let didConfirmKickContributor: PublishRelay<Int>
     }
 
     struct Output {
@@ -37,6 +38,7 @@ public final class AddMemberViewModel {
         let inviteCode: PublishRelay<String>
         let errorToast: PublishRelay<String>
         let delegateHostSuccess: PublishRelay<Void>
+        let kickContributorSuccess: PublishRelay<Void>
     }
 
     func transform(_ input: Input) -> Output {
@@ -44,6 +46,7 @@ public final class AddMemberViewModel {
         let inviteCode: PublishRelay<String> = .init()
         let errorToast: PublishRelay<String> = .init()
         let delegateHostSuccess: PublishRelay<Void> = .init()
+        let kickContributorSuccess: PublishRelay<Void> = .init()
 
         input.rxViewDidLoad
             .withUnretained(self)
@@ -113,11 +116,38 @@ public final class AddMemberViewModel {
             })
             .disposed(by: disposeBag)
 
+        input.didConfirmKickContributor
+            .withUnretained(self)
+            .subscribe(onNext: { (self, targetUserId) in
+                Task { [weak self] in
+                    guard let self else { return }
+                    do {
+                        try await self.addMemberUseCase.kickContributor(
+                            capsuleId: self.capsuleId,
+                            targetUserId: targetUserId
+                        )
+                        let updated = try await self.addMemberUseCase.fetchCollaborators(
+                            capsuleId: self.capsuleId
+                        )
+                        await MainActor.run {
+                            kickContributorSuccess.accept(())
+                            memberList.accept(updated)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorToast.accept("멤버 추방에 실패했습니다")
+                        }
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+
         return .init(
             memberList: memberList,
             inviteCode: inviteCode,
             errorToast: errorToast,
-            delegateHostSuccess: delegateHostSuccess
+            delegateHostSuccess: delegateHostSuccess,
+            kickContributorSuccess: kickContributorSuccess
         )
     }
 }

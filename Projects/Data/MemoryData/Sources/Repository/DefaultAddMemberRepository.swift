@@ -39,4 +39,9 @@ public final class DefaultAddMemberRepository: AddMemberRepository {
         let result = await provider.request(.delegateHost(capsuleId: capsuleId, targetUserId: targetUserId))
         try ResultHandler.handleResult(result: result, errorType: AddMemberError.self)
     }
+
+    public func kickContributor(capsuleId: Int, targetUserId: Int) async throws {
+        let result = await provider.request(.kickContributor(capsuleId: capsuleId, targetUserId: targetUserId))
+        try ResultHandler.handleResult(result: result, errorType: AddMemberError.self)
+    }
 }

@@ -19,6 +19,7 @@ public final class AddMemberViewController: UIViewController {
     private let didTapCopyInviteCode: PublishRelay<Void> = .init()
     private let didTapShareLink: PublishRelay<Void> = .init()
     private let didConfirmDelegateHost: PublishRelay<Int> = .init()
+    private let didConfirmKickContributor: PublishRelay<Int> = .init()
     private let disposeBag = DisposeBag()
 
     private let viewModel: AddMemberViewModel
@@ -147,7 +148,8 @@ extension AddMemberViewController {
         let input = AddMemberViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
             didTapCopyInviteCode: didTapCopyInviteCode,
-            didConfirmDelegateHost: didConfirmDelegateHost
+            didConfirmDelegateHost: didConfirmDelegateHost,
+            didConfirmKickContributor: didConfirmKickContributor
         )
         let output = viewModel.transform(input)
 
@@ -206,6 +208,13 @@ extension AddMemberViewController {
                 ToastView.show(on: self.view, message: "방장 위임이 완료되었습니다.", position: .top)
             })
             .disposed(by: disposeBag)
+
+        output.kickContributorSuccess
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                ToastView.show(on: self.view, message: "멤버를 추방했습니다.", position: .top)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func showMemberMoreSheet(for collaborator: CollaboratorEntity) {
@@ -221,8 +230,36 @@ extension AddMemberViewController {
             .disposed(by: disposeBag)
 
         sheet.kickButtonDidTap
-            .subscribe(onNext: { [weak sheet] in
-                sheet?.dismiss()
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                sheet.dismiss { [weak self] in
+                    self?.showKickContributorDialog(for: collaborator)
+                }
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func showKickContributorDialog(for collaborator: CollaboratorEntity) {
+        let title = "\u{201C}\(collaborator.nickname)\u{201D}님을\n정말 추방하시겠습니까?"
+        let dialog = DialogView.show(
+            on: self.view,
+            title: title,
+            cancelTitle: "취소",
+            confirmTitle: "추방",
+            confirmStyle: .destructive
+        )
+
+        dialog.confirmButtonDidTap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                dialog.dismiss()
+                self.didConfirmKickContributor.accept(collaborator.userId)
+            })
+            .disposed(by: disposeBag)
+
+        dialog.cancelButtonDidTap
+            .subscribe(onNext: { [weak dialog] in
+                dialog?.dismiss()
             })
             .disposed(by: disposeBag)
     }
