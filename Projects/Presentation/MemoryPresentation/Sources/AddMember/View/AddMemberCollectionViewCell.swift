@@ -8,42 +8,108 @@
 
 import UIKit
 import SnapKit
+import Kingfisher
+import RxSwift
+import RxCocoa
 
 import DesignSystem
 
+public enum AddMemberRole {
+    case none
+    case me
+    case host
+}
+
 final class AddMemberCollectionViewCell: UICollectionViewCell {
+
+    private let profileContainerView: UIView = UIView()
 
     private let userImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
-        imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = false
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 20
         return imageView
     }()
 
-    private let userNickNameLabel: UILabel = {
+    private let profileWavyBorder: WavyStrokeView = {
+        let view = WavyStrokeView(strokeColor: .black, lineWidth: 2)
+        view.waveCornerRadius = 20
+        view.waveAmplitude = 1.0
+        view.waveSpacing = 4
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
+    private let nameLabel: UILabel = {
         let label = UILabel()
-        label.text = "나는야 유저 유저!"
         label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 16)
         label.textColor = DesignSystemAsset.ColorAssests.grey5.color
+        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
         return label
     }()
 
-    private let acceptButton: UIButton = {
-        let button = UIButton()
-        button.setTitle(
-            "수락",
+    private let badgeContainerView: UIView = {
+        let view = UIView()
+        view.isHidden = true
+        return view
+    }()
+
+    private let badgeWavyBackground: WavyStrokeView = {
+        let view = WavyStrokeView(fillColor: .clear)
+        view.waveCornerRadius = 30
+        view.waveAmplitude = 1.0
+        view.waveSpacing = 4
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
+    private let badgeIconImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFit
+        iv.isHidden = true
+        return iv
+    }()
+
+    private let badgeLabel: UILabel = {
+        let label = UILabel()
+        label.textAlignment = .center
+        return label
+    }()
+
+    private let badgeStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 4
+        return stack
+    }()
+
+    private let contentStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 12
+        return stack
+    }()
+
+    private let moreButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.setImage(
+            DesignSystemAsset.ImageAssets.meatballIcon.image,
             for: .normal
         )
-        button.setTitleColor(
-            DesignSystemAsset.ColorAssests.primaryDark.color,
-            for: .normal
-        )
-        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryLight.color
-        button.layer.cornerRadius = 8
+        button.imageView?.contentMode = .scaleAspectFit
         return button
     }()
+
+    var moreButtonDidTap: ControlEvent<Void> {
+        return moreButton.rx.tap
+    }
+
+    private(set) var disposeBag: DisposeBag = DisposeBag()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -56,33 +122,107 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        disposeBag = DisposeBag()
+    }
+
+    func configure(
+        name: String,
+        profileImageUrl: String? = nil,
+        role: AddMemberRole = .none,
+        showMoreButton: Bool = true
+    ) {
+        nameLabel.text = name
+
+        if let urlString = profileImageUrl, let url = URL(string: urlString) {
+            userImageView.kf.setImage(
+                with: url,
+                placeholder: DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+            )
+        } else {
+            userImageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+        }
+
+        moreButton.isHidden = !showMoreButton || (role == .me)
+
+        switch role {
+        case .none:
+            badgeContainerView.isHidden = true
+        case .me:
+            badgeContainerView.isHidden = false
+            badgeWavyBackground.style = .filled(color: UIColor(hex: "#CFF2D8") ?? .systemGreen)
+            badgeIconImageView.isHidden = true
+            badgeLabel.text = "나"
+            badgeLabel.font = DesignSystemFontFamily.Pretendard.bold.font(size: 12)
+            badgeLabel.textColor = UIColor(hex: "#048F27")
+        case .host:
+            badgeContainerView.isHidden = false
+            badgeWavyBackground.style = .filled(color: UIColor(hex: "#F5F5F5") ?? .systemGray6)
+            badgeIconImageView.isHidden = false
+            badgeIconImageView.image = DesignSystemAsset.ImageAssets.crownFillIcon.image
+            badgeLabel.text = "방장"
+            badgeLabel.font = DesignSystemFontFamily.Pretendard.semiBold.font(size: 12)
+            badgeLabel.textColor = DesignSystemAsset.ColorAssests.grey4.color
+        }
+    }
 }
 
 extension AddMemberCollectionViewCell {
     private func addSubviews() {
-        addSubview(userImageView)
-        addSubview(acceptButton)
-        addSubview(userNickNameLabel)
+        profileContainerView.addSubview(userImageView)
+        profileContainerView.addSubview(profileWavyBorder)
+
+        badgeStackView.addArrangedSubview(badgeIconImageView)
+        badgeStackView.addArrangedSubview(badgeLabel)
+        badgeContainerView.addSubview(badgeWavyBackground)
+        badgeContainerView.addSubview(badgeStackView)
+
+        contentStackView.addArrangedSubview(profileContainerView)
+        contentStackView.addArrangedSubview(badgeContainerView)
+        contentStackView.addArrangedSubview(nameLabel)
+        contentView.addSubview(contentStackView)
+        contentView.addSubview(moreButton)
     }
 
     private func setLayout() {
         userImageView.snp.makeConstraints {
-            $0.leading.equalToSuperview()
-            $0.centerY.equalToSuperview()
+            $0.edges.equalToSuperview()
+        }
+
+        profileWavyBorder.snp.makeConstraints {
+            $0.edges.equalTo(userImageView)
+        }
+
+        profileContainerView.snp.makeConstraints {
             $0.width.height.equalTo(40)
         }
 
-        acceptButton.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
+        moreButton.snp.makeConstraints {
             $0.trailing.equalToSuperview()
-            $0.height.equalTo(32)
-            $0.width.equalTo(49)
+            $0.centerY.equalToSuperview()
+            $0.width.height.equalTo(24)
         }
 
-        userNickNameLabel.snp.makeConstraints {
+        contentStackView.snp.makeConstraints {
+            $0.leading.equalToSuperview()
             $0.centerY.equalToSuperview()
-            $0.leading.equalTo(userImageView.snp.trailing).offset(12)
-            $0.trailing.lessThanOrEqualTo(acceptButton.snp.leading).offset(-16)
+            $0.trailing.lessThanOrEqualTo(moreButton.snp.leading).offset(-16)
+        }
+
+        badgeWavyBackground.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
+        badgeStackView.snp.makeConstraints {
+            $0.edges.equalToSuperview().inset(
+                UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+            )
+        }
+
+        badgeIconImageView.snp.makeConstraints {
+            $0.width.height.equalTo(14)
         }
     }
 }

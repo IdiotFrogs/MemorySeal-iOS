@@ -11,6 +11,11 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
+public enum DialogConfirmStyle {
+    case primary
+    case destructive
+}
+
 public final class DialogView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -108,9 +113,11 @@ public final class DialogView: UIView {
         title: String,
         message: String? = nil,
         cancelTitle: String? = nil,
-        confirmTitle: String
+        confirmTitle: String,
+        confirmStyle: DialogConfirmStyle = .primary
     ) {
         super.init(frame: .zero)
+        applyConfirmStyle(confirmStyle)
 
         if cancelTitle == nil {
             let paragraphStyle = NSMutableParagraphStyle()
@@ -151,19 +158,32 @@ public final class DialogView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    private func applyConfirmStyle(_ style: DialogConfirmStyle) {
+        let color: UIColor
+        switch style {
+        case .primary:
+            color = DesignSystemAsset.ColorAssests.primaryNormal.color
+        case .destructive:
+            color = UIColor(hex: "#ED1E2F") ?? .systemRed
+        }
+        confirmButtonWavyBackground.style = .filledStroked(fill: color, stroke: color, lineWidth: 3)
+    }
+
     @discardableResult
     public static func show(
         on view: UIView,
         title: String,
         message: String? = nil,
         cancelTitle: String? = nil,
-        confirmTitle: String
+        confirmTitle: String,
+        confirmStyle: DialogConfirmStyle = .primary
     ) -> DialogView {
         let dialog = DialogView(
             title: title,
             message: message,
             cancelTitle: cancelTitle,
-            confirmTitle: confirmTitle
+            confirmTitle: confirmTitle,
+            confirmStyle: confirmStyle
         )
 
         let dimming = UIView()

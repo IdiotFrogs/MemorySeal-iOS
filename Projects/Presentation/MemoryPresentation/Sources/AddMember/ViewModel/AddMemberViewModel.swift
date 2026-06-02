@@ -29,32 +29,43 @@ public final class AddMemberViewModel {
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
         let didTapCopyInviteCode: PublishRelay<Void>
+        let didConfirmDelegateHost: PublishRelay<Int>
+        let didConfirmKickContributor: PublishRelay<Int>
     }
 
     struct Output {
-        let memberList: PublishRelay<[String]>
+        let memberList: PublishRelay<[CollaboratorEntity]>
         let inviteCode: PublishRelay<String>
         let errorToast: PublishRelay<String>
+        let delegateHostSuccess: PublishRelay<Void>
+        let kickContributorSuccess: PublishRelay<Void>
     }
 
     func transform(_ input: Input) -> Output {
-        let memberList: PublishRelay<[String]> = .init()
+        let memberList: PublishRelay<[CollaboratorEntity]> = .init()
         let inviteCode: PublishRelay<String> = .init()
         let errorToast: PublishRelay<String> = .init()
+        let delegateHostSuccess: PublishRelay<Void> = .init()
+        let kickContributorSuccess: PublishRelay<Void> = .init()
 
         input.rxViewDidLoad
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                memberList.accept([
-                    "유저 1",
-                    "유저 2",
-                    "유저 3",
-                    "유저 4",
-                    "유저 5",
-                    "유저 6",
-                    "유저 7",
-                    "유저 8"
-                ])
+                Task { [weak self] in
+                    guard let self else { return }
+                    do {
+                        let collaborators = try await self.addMemberUseCase.fetchCollaborators(
+                            capsuleId: self.capsuleId
+                        )
+                        await MainActor.run {
+                            memberList.accept(collaborators)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorToast.accept("멤버 목록을 불러올 수 없습니다")
+                        }
+                    }
+                }
             })
             .disposed(by: disposeBag)
 
@@ -79,10 +90,64 @@ public final class AddMemberViewModel {
             })
             .disposed(by: disposeBag)
 
+        input.didConfirmDelegateHost
+            .withUnretained(self)
+            .subscribe(onNext: { (self, targetUserId) in
+                Task { [weak self] in
+                    guard let self else { return }
+                    do {
+                        try await self.addMemberUseCase.delegateHost(
+                            capsuleId: self.capsuleId,
+                            targetUserId: targetUserId
+                        )
+                        let updated = try await self.addMemberUseCase.fetchCollaborators(
+                            capsuleId: self.capsuleId
+                        )
+                        await MainActor.run {
+                            delegateHostSuccess.accept(())
+                            memberList.accept(updated)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorToast.accept("방장 위임에 실패했습니다")
+                        }
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+
+        input.didConfirmKickContributor
+            .withUnretained(self)
+            .subscribe(onNext: { (self, targetUserId) in
+                Task { [weak self] in
+                    guard let self else { return }
+                    do {
+                        try await self.addMemberUseCase.kickContributor(
+                            capsuleId: self.capsuleId,
+                            targetUserId: targetUserId
+                        )
+                        let updated = try await self.addMemberUseCase.fetchCollaborators(
+                            capsuleId: self.capsuleId
+                        )
+                        await MainActor.run {
+                            kickContributorSuccess.accept(())
+                            memberList.accept(updated)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorToast.accept("멤버 추방에 실패했습니다")
+                        }
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+
         return .init(
             memberList: memberList,
             inviteCode: inviteCode,
-            errorToast: errorToast
+            errorToast: errorToast,
+            delegateHostSuccess: delegateHostSuccess,
+            kickContributorSuccess: kickContributorSuccess
         )
     }
 }
