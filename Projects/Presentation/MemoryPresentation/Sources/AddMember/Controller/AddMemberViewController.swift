@@ -20,6 +20,7 @@ public final class AddMemberViewController: UIViewController {
     private let didTapShareLink: PublishRelay<Void> = .init()
     private let didConfirmDelegateHost: PublishRelay<Int> = .init()
     private let didConfirmKickContributor: PublishRelay<Int> = .init()
+    private var isCurrentUserHost: Bool = false
     private let disposeBag = DisposeBag()
 
     private let viewModel: AddMemberViewModel
@@ -157,6 +158,7 @@ extension AddMemberViewController {
             .withUnretained(self)
             .do(onNext: { (self, list) in
                 self.memberCountLabel.text = "\(list.count)"
+                self.isCurrentUserHost = list.first(where: { $0.isMe })?.role == .host
             })
             .map { $0.1 }
             .bind(to: collectionView.rx.items(
@@ -174,7 +176,8 @@ extension AddMemberViewController {
                 cell.configure(
                     name: collaborator.nickname,
                     profileImageUrl: collaborator.profileImageUrl,
-                    role: role
+                    role: role,
+                    showMoreButton: self?.isCurrentUserHost ?? false
                 )
 
                 cell.moreButtonDidTap

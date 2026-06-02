@@ -131,7 +131,8 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
     func configure(
         name: String,
         profileImageUrl: String? = nil,
-        role: AddMemberRole = .none
+        role: AddMemberRole = .none,
+        showMoreButton: Bool = true
     ) {
         nameLabel.text = name
 
@@ -144,7 +145,7 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
             userImageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
         }
 
-        moreButton.isHidden = (role == .me)
+        moreButton.isHidden = !showMoreButton || (role == .me)
 
         switch role {
         case .none:
