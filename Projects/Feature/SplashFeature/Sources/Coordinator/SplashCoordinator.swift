@@ -11,7 +11,7 @@ import UIKit
 import SplashPresentation
 
 public final class SplashCoordinator {
-    public struct Action {
+    public struct Dependency {
         public let moveToSignIn: () -> Void
         public let moveToHome: () -> Void
         public let moveToSignUp: () -> Void
@@ -25,18 +25,18 @@ public final class SplashCoordinator {
 
     private let navigationController: UINavigationController
     private let splashDIContainer: SplashDIContainer = SplashDIContainer()
-    private let action: Action
+    private let dependency: Dependency
 
-    public init(with navigationController: UINavigationController, action: Action) {
+    public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
-        self.action = action
+        self.dependency = dependency
     }
 
     public func start() {
         let vmAction = SplashViewModel.Action(
-            moveToSignIn: action.moveToSignIn,
-            moveToHome: action.moveToHome,
-            moveToSignUp: action.moveToSignUp
+            moveToSignIn: dependency.moveToSignIn,
+            moveToHome: dependency.moveToHome,
+            moveToSignUp: dependency.moveToSignUp
         )
         let splashViewController = splashDIContainer.makeSplashViewController(action: vmAction)
 

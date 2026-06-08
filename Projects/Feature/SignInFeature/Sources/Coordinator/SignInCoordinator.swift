@@ -10,7 +10,7 @@ import UIKit
 import SignInPresentation
 
 public final class SignInCoordinator {
-    public struct Action {
+    public struct Dependency {
         public let moveToHome: () -> Void
         public let moveToSignUp: () -> Void
 
@@ -22,17 +22,17 @@ public final class SignInCoordinator {
 
     private let navigationController: UINavigationController
     private let signInDIContainer: SignInDIContainer = SignInDIContainer()
-    private let action: Action
+    private let dependency: Dependency
 
-    public init(with navigationController: UINavigationController, action: Action) {
+    public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
-        self.action = action
+        self.dependency = dependency
     }
 
     public func start() {
         let vmAction = SignInViewModel.Action(
-            moveToHome: action.moveToHome,
-            moveToSignUp: action.moveToSignUp
+            moveToHome: dependency.moveToHome,
+            moveToSignUp: dependency.moveToSignUp
         )
         let signInViewController = signInDIContainer.makeSignInViewController(action: vmAction)
 
