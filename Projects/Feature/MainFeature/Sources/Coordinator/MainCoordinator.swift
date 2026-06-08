@@ -14,7 +14,7 @@ import CreateTicketFeature
 import MemoryFeature
 
 public final class MainCoordinator {
-    public struct Action {
+    public struct Dependency {
         public let didRequestLogout: () -> Void
 
         public init(didRequestLogout: @escaping () -> Void) {
@@ -25,35 +25,35 @@ public final class MainCoordinator {
     private let navigationController: UINavigationController
     private var profileCoordinator: ProfileCoordinator?
     private var memoryCoordinator: MemoryCoordinator?
-    private let action: Action
+    private let dependency: Dependency
 
-    public init(with navigationController: UINavigationController, action: Action) {
+    public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
-        self.action = action
+        self.dependency = dependency
     }
 
     public func start() {
-        let homeAction = HomeCoordinator.Action(
+        let homeDependency = HomeCoordinator.Dependency(
             moveToCreateTicket: moveToCreateTicketCoordinator,
             moveToProfile: moveToProfileCoordinator,
             moveToMemory: moveToMemoryCoordinator
         )
-        let coordinator = HomeCoordinator(with: navigationController, action: homeAction)
+        let coordinator = HomeCoordinator(with: navigationController, dependency: homeDependency)
         coordinator.start()
     }
 
     private func moveToProfileCoordinator() {
-        let profileAction = ProfileCoordinator.Action(
+        let profileDependency = ProfileCoordinator.Dependency(
             moveToBack: { [weak self] in
                 self?.navigationController.popViewController(animated: true)
                 self?.profileCoordinator = nil
             },
             didLogout: { [weak self] in
                 self?.profileCoordinator = nil
-                self?.action.didRequestLogout()
+                self?.dependency.didRequestLogout()
             }
         )
-        let coordinator = ProfileCoordinator(with: navigationController, action: profileAction)
+        let coordinator = ProfileCoordinator(with: navigationController, dependency: profileDependency)
         profileCoordinator = coordinator
         coordinator.start()
     }

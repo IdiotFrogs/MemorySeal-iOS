@@ -11,7 +11,7 @@ import UIKit
 import ProfilePresentation
 
 public final class ProfileCoordinator {
-    public struct Action {
+    public struct Dependency {
         public let moveToBack: () -> Void
         public let didLogout: () -> Void
 
@@ -23,16 +23,16 @@ public final class ProfileCoordinator {
 
     private let navigationController: UINavigationController
     private let profileDIContainer: ProfileDIContainer = .init()
-    private let action: Action
+    private let dependency: Dependency
 
-    public init(with navigationController: UINavigationController, action: Action) {
+    public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
-        self.action = action
+        self.dependency = dependency
     }
 
     public func start() {
         let profileAction = ProfileViewModel.Action(
-            moveToBack: action.moveToBack,
+            moveToBack: dependency.moveToBack,
             moveToEditProfile: moveToEditProfile,
             moveToSettings: moveToSettings
         )
@@ -60,8 +60,8 @@ public final class ProfileCoordinator {
         let settingsAction = SettingsViewModel.Action(
             moveToBack: popViewController,
             moveToTermsOfService: moveToTermsOfService,
-            moveToLogout: action.didLogout,
-            moveToWithdrawal: action.didLogout
+            moveToLogout: dependency.didLogout,
+            moveToWithdrawal: dependency.didLogout
         )
         let settingsViewController = profileDIContainer.makeSettingsViewController(action: settingsAction)
         self.navigationController.pushViewController(

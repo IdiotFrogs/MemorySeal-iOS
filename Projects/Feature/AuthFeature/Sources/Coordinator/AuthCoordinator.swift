@@ -13,7 +13,7 @@ import SignInFeature
 import SignUpFeature
 
 public final class AuthCoordinator {
-    public struct Action {
+    public struct Dependency {
         public let authDidFinish: () -> Void
 
         public init(authDidFinish: @escaping () -> Void) {
@@ -23,39 +23,39 @@ public final class AuthCoordinator {
 
     private let navigationController: UINavigationController
     private var splashCoordinator: SplashCoordinator?
-    private let action: Action
+    private let dependency: Dependency
 
-    public init(with navigationController: UINavigationController, action: Action) {
+    public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
-        self.action = action
+        self.dependency = dependency
     }
 
     public func start() {
-        let splashAction = SplashCoordinator.Action(
+        let splashDependency = SplashCoordinator.Dependency(
             moveToSignIn: moveToSignInCoordinator,
-            moveToHome: action.authDidFinish,
+            moveToHome: dependency.authDidFinish,
             moveToSignUp: moveToSignUpCoordinator
         )
-        let coordinator = SplashCoordinator(with: navigationController, action: splashAction)
+        let coordinator = SplashCoordinator(with: navigationController, dependency: splashDependency)
         splashCoordinator = coordinator
         coordinator.start()
     }
 
     private func moveToSignInCoordinator() {
         splashCoordinator = nil
-        let signInAction = SignInCoordinator.Action(
-            moveToHome: action.authDidFinish,
+        let signInDependency = SignInCoordinator.Dependency(
+            moveToHome: dependency.authDidFinish,
             moveToSignUp: moveToSignUpCoordinator
         )
-        let coordinator = SignInCoordinator(with: navigationController, action: signInAction)
+        let coordinator = SignInCoordinator(with: navigationController, dependency: signInDependency)
         coordinator.start()
     }
 
     private func moveToSignUpCoordinator() {
-        let signUpAction = SignUpCoordinator.Action(
-            moveToHome: action.authDidFinish
+        let signUpDependency = SignUpCoordinator.Dependency(
+            moveToHome: dependency.authDidFinish
         )
-        let coordinator = SignUpCoordinator(with: navigationController, action: signUpAction)
+        let coordinator = SignUpCoordinator(with: navigationController, dependency: signUpDependency)
         coordinator.start()
     }
 }

@@ -11,7 +11,7 @@ import HomePresentation
 import BaseDomain
 
 public final class HomeCoordinator {
-    public struct Action {
+    public struct Dependency {
         public let moveToCreateTicket: () -> Void
         public let moveToProfile: () -> Void
         public let moveToMemory: (_ capsuleId: Int) -> Void
@@ -25,21 +25,21 @@ public final class HomeCoordinator {
 
     private let navigationController: UINavigationController
     private let homeDIContainer: HomeDIContainer = .init()
-    private let action: Action
+    private let dependency: Dependency
 
-    public init(with navigationController: UINavigationController, action: Action) {
+    public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
-        self.action = action
+        self.dependency = dependency
     }
 
     public func start() {
         let tabmanAction = HomeTabmanViewModel.Action(
-            moveToCreateTicket: action.moveToCreateTicket,
-            moveToProfile: action.moveToProfile,
+            moveToCreateTicket: dependency.moveToCreateTicket,
+            moveToProfile: dependency.moveToProfile,
             moveToEnterTicket: moveToEnterTicket
         )
 
-        let homeAction = HomeViewModel.Action(moveToMemory: action.moveToMemory)
+        let homeAction = HomeViewModel.Action(moveToMemory: dependency.moveToMemory)
 
         let hostHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .host)
         let contributorHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .contributor)
