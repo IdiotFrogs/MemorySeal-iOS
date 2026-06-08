@@ -12,7 +12,6 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
-import CalendarDomain
 import DesignSystem
 
 private final class LayoutTrackingTextView: UITextView {

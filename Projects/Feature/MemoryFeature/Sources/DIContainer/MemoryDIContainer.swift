@@ -5,7 +5,6 @@ import BaseData
 import BaseDomain
 import MemoryData
 import MemoryDomain
-import CalendarDomain
 
 public final class MemoryDIContainer {
     private func makeMemoryViewModel(action: MemoryViewModel.Action, capsuleId: Int) -> MemoryViewModel {

@@ -4,7 +4,7 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
-import CalendarDomain
+import MemoryDomain
 import DesignSystem
 
 public final class BuryTicketViewController: UIViewController {
@@ -13,7 +13,7 @@ public final class BuryTicketViewController: UIViewController {
 
     private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let didSelectDate: PublishRelay<Date> = .init()
-    private var currentCalendarDates: [CalendarDateModel] = []
+    private var currentCalendarDates: [CalendarDateEntity] = []
 
     // MARK: - Subviews
 

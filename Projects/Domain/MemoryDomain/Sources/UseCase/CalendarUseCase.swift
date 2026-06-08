@@ -1,6 +1,6 @@
 //
 //  CalendarUseCase.swift
-//  CalendarDomain
+//  MemoryDomain
 //
 //  Created by 선민재 on 6/5/25.
 //  Copyright © 2025 MemorySeal. All rights reserved.
@@ -11,13 +11,13 @@ import Foundation
 import DesignSystem
 
 public protocol CalendarUseCase {
-    func generateCalendarDates(for date: Date) -> [CalendarDateModel]
+    func generateCalendarDates(for date: Date) -> [CalendarDateEntity]
 }
 
 public final class DefaultCalendarUseCase: CalendarUseCase {
     public init() {}
     
-    public func generateCalendarDates(for date: Date) -> [CalendarDateModel] {
+    public func generateCalendarDates(for date: Date) -> [CalendarDateEntity] {
         var calendar = Calendar(identifier: .gregorian)
         calendar.locale = Locale(identifier: "en_US")
         calendar.timeZone = TimeZone(abbreviation: "UTC") ?? .current
@@ -38,7 +38,7 @@ public final class DefaultCalendarUseCase: CalendarUseCase {
         let weekdayOfFirstDay = calendar.component(.weekday, from: startOfMonth)
         let prefixEmptyCount = (weekdayOfFirstDay - calendar.firstWeekday + 7) % 7
         
-        var dates: [CalendarDateModel] = []
+        var dates: [CalendarDateEntity] = []
         
         for i in stride(from: prefixEmptyCount, to: 0, by: -1) {
             if let date = calendar.date(
@@ -46,7 +46,7 @@ public final class DefaultCalendarUseCase: CalendarUseCase {
                 value: -i,
                 to: startOfMonth
             ) {
-                dates.append(CalendarDateModel(date: date, isInCurrentMonth: false))
+                dates.append(CalendarDateEntity(date: date, isInCurrentMonth: false))
             }
         }
         
@@ -57,7 +57,7 @@ public final class DefaultCalendarUseCase: CalendarUseCase {
                 to: startOfMonth
             ) {
                 let isToday = calendar.isDate(Date().kstNow, inSameDayAs: date)
-                dates.append(CalendarDateModel(date: date, isInCurrentMonth: true, isToday: isToday))
+                dates.append(CalendarDateEntity(date: date, isInCurrentMonth: true, isToday: isToday))
             }
         }
         
@@ -68,7 +68,7 @@ public final class DefaultCalendarUseCase: CalendarUseCase {
                 value: 1,
                 to: lastDate
                ) {
-                dates.append(CalendarDateModel(date: nextDate, isInCurrentMonth: false))
+                dates.append(CalendarDateEntity(date: nextDate, isInCurrentMonth: false))
             }
         }
         
