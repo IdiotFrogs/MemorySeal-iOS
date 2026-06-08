@@ -1,6 +1,6 @@
 //
 //  MyMessagesCardsCollectionViewCell.swift
-//  MemoryPresentation
+//  TicketPresentation
 //
 //  Created by 선민재 on 5/12/26.
 //  Copyright © 2026 MemorySeal. All rights reserved.

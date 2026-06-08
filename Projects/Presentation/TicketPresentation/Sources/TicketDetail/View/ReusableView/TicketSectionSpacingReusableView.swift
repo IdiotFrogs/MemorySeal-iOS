@@ -1,6 +1,6 @@
 //
-//  MemorySectionSpacingReusableView.swift
-//  MemoryPresentation
+//  TicketSectionSpacingReusableView.swift
+//  TicketPresentation
 //
 //  Created by 선민재 on 8/19/25.
 //  Copyright © 2025 MemorySeal. All rights reserved.

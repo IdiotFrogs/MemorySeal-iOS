@@ -1,6 +1,6 @@
 //
 //  MemberMoreRowView.swift
-//  MemoryPresentation
+//  TicketPresentation
 //
 //  Created by 선민재 on 6/1/26.
 //  Copyright © 2026 MemorySeal. All rights reserved.

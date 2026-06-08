@@ -1,6 +1,6 @@
 //
-//  MemoryUserCollectionViewCell.swift
-//  MemoryPresentation
+//  TicketUserCollectionViewCell.swift
+//  TicketPresentation
 //
 //  Created by 선민재 on 9/9/25.
 //  Copyright © 2025 MemorySeal. All rights reserved.

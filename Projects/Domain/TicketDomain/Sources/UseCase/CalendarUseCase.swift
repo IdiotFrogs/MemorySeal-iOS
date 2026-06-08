@@ -1,6 +1,6 @@
 //
 //  CalendarUseCase.swift
-//  MemoryDomain
+//  TicketDomain
 //
 //  Created by 선민재 on 6/5/25.
 //  Copyright © 2025 MemorySeal. All rights reserved.

@@ -1,5 +1,5 @@
 //
-//  MemoryViewController.swift
+//  TicketDetailViewController.swift
 //  HomePresentation
 //
 //  Created by 선민재 on 7/28/25.
