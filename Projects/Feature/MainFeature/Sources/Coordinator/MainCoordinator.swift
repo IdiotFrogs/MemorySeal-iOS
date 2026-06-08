@@ -11,7 +11,7 @@ import UIKit
 import HomeFeature
 import ProfileFeature
 import CreateTicketFeature
-import MemoryFeature
+import TicketFeature
 
 public final class MainCoordinator {
     public struct Dependency {
@@ -24,7 +24,7 @@ public final class MainCoordinator {
 
     private let navigationController: UINavigationController
     private var profileCoordinator: ProfileCoordinator?
-    private var memoryCoordinator: MemoryCoordinator?
+    private var ticketCoordinator: TicketCoordinator?
     private let dependency: Dependency
 
     public init(with navigationController: UINavigationController, dependency: Dependency) {
@@ -36,7 +36,7 @@ public final class MainCoordinator {
         let homeDependency = HomeCoordinator.Dependency(
             moveToCreateTicket: moveToCreateTicketCoordinator,
             moveToProfile: moveToProfileCoordinator,
-            moveToMemory: moveToMemoryCoordinator
+            moveToTicket: moveToTicketCoordinator
         )
         let coordinator = HomeCoordinator(with: navigationController, dependency: homeDependency)
         coordinator.start()
@@ -63,9 +63,9 @@ public final class MainCoordinator {
         coordinator.start()
     }
 
-    private func moveToMemoryCoordinator(capsuleId: Int) {
-        let coordinator = MemoryCoordinator(with: navigationController, capsuleId: capsuleId)
-        memoryCoordinator = coordinator
+    private func moveToTicketCoordinator(capsuleId: Int) {
+        let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
+        ticketCoordinator = coordinator
         coordinator.start()
     }
 }

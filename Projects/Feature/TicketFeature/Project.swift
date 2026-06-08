@@ -2,19 +2,18 @@
 //  Project.swift
 //  Manifests
 //
-//  Created by 선민재 on 4/13/26.
+//  Created by 선민재 on 7/28/25.
 //
 
 import ProjectDescription
 import ProjectDescriptionHelpers
 
 let project = Project.makeModule(
-    name: "MainFeature",
+    name: "TicketFeature",
     product: .staticFramework,
     dependencies: [
-        .Feature.HomeFeature,
-        .Feature.ProfileFeature,
-        .Feature.CreateTicketFeature,
-        .Feature.TicketFeature
+        .Presentation.TicketPresentation,
+        .Data.BaseData,
+        .Data.TicketData
     ]
 )
