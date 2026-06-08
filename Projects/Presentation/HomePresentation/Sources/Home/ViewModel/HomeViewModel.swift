@@ -17,10 +17,10 @@ public final class HomeViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
 
     public struct Action {
-        public let moveToMemory: (_ capsuleId: Int) -> Void
+        public let moveToTicket: (_ capsuleId: Int) -> Void
 
-        public init(moveToMemory: @escaping (_ capsuleId: Int) -> Void) {
-            self.moveToMemory = moveToMemory
+        public init(moveToTicket: @escaping (_ capsuleId: Int) -> Void) {
+            self.moveToTicket = moveToTicket
         }
     }
 
@@ -29,15 +29,15 @@ public final class HomeViewModel {
     private let homeUseCase: HomeUseCase
     private let role: TimeCapsuleRole
 
-    private let memoryList: BehaviorRelay<[TimeCapsuleEntity]> = .init(value: [])
+    private let ticketList: BehaviorRelay<[TimeCapsuleEntity]> = .init(value: [])
 
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
-        let didTapMemoryList: ControlEvent<IndexPath>
+        let didTapTicketList: ControlEvent<IndexPath>
     }
 
     struct Output {
-        let memoryList: BehaviorRelay<[TimeCapsuleEntity]>
+        let ticketList: BehaviorRelay<[TimeCapsuleEntity]>
     }
 
     func transform(_ input: Input) -> Output {
@@ -49,27 +49,27 @@ public final class HomeViewModel {
                     do {
                         let capsules = try await self.homeUseCase.fetchMyTimeCapsules(role: self.role)
                         await MainActor.run {
-                            self.memoryList.accept(capsules)
+                            self.ticketList.accept(capsules)
                         }
                     } catch {
                         await MainActor.run {
-                            self.memoryList.accept([])
+                            self.ticketList.accept([])
                         }
                     }
                 }
             })
             .disposed(by: disposeBag)
 
-        input.didTapMemoryList
+        input.didTapTicketList
             .withUnretained(self)
             .subscribe(onNext: { (self, indexPath) in
-                guard indexPath.item < self.memoryList.value.count else { return }
-                let capsuleId = self.memoryList.value[indexPath.item].timeCapsuleId
-                self.action.moveToMemory(capsuleId)
+                guard indexPath.item < self.ticketList.value.count else { return }
+                let capsuleId = self.ticketList.value[indexPath.item].timeCapsuleId
+                self.action.moveToTicket(capsuleId)
             })
             .disposed(by: disposeBag)
 
-        return Output(memoryList: memoryList)
+        return Output(ticketList: ticketList)
     }
 
     public init(

@@ -14,12 +14,12 @@ public final class HomeCoordinator {
     public struct Dependency {
         public let moveToCreateTicket: () -> Void
         public let moveToProfile: () -> Void
-        public let moveToMemory: (_ capsuleId: Int) -> Void
+        public let moveToTicket: (_ capsuleId: Int) -> Void
 
-        public init(moveToCreateTicket: @escaping () -> Void, moveToProfile: @escaping () -> Void, moveToMemory: @escaping (_ capsuleId: Int) -> Void) {
+        public init(moveToCreateTicket: @escaping () -> Void, moveToProfile: @escaping () -> Void, moveToTicket: @escaping (_ capsuleId: Int) -> Void) {
             self.moveToCreateTicket = moveToCreateTicket
             self.moveToProfile = moveToProfile
-            self.moveToMemory = moveToMemory
+            self.moveToTicket = moveToTicket
         }
     }
 
@@ -39,7 +39,7 @@ public final class HomeCoordinator {
             moveToEnterTicket: moveToEnterTicket
         )
 
-        let homeAction = HomeViewModel.Action(moveToMemory: dependency.moveToMemory)
+        let homeAction = HomeViewModel.Action(moveToTicket: dependency.moveToTicket)
 
         let hostHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .host)
         let contributorHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .contributor)

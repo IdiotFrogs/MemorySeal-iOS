@@ -89,11 +89,11 @@ extension HomeViewController {
     private func bindViewModel() {
         let input = HomeViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
-            didTapMemoryList: collectionView.rx.itemSelected
+            didTapTicketList: collectionView.rx.itemSelected
         )
         let output = viewModel.transform(input)
 
-        output.memoryList
+        output.ticketList
             .bind(to: collectionView.rx.items(
                 cellIdentifier: TicketCollectionViewCell.reuseIdentifier,
                 cellType: TicketCollectionViewCell.self
@@ -102,7 +102,7 @@ extension HomeViewController {
             }
             .disposed(by: disposeBag)
 
-        output.memoryList
+        output.ticketList
             .map { !$0.isEmpty }
             .observe(on: MainScheduler.instance)
             .bind(to: emptyStateView.rx.isHidden)

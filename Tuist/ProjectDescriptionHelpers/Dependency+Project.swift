@@ -43,9 +43,9 @@ public extension TargetDependency.Data {
         path: .relativeToRoot("Projects/Data/CreateTicketData")
     )
 
-    static let MemoryData = TargetDependency.project(
-        target: "MemoryData",
-        path: .relativeToRoot("Projects/Data/MemoryData")
+    static let TicketData = TargetDependency.project(
+        target: "TicketData",
+        path: .relativeToRoot("Projects/Data/TicketData")
     )
 
     static let HomeData = TargetDependency.project(
@@ -81,9 +81,9 @@ public extension TargetDependency.Domain {
         path: .relativeToRoot("Projects/Domain/CreateTicketDomain")
     )
 
-    static let MemoryDomain = TargetDependency.project(
-        target: "MemoryDomain",
-        path: .relativeToRoot("Projects/Domain/MemoryDomain")
+    static let TicketDomain = TargetDependency.project(
+        target: "TicketDomain",
+        path: .relativeToRoot("Projects/Domain/TicketDomain")
     )
 
     static let HomeDomain = TargetDependency.project(
@@ -134,9 +134,9 @@ public extension TargetDependency.Feature {
         path: .relativeToRoot("Projects/Feature/ProfileFeature")
     )
     
-    static let MemoryFeature = TargetDependency.project(
-        target: "MemoryFeature",
-        path: .relativeToRoot("Projects/Feature/MemoryFeature")
+    static let TicketFeature = TargetDependency.project(
+        target: "TicketFeature",
+        path: .relativeToRoot("Projects/Feature/TicketFeature")
     )
 
     static let SplashFeature = TargetDependency.project(
@@ -177,9 +177,9 @@ public extension TargetDependency.Presentation {
         path: .relativeToRoot("Projects/Presentation/ProfilePresentation")
     )
     
-    static let MemoryPresentation = TargetDependency.project(
-        target: "MemoryPresentation",
-        path: .relativeToRoot("Projects/Presentation/MemoryPresentation")
+    static let TicketPresentation = TargetDependency.project(
+        target: "TicketPresentation",
+        path: .relativeToRoot("Projects/Presentation/TicketPresentation")
     )
 
     static let SplashPresentation = TargetDependency.project(
