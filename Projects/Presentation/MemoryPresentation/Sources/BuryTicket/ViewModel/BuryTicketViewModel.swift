@@ -3,7 +3,6 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-import CalendarDomain
 import MemoryDomain
 import DesignSystem
 
@@ -25,7 +24,7 @@ public final class BuryTicketViewModel {
     private let buryTicketUseCase: BuryTicketUseCase
 
     private let currentMonth: BehaviorRelay<Date> = .init(value: Date().kstNow)
-    private let calendarDates: PublishRelay<[CalendarDateModel]> = .init()
+    private let calendarDates: PublishRelay<[CalendarDateEntity]> = .init()
     private let selectedDate: BehaviorRelay<Date?> = .init(value: nil)
 
     public init(
@@ -51,7 +50,7 @@ public final class BuryTicketViewModel {
 
     struct Output {
         let currentMonth: BehaviorRelay<Date>
-        let calendarDates: PublishRelay<[CalendarDateModel]>
+        let calendarDates: PublishRelay<[CalendarDateEntity]>
         let selectedDate: BehaviorRelay<Date?>
         let canBury: Driver<Bool>
         let isLoading: Driver<Bool>
@@ -151,7 +150,7 @@ public final class BuryTicketViewModel {
 
 extension BuryTicketViewModel {
     private func requestCalendarDates(date: Date) {
-        let calendarDates: [CalendarDateModel] = calendarUseCase.generateCalendarDates(for: date)
+        let calendarDates: [CalendarDateEntity] = calendarUseCase.generateCalendarDates(for: date)
         self.calendarDates.accept(calendarDates)
         self.currentMonth.accept(date)
     }

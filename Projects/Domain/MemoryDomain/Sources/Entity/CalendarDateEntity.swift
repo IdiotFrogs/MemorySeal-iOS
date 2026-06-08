@@ -1,6 +1,6 @@
 //
-//  CalendarDateModel.swift
-//  CalendarDomain
+//  CalendarDateEntity.swift
+//  MemoryDomain
 //
 //  Created by 선민재 on 6/5/25.
 //  Copyright © 2025 MemorySeal. All rights reserved.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct CalendarDateModel {
+public struct CalendarDateEntity {
     public let date: Date
     public let isInCurrentMonth: Bool
     public let isToday: Bool
