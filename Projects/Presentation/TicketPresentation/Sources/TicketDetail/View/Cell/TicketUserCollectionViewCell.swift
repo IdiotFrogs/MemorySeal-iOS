@@ -8,8 +8,10 @@
 
 import UIKit
 import SnapKit
+import Kingfisher
 
 import DesignSystem
+import TicketDomain
 
 final class TicketUserCollectionViewCell: UICollectionViewCell {
     private let userImageView: UIImageView = {
@@ -32,6 +34,22 @@ final class TicketUserCollectionViewCell: UICollectionViewCell {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        userImageView.kf.cancelDownloadTask()
+        userImageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+    }
+
+    func configure(collaborator: CollaboratorEntity) {
+        let placeholder = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+        guard let urlString = collaborator.profileImageUrl,
+              let url = URL(string: urlString) else {
+            userImageView.image = placeholder
+            return
+        }
+        userImageView.kf.setImage(with: url, placeholder: placeholder)
     }
 }
 

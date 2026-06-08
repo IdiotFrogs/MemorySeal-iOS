@@ -39,7 +39,6 @@ final class MyTicketMessagesCollectionHeaderView: UICollectionReusableView {
 
     private let memberCountLabel: UILabel = {
         let label = UILabel()
-        label.text = "7"
         label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
         label.textColor = DesignSystemAsset.ColorAssests.primaryNormal.color
         return label
@@ -82,6 +81,10 @@ extension MyTicketMessagesCollectionHeaderView {
         if status == .member {
             showMemberCountLabel()
         }
+    }
+
+    func setMemberCount(_ count: Int) {
+        memberCountLabel.text = "\(count)"
     }
 }
 

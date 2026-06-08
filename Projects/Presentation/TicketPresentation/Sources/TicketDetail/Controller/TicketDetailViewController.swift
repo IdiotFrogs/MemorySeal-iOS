@@ -11,7 +11,9 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
+import BaseDomain
 import DesignSystem
+import TicketDomain
 
 public final class TicketDetailViewController: UIViewController {
     private let rxViewDidLoad: PublishRelay<Void> = .init()
@@ -30,6 +32,8 @@ public final class TicketDetailViewController: UIViewController {
     }
 
     private let viewModel: TicketDetailViewModel
+    private var ticketDetail: TicketDetailEntity?
+    private var collaborators: [CollaboratorEntity] = []
     private let myTicketMessagesHeaderViewReuseIdentifier: String = "MyTicketMessagesCollectionHeaderView"
     private let sectionSpacingReusableViewReuseIdentifier: String = "SectionSpacingReusableView"
 
@@ -281,7 +285,31 @@ extension TicketDetailViewController {
             didTapSeeMessagesButton: didTapSeeMessagesButton,
             didTapBuryTicketButton: didTapBuryTicketButton
         )
-        let _ = viewModel.transform(input)
+        let output = viewModel.transform(input)
+
+        output.ticketDetail
+            .drive(with: self, onNext: { (self, detail) in
+                self.ticketDetail = detail
+                self.collectionView.reloadSections(IndexSet([
+                    TicketDetailSection.ticketImage.rawValue,
+                    TicketDetailSection.ticketDescription.rawValue,
+                    TicketDetailSection.myMessages.rawValue
+                ]))
+            })
+            .disposed(by: disposeBag)
+
+        output.collaborators
+            .drive(with: self, onNext: { (self, list) in
+                self.collaborators = list
+                self.collectionView.reloadSections(IndexSet(integer: TicketDetailSection.members.rawValue))
+            })
+            .disposed(by: disposeBag)
+
+        output.errorToast
+            .emit(with: self, onNext: { (self, message) in
+                ToastView.show(on: self.view, message: message)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func bindButtons() {
@@ -344,7 +372,7 @@ extension TicketDetailViewController: UICollectionViewDataSource {
         case .ticketImage, .ticketDescription, .buryTicket, .myMessages:
             return 1
         case .members:
-            return 7
+            return collaborators.count
         default:
             return 0
         }
@@ -356,15 +384,26 @@ extension TicketDetailViewController: UICollectionViewDataSource {
     ) -> UICollectionViewCell {
         switch TicketDetailSection(rawValue: indexPath.section) {
         case .ticketImage:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TicketImageCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            )
+            ) as? TicketImageCollectionViewCell else { return .init() }
+            cell.configure(imageUrl: ticketDetail?.mainImageUrl)
+            return cell
         case .ticketDescription:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TicketDescriptionCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            )
+            ) as? TicketDescriptionCollectionViewCell else { return .init() }
+            if let detail = ticketDetail {
+                cell.configure(
+                    title: detail.title,
+                    description: detail.description,
+                    createdAt: detail.createdAt,
+                    openedAt: detail.openedAt
+                )
+            }
+            return cell
         case .buryTicket:
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier,
@@ -375,15 +414,23 @@ extension TicketDetailViewController: UICollectionViewDataSource {
                 .disposed(by: cell.disposeBag)
             return cell
         case .myMessages:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: MyMessagesCardsCollectionViewCell.reuseIdentifier,
                 for: indexPath
+            ) as? MyMessagesCardsCollectionViewCell else { return .init() }
+            cell.configure(
+                messageCount: ticketDetail?.myContentCount ?? 0,
+                photoCount: ticketDetail?.myImageCount ?? 0
             )
+            return cell
         case .members:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TicketUserCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            )
+            ) as? TicketUserCollectionViewCell else { return .init() }
+            guard indexPath.item < collaborators.count else { return cell }
+            cell.configure(collaborator: collaborators[indexPath.item])
+            return cell
         default:
             return .init()
         }
@@ -419,6 +466,7 @@ extension TicketDetailViewController: UICollectionViewDelegate {
                 for: indexPath
             ) as? MyTicketMessagesCollectionHeaderView else { return .init() }
             header.setStatus(.member)
+            header.setMemberCount(collaborators.count)
             header.didTapSeeOtherButton
                 .withUnretained(self)
                 .subscribe(onNext: { (self, _) in

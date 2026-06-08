@@ -8,7 +8,20 @@ import TicketDomain
 
 public final class TicketDIContainer {
     private func makeTicketDetailViewModel(action: TicketDetailViewModel.Action, capsuleId: Int) -> TicketDetailViewModel {
-        return TicketDetailViewModel(action: action, capsuleId: capsuleId)
+        let detailProvider = DefaultProvider<TicketDetailTargetType>()
+        let detailRepository = DefaultTicketDetailRepository(provider: detailProvider)
+        let ticketDetailUseCase = DefaultTicketDetailUseCase(ticketDetailRepository: detailRepository)
+
+        let addMemberProvider = DefaultProvider<AddMemberTargetType>()
+        let addMemberRepository = DefaultAddMemberRepository(provider: addMemberProvider)
+        let addMemberUseCase = DefaultAddMemberUseCase(addMemberRepository: addMemberRepository)
+
+        return TicketDetailViewModel(
+            action: action,
+            capsuleId: capsuleId,
+            ticketDetailUseCase: ticketDetailUseCase,
+            addMemberUseCase: addMemberUseCase
+        )
     }
 
     func makeTicketDetailViewController(action: TicketDetailViewModel.Action, capsuleId: Int) -> TicketDetailViewController {

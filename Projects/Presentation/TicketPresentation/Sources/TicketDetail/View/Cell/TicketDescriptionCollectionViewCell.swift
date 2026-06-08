@@ -14,7 +14,6 @@ import DesignSystem
 public final class TicketDescriptionCollectionViewCell: UICollectionViewCell {
     private let ticketTitleLabel: UILabel = {
         let label = UILabel()
-        label.text = "첫 여행, 첫 추억"
         label.textColor = DesignSystemAsset.ColorAssests.grey5.color
         label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 20)
         return label
@@ -22,7 +21,6 @@ public final class TicketDescriptionCollectionViewCell: UICollectionViewCell {
 
     private let ticketDateLabel: UILabel = {
         let label = UILabel()
-        label.text = "2025. 02. 20. (목) ~ 오픈일"
         label.textColor = DesignSystemAsset.ColorAssests.grey3.color
         label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 14)
         label.numberOfLines = 0
@@ -31,11 +29,17 @@ public final class TicketDescriptionCollectionViewCell: UICollectionViewCell {
 
     private let ticketDescriptionLabel: UILabel = {
         let label = UILabel()
-        label.text = "처음 함께 떠났던 여행의 순간들을 담은 우리의 작은 시간 저장소."
         label.textColor = DesignSystemAsset.ColorAssests.grey5.color
         label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
         label.numberOfLines = 0
         return label
+    }()
+
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy. MM. dd."
+        formatter.locale = Locale(identifier: "ko_KR")
+        return formatter
     }()
 
     override init(frame: CGRect) {
@@ -48,6 +52,14 @@ public final class TicketDescriptionCollectionViewCell: UICollectionViewCell {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(title: String, description: String, createdAt: Date, openedAt: Date?) {
+        ticketTitleLabel.text = title
+        ticketDescriptionLabel.text = description
+        let start = dateFormatter.string(from: createdAt)
+        let end = openedAt.map { dateFormatter.string(from: $0) } ?? "오픈일"
+        ticketDateLabel.text = "\(start) ~ \(end)"
     }
 }
 

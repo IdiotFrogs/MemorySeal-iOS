@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import Kingfisher
 
 import DesignSystem
 
@@ -50,6 +51,19 @@ final class TicketImageCollectionViewCell: UICollectionViewCell {
         CATransaction.setDisableActions(true)
         gradientLayer.frame = ticketImageView.bounds
         CATransaction.commit()
+    }
+
+    func configure(imageUrl: String?) {
+        let placeholder = DesignSystemAsset.ImageAssets.ticketDummyImage.image
+        guard let imageUrl, let url = URL(string: imageUrl) else {
+            ticketImageView.image = placeholder
+            return
+        }
+        ticketImageView.kf.setImage(
+            with: url,
+            placeholder: placeholder,
+            options: [.transition(.fade(0.2))]
+        )
     }
 }
 
