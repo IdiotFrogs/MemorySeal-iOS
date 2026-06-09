@@ -8,16 +8,27 @@
 
 import UIKit
 import SnapKit
+import Kingfisher
 
 import DesignSystem
+import TicketDomain
 
 final class TicketUserCollectionViewCell: UICollectionViewCell {
     private let userImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
-        imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = false
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 24
         return imageView
+    }()
+
+    private let profileWavyBorder: WavyStrokeView = {
+        let view = WavyStrokeView(strokeColor: .black, lineWidth: 2)
+        view.waveCornerRadius = 24
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     override init(frame: CGRect) {
@@ -33,16 +44,37 @@ final class TicketUserCollectionViewCell: UICollectionViewCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        userImageView.kf.cancelDownloadTask()
+        userImageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+    }
+
+    func configure(collaborator: CollaboratorEntity) {
+        let placeholder = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+        guard let urlString = collaborator.profileImageUrl,
+              let url = URL(string: urlString) else {
+            userImageView.image = placeholder
+            return
+        }
+        userImageView.kf.setImage(with: url, placeholder: placeholder)
+    }
 }
 
 extension TicketUserCollectionViewCell {
     private func addSubviews() {
-        addSubview(userImageView)
+        contentView.addSubview(userImageView)
+        contentView.addSubview(profileWavyBorder)
     }
 
     private func setLayout() {
         userImageView.snp.makeConstraints {
             $0.edges.equalToSuperview()
+        }
+
+        profileWavyBorder.snp.makeConstraints {
+            $0.edges.equalTo(userImageView)
         }
     }
 }

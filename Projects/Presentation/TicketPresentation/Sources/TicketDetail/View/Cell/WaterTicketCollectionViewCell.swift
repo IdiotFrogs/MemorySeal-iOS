@@ -1,8 +1,8 @@
 //
-//  BuryTicketCollectionViewCell.swift
+//  WaterTicketCollectionViewCell.swift
 //  TicketPresentation
 //
-//  Created by 선민재 on 5/12/26.
+//  Created by 선민재 on 6/9/26.
 //  Copyright © 2026 MemorySeal. All rights reserved.
 //
 
@@ -13,7 +13,7 @@ import RxCocoa
 
 import DesignSystem
 
-final class BuryTicketCollectionViewCell: UICollectionViewCell {
+final class WaterTicketCollectionViewCell: UICollectionViewCell {
     var disposeBag = DisposeBag()
 
     private let dashedSeparator: DashedSeparatorView = {
@@ -21,21 +21,13 @@ final class BuryTicketCollectionViewCell: UICollectionViewCell {
         return view
     }()
 
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.text = "티켓 묻기"
-        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-        return label
-    }()
-
-    let buryButton: UIButton = {
+    let waterButton: UIButton = {
         let button = UIButton()
-        button.setTitle("티켓 묻기", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.grey5.color
-        button.layer.cornerRadius = 8
+        button.setBackgroundImage(
+            DesignSystemAsset.ImageAssets.waterCardBackground.image,
+            for: .normal
+        )
+        button.adjustsImageWhenHighlighted = false
         return button
     }()
 
@@ -57,11 +49,10 @@ final class BuryTicketCollectionViewCell: UICollectionViewCell {
     }
 }
 
-extension BuryTicketCollectionViewCell {
+extension WaterTicketCollectionViewCell {
     private func addSubviews() {
         addSubview(dashedSeparator)
-        addSubview(titleLabel)
-        addSubview(buryButton)
+        addSubview(waterButton)
     }
 
     private func setLayout() {
@@ -71,17 +62,11 @@ extension BuryTicketCollectionViewCell {
             $0.height.equalTo(2)
         }
 
-        buryButton.snp.makeConstraints {
+        waterButton.snp.makeConstraints {
             $0.top.equalTo(dashedSeparator.snp.bottom).offset(28)
-            $0.trailing.equalToSuperview().inset(20)
-            $0.width.equalTo(76)
-            $0.height.equalTo(32)
+            $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalToSuperview()
-        }
-
-        titleLabel.snp.makeConstraints {
-            $0.centerY.equalTo(buryButton)
-            $0.leading.equalToSuperview().offset(20)
+            $0.height.equalTo(waterButton.snp.width).multipliedBy(289.0 / 1027.0)
         }
     }
 }

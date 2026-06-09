@@ -18,8 +18,6 @@ public final class MessageDetailModalViewController: UIViewController {
     private let cardView: WavyStrokeView = {
         let view = WavyStrokeView(fillColor: .white)
         view.waveCornerRadius = 12
-        view.waveAmplitude = 1.5
-        view.waveSpacing = 8
         return view
     }()
 

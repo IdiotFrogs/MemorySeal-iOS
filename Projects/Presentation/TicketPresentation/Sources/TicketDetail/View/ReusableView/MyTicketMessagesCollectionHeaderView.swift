@@ -30,6 +30,11 @@ final class MyTicketMessagesCollectionHeaderView: UICollectionReusableView {
 
     var disposeBag = DisposeBag()
 
+    private let dashedSeparator: DashedSeparatorView = {
+        let view = DashedSeparatorView()
+        return view
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = DesignSystemAsset.ColorAssests.grey5.color
@@ -39,7 +44,6 @@ final class MyTicketMessagesCollectionHeaderView: UICollectionReusableView {
 
     private let memberCountLabel: UILabel = {
         let label = UILabel()
-        label.text = "7"
         label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
         label.textColor = DesignSystemAsset.ColorAssests.primaryNormal.color
         return label
@@ -79,14 +83,35 @@ extension MyTicketMessagesCollectionHeaderView {
         titleLabel.text = status.title
         memberCountLabel.removeFromSuperview()
 
+        let showsDashed = (status == .message)
+        dashedSeparator.isHidden = !showsDashed
+
+        if showsDashed {
+            titleLabel.snp.remakeConstraints {
+                $0.top.equalTo(dashedSeparator.snp.bottom).offset(28)
+                $0.leading.equalToSuperview()
+                $0.bottom.equalToSuperview()
+            }
+        } else {
+            titleLabel.snp.remakeConstraints {
+                $0.centerY.equalToSuperview()
+                $0.leading.equalToSuperview()
+            }
+        }
+
         if status == .member {
             showMemberCountLabel()
         }
+    }
+
+    func setMemberCount(_ count: Int) {
+        memberCountLabel.text = "\(count)"
     }
 }
 
 extension MyTicketMessagesCollectionHeaderView {
     private func addSubviews() {
+        addSubview(dashedSeparator)
         addSubview(titleLabel)
         addSubview(seeOtherButton)
     }
@@ -101,13 +126,20 @@ extension MyTicketMessagesCollectionHeaderView {
     }
 
     private func setLayout() {
+        dashedSeparator.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.leading.trailing.equalToSuperview()
+            $0.height.equalTo(2)
+        }
+
         titleLabel.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
+            $0.top.equalTo(dashedSeparator.snp.bottom).offset(28)
             $0.leading.equalToSuperview()
+            $0.bottom.equalToSuperview()
         }
 
         seeOtherButton.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
+            $0.centerY.equalTo(titleLabel)
             $0.trailing.equalToSuperview()
             $0.width.height.equalTo(16)
         }

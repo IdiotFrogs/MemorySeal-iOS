@@ -12,10 +12,10 @@ public final class WavyStrokeLayer: CAShapeLayer {
 
     // MARK: - Configurable
 
-    public var waveAmplitude: CGFloat = 2.0 {
+    public var waveAmplitude: CGFloat = 1.0 {
         didSet { regeneratePath() }
     }
-    public var waveSpacing: CGFloat = 6.0 {
+    public var waveSpacing: CGFloat = 4.0 {
         didSet { regeneratePath() }
     }
     public var waveCornerRadius: CGFloat = 12.0 {

@@ -61,8 +61,6 @@ public final class AddMemberViewController: UIViewController {
             lineWidth: 3
         )
         view.waveCornerRadius = 12
-        view.waveAmplitude = 1.0
-        view.waveSpacing = 4
         view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         return view

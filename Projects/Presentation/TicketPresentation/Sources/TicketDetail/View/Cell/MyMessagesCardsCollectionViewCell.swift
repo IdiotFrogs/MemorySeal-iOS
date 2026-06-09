@@ -21,8 +21,22 @@ final class MyMessagesCardsCollectionViewCell: UICollectionViewCell {
         return stack
     }()
 
-    private lazy var messageCard = makeCard(title: "메세지", status: "미등록")
-    private lazy var photoCard = makeCard(title: "사진", status: "미등록")
+    private let messageStatusLabel: UILabel = {
+        let label = UILabel()
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 12)
+        label.textColor = DesignSystemAsset.ColorAssests.primaryDark.color
+        return label
+    }()
+
+    private let photoStatusLabel: UILabel = {
+        let label = UILabel()
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 12)
+        label.textColor = DesignSystemAsset.ColorAssests.primaryDark.color
+        return label
+    }()
+
+    private lazy var messageCard: UIView = makeCard(title: "메세지", statusLabel: messageStatusLabel)
+    private lazy var photoCard: UIView = makeCard(title: "사진", statusLabel: photoStatusLabel)
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -30,15 +44,21 @@ final class MyMessagesCardsCollectionViewCell: UICollectionViewCell {
 
         self.addSubviews()
         self.setLayout()
+        configure(messageCount: 0, photoCount: 0)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+
+    func configure(messageCount: Int, photoCount: Int) {
+        messageStatusLabel.text = messageCount > 0 ? "\(messageCount)건 등록됨" : "미등록"
+        photoStatusLabel.text = photoCount > 0 ? "\(photoCount)장 등록됨" : "미등록"
+    }
 }
 
 extension MyMessagesCardsCollectionViewCell {
-    private func makeCard(title: String, status: String) -> UIView {
+    private func makeCard(title: String, statusLabel: UILabel) -> UIView {
         let primaryLight = DesignSystemAsset.ColorAssests.primaryLight.color
 
         let container = WavyStrokeView(fillColor: primaryLight)
@@ -48,11 +68,6 @@ extension MyMessagesCardsCollectionViewCell {
         titleLabel.text = title
         titleLabel.font = DesignSystemFontFamily.Pretendard.bold.font(size: 12)
         titleLabel.textColor = DesignSystemAsset.ColorAssests.primaryDark.color
-
-        let statusLabel = UILabel()
-        statusLabel.text = status
-        statusLabel.font = DesignSystemFontFamily.Pretendard.medium.font(size: 12)
-        statusLabel.textColor = DesignSystemAsset.ColorAssests.primaryDark.color
 
         container.addSubview(titleLabel)
         container.addSubview(statusLabel)

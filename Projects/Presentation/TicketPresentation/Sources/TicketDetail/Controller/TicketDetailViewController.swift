@@ -11,13 +11,16 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
+import BaseDomain
 import DesignSystem
+import TicketDomain
 
 public final class TicketDetailViewController: UIViewController {
     private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let didTapAddMemberButton: PublishRelay<Void> = .init()
     private let didTapManageButton: PublishRelay<Void> = .init()
     private let didTapBuryTicketButton: PublishRelay<Void> = .init()
+    private let didTapWaterButton: PublishRelay<Void> = .init()
     private let didTapSeeMessagesButton: PublishRelay<Void> = .init()
     private let disposeBag: DisposeBag = DisposeBag()
 
@@ -30,6 +33,8 @@ public final class TicketDetailViewController: UIViewController {
     }
 
     private let viewModel: TicketDetailViewModel
+    private var ticketDetail: TicketDetailEntity?
+    private var collaborators: [CollaboratorEntity] = []
     private let myTicketMessagesHeaderViewReuseIdentifier: String = "MyTicketMessagesCollectionHeaderView"
     private let sectionSpacingReusableViewReuseIdentifier: String = "SectionSpacingReusableView"
 
@@ -88,6 +93,10 @@ public final class TicketDetailViewController: UIViewController {
             forCellWithReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier
         )
         collectionView.register(
+            WaterTicketCollectionViewCell.self,
+            forCellWithReuseIdentifier: WaterTicketCollectionViewCell.reuseIdentifier
+        )
+        collectionView.register(
             MyMessagesCardsCollectionViewCell.self,
             forCellWithReuseIdentifier: MyMessagesCardsCollectionViewCell.reuseIdentifier
         )
@@ -126,8 +135,6 @@ public final class TicketDetailViewController: UIViewController {
             cornerRadius: 16,
             alignment: .outside
         )
-        backButtonWavyLayer?.waveAmplitude = 1.5
-        backButtonWavyLayer?.waveSpacing = 8
         backButtonWavyLayer?.setNeedsPathRefresh()
 
         menuButtonWavyLayer = menuButton.addWavyStrokeLayer(
@@ -136,8 +143,6 @@ public final class TicketDetailViewController: UIViewController {
             cornerRadius: 16,
             alignment: .outside
         )
-        menuButtonWavyLayer?.waveAmplitude = 1.5
-        menuButtonWavyLayer?.waveSpacing = 8
         menuButtonWavyLayer?.setNeedsPathRefresh()
     }
 
@@ -208,12 +213,12 @@ extension TicketDetailViewController {
     private func getBuryTicketSectionLayout() -> NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .absolute(40)
+            heightDimension: .estimated(140)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let group = NSCollectionLayoutGroup.vertical(layoutSize: itemSize, subitems: [item])
         let section = NSCollectionLayoutSection(group: group)
-        section.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 0, bottom: 28, trailing: 0)
+        section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 28, trailing: 0)
         return section
     }
 
@@ -228,7 +233,7 @@ extension TicketDetailViewController {
         let header = NSCollectionLayoutBoundarySupplementaryItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(24)
+                heightDimension: .absolute(54)
             ),
             elementKind: UICollectionView.elementKindSectionHeader,
             alignment: .top
@@ -281,7 +286,32 @@ extension TicketDetailViewController {
             didTapSeeMessagesButton: didTapSeeMessagesButton,
             didTapBuryTicketButton: didTapBuryTicketButton
         )
-        let _ = viewModel.transform(input)
+        let output = viewModel.transform(input)
+
+        output.ticketDetail
+            .drive(with: self, onNext: { (self, detail) in
+                self.ticketDetail = detail
+                self.collectionView.reloadSections(IndexSet([
+                    TicketDetailSection.ticketImage.rawValue,
+                    TicketDetailSection.ticketDescription.rawValue,
+                    TicketDetailSection.buryTicket.rawValue,
+                    TicketDetailSection.myMessages.rawValue
+                ]))
+            })
+            .disposed(by: disposeBag)
+
+        output.collaborators
+            .drive(with: self, onNext: { (self, list) in
+                self.collaborators = list
+                self.collectionView.reloadSections(IndexSet(integer: TicketDetailSection.members.rawValue))
+            })
+            .disposed(by: disposeBag)
+
+        output.errorToast
+            .emit(with: self, onNext: { (self, message) in
+                ToastView.show(on: self.view, message: message)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func bindButtons() {
@@ -344,7 +374,7 @@ extension TicketDetailViewController: UICollectionViewDataSource {
         case .ticketImage, .ticketDescription, .buryTicket, .myMessages:
             return 1
         case .members:
-            return 7
+            return collaborators.count
         default:
             return 0
         }
@@ -356,34 +386,65 @@ extension TicketDetailViewController: UICollectionViewDataSource {
     ) -> UICollectionViewCell {
         switch TicketDetailSection(rawValue: indexPath.section) {
         case .ticketImage:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TicketImageCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            )
+            ) as? TicketImageCollectionViewCell else { return .init() }
+            cell.configure(imageUrl: ticketDetail?.mainImageUrl)
+            return cell
         case .ticketDescription:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TicketDescriptionCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            )
-        case .buryTicket:
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier,
-                for: indexPath
-            ) as? BuryTicketCollectionViewCell else { return .init() }
-            cell.buryButton.rx.tap
-                .bind(to: didTapBuryTicketButton)
-                .disposed(by: cell.disposeBag)
+            ) as? TicketDescriptionCollectionViewCell else { return .init() }
+            if let detail = ticketDetail {
+                cell.configure(
+                    title: detail.title,
+                    description: detail.description,
+                    createdAt: detail.createdAt,
+                    openedAt: detail.openedAt,
+                    isBuried: detail.timeCapsuleStatus == .buried
+                )
+            }
             return cell
+        case .buryTicket:
+            if ticketDetail?.timeCapsuleStatus == .buried {
+                guard let cell = collectionView.dequeueReusableCell(
+                    withReuseIdentifier: WaterTicketCollectionViewCell.reuseIdentifier,
+                    for: indexPath
+                ) as? WaterTicketCollectionViewCell else { return .init() }
+                cell.waterButton.rx.tap
+                    .bind(to: didTapWaterButton)
+                    .disposed(by: cell.disposeBag)
+                return cell
+            } else {
+                guard let cell = collectionView.dequeueReusableCell(
+                    withReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier,
+                    for: indexPath
+                ) as? BuryTicketCollectionViewCell else { return .init() }
+                cell.buryButton.rx.tap
+                    .bind(to: didTapBuryTicketButton)
+                    .disposed(by: cell.disposeBag)
+                return cell
+            }
         case .myMessages:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: MyMessagesCardsCollectionViewCell.reuseIdentifier,
                 for: indexPath
+            ) as? MyMessagesCardsCollectionViewCell else { return .init() }
+            cell.configure(
+                messageCount: ticketDetail?.myContentCount ?? 0,
+                photoCount: ticketDetail?.myImageCount ?? 0
             )
+            return cell
         case .members:
-            return collectionView.dequeueReusableCell(
+            guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TicketUserCollectionViewCell.reuseIdentifier,
                 for: indexPath
-            )
+            ) as? TicketUserCollectionViewCell else { return .init() }
+            guard indexPath.item < collaborators.count else { return cell }
+            cell.configure(collaborator: collaborators[indexPath.item])
+            return cell
         default:
             return .init()
         }
@@ -419,6 +480,7 @@ extension TicketDetailViewController: UICollectionViewDelegate {
                 for: indexPath
             ) as? MyTicketMessagesCollectionHeaderView else { return .init() }
             header.setStatus(.member)
+            header.setMemberCount(collaborators.count)
             header.didTapSeeOtherButton
                 .withUnretained(self)
                 .subscribe(onNext: { (self, _) in
