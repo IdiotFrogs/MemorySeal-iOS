@@ -30,6 +30,11 @@ final class MyTicketMessagesCollectionHeaderView: UICollectionReusableView {
 
     var disposeBag = DisposeBag()
 
+    private let dashedSeparator: DashedSeparatorView = {
+        let view = DashedSeparatorView()
+        return view
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = DesignSystemAsset.ColorAssests.grey5.color
@@ -78,6 +83,22 @@ extension MyTicketMessagesCollectionHeaderView {
         titleLabel.text = status.title
         memberCountLabel.removeFromSuperview()
 
+        let showsDashed = (status == .message)
+        dashedSeparator.isHidden = !showsDashed
+
+        if showsDashed {
+            titleLabel.snp.remakeConstraints {
+                $0.top.equalTo(dashedSeparator.snp.bottom).offset(28)
+                $0.leading.equalToSuperview()
+                $0.bottom.equalToSuperview()
+            }
+        } else {
+            titleLabel.snp.remakeConstraints {
+                $0.centerY.equalToSuperview()
+                $0.leading.equalToSuperview()
+            }
+        }
+
         if status == .member {
             showMemberCountLabel()
         }
@@ -90,6 +111,7 @@ extension MyTicketMessagesCollectionHeaderView {
 
 extension MyTicketMessagesCollectionHeaderView {
     private func addSubviews() {
+        addSubview(dashedSeparator)
         addSubview(titleLabel)
         addSubview(seeOtherButton)
     }
@@ -104,13 +126,20 @@ extension MyTicketMessagesCollectionHeaderView {
     }
 
     private func setLayout() {
+        dashedSeparator.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.leading.trailing.equalToSuperview()
+            $0.height.equalTo(2)
+        }
+
         titleLabel.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
+            $0.top.equalTo(dashedSeparator.snp.bottom).offset(28)
             $0.leading.equalToSuperview()
+            $0.bottom.equalToSuperview()
         }
 
         seeOtherButton.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
+            $0.centerY.equalTo(titleLabel)
             $0.trailing.equalToSuperview()
             $0.width.height.equalTo(16)
         }

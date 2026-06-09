@@ -16,6 +16,11 @@ import DesignSystem
 final class BuryTicketCollectionViewCell: UICollectionViewCell {
     var disposeBag = DisposeBag()
 
+    private let dashedSeparator: DashedSeparatorView = {
+        let view = DashedSeparatorView()
+        return view
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "티켓 묻기"
@@ -54,21 +59,29 @@ final class BuryTicketCollectionViewCell: UICollectionViewCell {
 
 extension BuryTicketCollectionViewCell {
     private func addSubviews() {
+        addSubview(dashedSeparator)
         addSubview(titleLabel)
         addSubview(buryButton)
     }
 
     private func setLayout() {
-        titleLabel.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
-            $0.leading.equalToSuperview().offset(20)
+        dashedSeparator.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.leading.trailing.equalToSuperview().inset(20)
+            $0.height.equalTo(2)
         }
 
         buryButton.snp.makeConstraints {
-            $0.centerY.equalToSuperview()
+            $0.top.equalTo(dashedSeparator.snp.bottom).offset(28)
             $0.trailing.equalToSuperview().inset(20)
             $0.width.equalTo(76)
             $0.height.equalTo(32)
+            $0.bottom.equalToSuperview()
+        }
+
+        titleLabel.snp.makeConstraints {
+            $0.centerY.equalTo(buryButton)
+            $0.leading.equalToSuperview().offset(20)
         }
     }
 }
