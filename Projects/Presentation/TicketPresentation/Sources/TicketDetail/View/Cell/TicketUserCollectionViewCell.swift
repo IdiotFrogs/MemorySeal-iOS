@@ -17,9 +17,20 @@ final class TicketUserCollectionViewCell: UICollectionViewCell {
     private let userImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
-        imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = false
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 24
         return imageView
+    }()
+
+    private let profileWavyBorder: WavyStrokeView = {
+        let view = WavyStrokeView(strokeColor: .black, lineWidth: 2)
+        view.waveCornerRadius = 24
+        view.waveAmplitude = 1.0
+        view.waveSpacing = 4
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     override init(frame: CGRect) {
@@ -55,12 +66,17 @@ final class TicketUserCollectionViewCell: UICollectionViewCell {
 
 extension TicketUserCollectionViewCell {
     private func addSubviews() {
-        addSubview(userImageView)
+        contentView.addSubview(userImageView)
+        contentView.addSubview(profileWavyBorder)
     }
 
     private func setLayout() {
         userImageView.snp.makeConstraints {
             $0.edges.equalToSuperview()
+        }
+
+        profileWavyBorder.snp.makeConstraints {
+            $0.edges.equalTo(userImageView)
         }
     }
 }
