@@ -20,6 +20,7 @@ public final class TicketDetailViewController: UIViewController {
     private let didTapAddMemberButton: PublishRelay<Void> = .init()
     private let didTapManageButton: PublishRelay<Void> = .init()
     private let didTapBuryTicketButton: PublishRelay<Void> = .init()
+    private let didTapWaterButton: PublishRelay<Void> = .init()
     private let didTapSeeMessagesButton: PublishRelay<Void> = .init()
     private let disposeBag: DisposeBag = DisposeBag()
 
@@ -92,6 +93,10 @@ public final class TicketDetailViewController: UIViewController {
             forCellWithReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier
         )
         collectionView.register(
+            WaterTicketCollectionViewCell.self,
+            forCellWithReuseIdentifier: WaterTicketCollectionViewCell.reuseIdentifier
+        )
+        collectionView.register(
             MyMessagesCardsCollectionViewCell.self,
             forCellWithReuseIdentifier: MyMessagesCardsCollectionViewCell.reuseIdentifier
         )
@@ -130,8 +135,6 @@ public final class TicketDetailViewController: UIViewController {
             cornerRadius: 16,
             alignment: .outside
         )
-        backButtonWavyLayer?.waveAmplitude = 1.5
-        backButtonWavyLayer?.waveSpacing = 8
         backButtonWavyLayer?.setNeedsPathRefresh()
 
         menuButtonWavyLayer = menuButton.addWavyStrokeLayer(
@@ -140,8 +143,6 @@ public final class TicketDetailViewController: UIViewController {
             cornerRadius: 16,
             alignment: .outside
         )
-        menuButtonWavyLayer?.waveAmplitude = 1.5
-        menuButtonWavyLayer?.waveSpacing = 8
         menuButtonWavyLayer?.setNeedsPathRefresh()
     }
 
@@ -212,7 +213,7 @@ extension TicketDetailViewController {
     private func getBuryTicketSectionLayout() -> NSCollectionLayoutSection {
         let itemSize = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .absolute(62)
+            heightDimension: .estimated(140)
         )
         let item = NSCollectionLayoutItem(layoutSize: itemSize)
         let group = NSCollectionLayoutGroup.vertical(layoutSize: itemSize, subitems: [item])
@@ -293,6 +294,7 @@ extension TicketDetailViewController {
                 self.collectionView.reloadSections(IndexSet([
                     TicketDetailSection.ticketImage.rawValue,
                     TicketDetailSection.ticketDescription.rawValue,
+                    TicketDetailSection.buryTicket.rawValue,
                     TicketDetailSection.myMessages.rawValue
                 ]))
             })
@@ -400,19 +402,31 @@ extension TicketDetailViewController: UICollectionViewDataSource {
                     title: detail.title,
                     description: detail.description,
                     createdAt: detail.createdAt,
-                    openedAt: detail.openedAt
+                    openedAt: detail.openedAt,
+                    isBuried: detail.timeCapsuleStatus == .buried
                 )
             }
             return cell
         case .buryTicket:
-            guard let cell = collectionView.dequeueReusableCell(
-                withReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier,
-                for: indexPath
-            ) as? BuryTicketCollectionViewCell else { return .init() }
-            cell.buryButton.rx.tap
-                .bind(to: didTapBuryTicketButton)
-                .disposed(by: cell.disposeBag)
-            return cell
+            if ticketDetail?.timeCapsuleStatus == .buried {
+                guard let cell = collectionView.dequeueReusableCell(
+                    withReuseIdentifier: WaterTicketCollectionViewCell.reuseIdentifier,
+                    for: indexPath
+                ) as? WaterTicketCollectionViewCell else { return .init() }
+                cell.waterButton.rx.tap
+                    .bind(to: didTapWaterButton)
+                    .disposed(by: cell.disposeBag)
+                return cell
+            } else {
+                guard let cell = collectionView.dequeueReusableCell(
+                    withReuseIdentifier: BuryTicketCollectionViewCell.reuseIdentifier,
+                    for: indexPath
+                ) as? BuryTicketCollectionViewCell else { return .init() }
+                cell.buryButton.rx.tap
+                    .bind(to: didTapBuryTicketButton)
+                    .disposed(by: cell.disposeBag)
+                return cell
+            }
         case .myMessages:
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: MyMessagesCardsCollectionViewCell.reuseIdentifier,
