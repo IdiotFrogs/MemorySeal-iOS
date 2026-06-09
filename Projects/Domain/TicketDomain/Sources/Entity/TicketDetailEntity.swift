@@ -6,7 +6,7 @@ public struct TicketDetailEntity {
     public let title: String
     public let description: String
     public let createdAt: Date
-    public let buriedAt: Date
+    public let buriedAt: Date?
     public let openedAt: Date?
     public let mainImageUrl: String?
     public let timeCapsuleStatus: TimeCapsuleStatus
@@ -18,7 +18,7 @@ public struct TicketDetailEntity {
         title: String,
         description: String,
         createdAt: Date,
-        buriedAt: Date,
+        buriedAt: Date?,
         openedAt: Date?,
         mainImageUrl: String?,
         timeCapsuleStatus: TimeCapsuleStatus,
