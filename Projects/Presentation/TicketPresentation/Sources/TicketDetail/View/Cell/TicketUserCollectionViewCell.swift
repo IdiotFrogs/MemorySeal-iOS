@@ -26,8 +26,6 @@ final class TicketUserCollectionViewCell: UICollectionViewCell {
     private let profileWavyBorder: WavyStrokeView = {
         let view = WavyStrokeView(strokeColor: .black, lineWidth: 2)
         view.waveCornerRadius = 24
-        view.waveAmplitude = 1.0
-        view.waveSpacing = 4
         view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         return view

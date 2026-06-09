@@ -40,8 +40,6 @@ final class TicketImageCollectionViewCell: UICollectionViewCell {
             lineWidth: 5
         )
         view.waveCornerRadius = 0
-        view.waveAmplitude = 3
-        view.waveSpacing = 6
         view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         return view

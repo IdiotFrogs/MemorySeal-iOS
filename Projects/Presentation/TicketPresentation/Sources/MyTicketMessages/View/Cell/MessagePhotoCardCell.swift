@@ -25,8 +25,6 @@ public final class MessagePhotoCardCell: UICollectionViewCell {
             )
         )
         view.waveCornerRadius = 14
-        view.waveAmplitude = 1.5
-        view.waveSpacing = 8
         view.strokeAlignment = .outside
         view.isHidden = true
         view.isUserInteractionEnabled = false

@@ -36,8 +36,6 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
     private let profileWavyBorder: WavyStrokeView = {
         let view = WavyStrokeView(strokeColor: .black, lineWidth: 2)
         view.waveCornerRadius = 20
-        view.waveAmplitude = 1.0
-        view.waveSpacing = 4
         view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         return view
@@ -60,8 +58,6 @@ final class AddMemberCollectionViewCell: UICollectionViewCell {
     private let badgeWavyBackground: WavyStrokeView = {
         let view = WavyStrokeView(fillColor: .clear)
         view.waveCornerRadius = 30
-        view.waveAmplitude = 1.0
-        view.waveSpacing = 4
         view.isUserInteractionEnabled = false
         return view
     }()
