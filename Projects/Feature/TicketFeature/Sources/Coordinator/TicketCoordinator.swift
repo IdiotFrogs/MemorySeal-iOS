@@ -32,6 +32,21 @@ public final class TicketCoordinator {
         )
     }
 
+    // MARK: - MemoryMessages
+
+    public func startMemoryMessages() {
+        let action = MemoryMessagesViewModel.Action(
+            moveToBack: { [weak self] in
+                self?.navigationController.popViewController(animated: true)
+            }
+        )
+        let viewController = ticketDIContainer.makeMemoryMessagesViewController(action: action)
+        self.navigationController.pushViewController(
+            viewController,
+            animated: true
+        )
+    }
+
     public func moveToBuryTicket() {
         let buryAction = BuryTicketViewModel.Action(
             dismiss: { [weak self] in
