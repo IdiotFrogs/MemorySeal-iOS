@@ -91,6 +91,13 @@ public final class TicketDIContainer {
         )
     }
 
+    // MARK: - MemoryMessages
+
+    public func makeMemoryMessagesViewController(action: MemoryMessagesViewModel.Action) -> MemoryMessagesViewController {
+        let viewModel = MemoryMessagesViewModel(action: action)
+        return MemoryMessagesViewController(with: viewModel)
+    }
+
     private func makeMyTicketMessagesViewModel(capsuleId: Int) -> MyTicketMessagesViewModel {
         let provider = DefaultProvider<CapsuleContentTargetType>()
         let userDefaultStorage = DefaultUserDefaultStorage()
