@@ -43,6 +43,10 @@ let project = Project(
                             "43.201.15.113": [
                                 "NSExceptionAllowsInsecureHTTPLoads": true,
                                 "NSIncludesSubdomains": true
+                            ],
+                            "43.201.55.4": [
+                                "NSExceptionAllowsInsecureHTTPLoads": true,
+                                "NSIncludesSubdomains": true
                             ]
                         ]
                     ],
