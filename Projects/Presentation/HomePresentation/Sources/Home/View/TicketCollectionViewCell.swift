@@ -8,8 +8,6 @@
 
 import UIKit
 import SnapKit
-import RxSwift
-import RxCocoa
 import Kingfisher
 
 import DesignSystem
@@ -21,7 +19,6 @@ final class TicketCollectionViewCell: UICollectionViewCell {
         static let cornerRadius: CGFloat = 16
         static let strokeLineWidth: CGFloat = 4
         static let imageInset: CGFloat = 24
-        static let imageCornerRadius: CGFloat = 12
         static let headerHorizontalInset: CGFloat = 20
         static let headerVerticalInset: CGFloat = 20
         static let leftStackSpacing: CGFloat = 8
@@ -117,13 +114,9 @@ final class TicketCollectionViewCell: UICollectionViewCell {
         return view
     }()
 
-    private let ticketImageView: UIImageView = {
-        let imageView = UIImageView()
+    private let ticketImageView: WavyPhotoView = {
+        let imageView = WavyPhotoView(frame: .zero)
         imageView.image = DesignSystemAsset.ImageAssets.ticketDummyImage.image
-        imageView.contentMode = .scaleAspectFill
-        imageView.clipsToBounds = true
-        imageView.layer.cornerRadius = Layout.imageCornerRadius
-        imageView.layer.cornerCurve = .continuous
         return imageView
     }()
 
@@ -142,7 +135,7 @@ final class TicketCollectionViewCell: UICollectionViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
-        ticketImageView.kf.cancelDownloadTask()
+        ticketImageView.imageView.kf.cancelDownloadTask()
         ticketImageView.image = DesignSystemAsset.ImageAssets.ticketDummyImage.image
     }
 
@@ -217,7 +210,7 @@ extension TicketCollectionViewCell {
             ticketImageView.image = placeholder
             return
         }
-        ticketImageView.kf.setImage(
+        ticketImageView.imageView.kf.setImage(
             with: url,
             placeholder: placeholder,
             options: [.transition(.fade(0.2))]
