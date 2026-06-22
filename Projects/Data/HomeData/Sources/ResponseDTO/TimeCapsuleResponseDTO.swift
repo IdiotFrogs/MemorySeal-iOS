@@ -9,6 +9,7 @@ struct TimeCapsuleResponseDTO: Decodable {
     let createdAt: String?
     let timeCapsuleStatus: String
     let role: String
+    let mainImageUrl: String?
     let imageUrl: String?
 
     var toDomain: TimeCapsuleEntity {
@@ -22,7 +23,7 @@ struct TimeCapsuleResponseDTO: Decodable {
             createdAt: createdAtDate,
             timeCapsuleStatus: TimeCapsuleStatus(rawValue: timeCapsuleStatus) ?? .beforeBuried,
             role: TimeCapsuleRole(rawValue: role) ?? .host,
-            imageUrl: imageUrl
+            imageUrl: mainImageUrl ?? imageUrl
         )
     }
 }
