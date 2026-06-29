@@ -10,6 +10,7 @@ import Foundation
 import RxSwift
 import RxCocoa
 
+import BaseDomain
 import TicketDomain
 
 public final class AddMemberViewModel {
@@ -17,6 +18,7 @@ public final class AddMemberViewModel {
 
     private let capsuleId: Int
     private let addMemberUseCase: AddMemberUseCase
+    private var cachedMemberList: [CollaboratorEntity] = []
 
     public init(
         capsuleId: Int,
@@ -28,6 +30,7 @@ public final class AddMemberViewModel {
 
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
+        let searchText: Observable<String>
         let didTapCopyInviteCode: PublishRelay<Void>
         let didConfirmDelegateHost: PublishRelay<Int>
         let didConfirmKickContributor: PublishRelay<Int>
@@ -35,6 +38,7 @@ public final class AddMemberViewModel {
 
     struct Output {
         let memberList: PublishRelay<[CollaboratorEntity]>
+        let isCurrentUserHost: BehaviorRelay<Bool>
         let inviteCode: PublishRelay<String>
         let errorToast: PublishRelay<String>
         let delegateHostSuccess: PublishRelay<Void>
@@ -43,6 +47,7 @@ public final class AddMemberViewModel {
 
     func transform(_ input: Input) -> Output {
         let memberList: PublishRelay<[CollaboratorEntity]> = .init()
+        let isCurrentUserHost: BehaviorRelay<Bool> = .init(value: false)
         let inviteCode: PublishRelay<String> = .init()
         let errorToast: PublishRelay<String> = .init()
         let delegateHostSuccess: PublishRelay<Void> = .init()
@@ -58,11 +63,43 @@ public final class AddMemberViewModel {
                             capsuleId: self.capsuleId
                         )
                         await MainActor.run {
+                            self.cachedMemberList = collaborators
+                            isCurrentUserHost.accept(collaborators.first(where: { $0.isMe })?.role == .host)
                             memberList.accept(collaborators)
                         }
                     } catch {
                         await MainActor.run {
                             errorToast.accept("멤버 목록을 불러올 수 없습니다")
+                        }
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+
+        input.searchText
+            .skip(1)
+            .distinctUntilChanged()
+            .debounce(.milliseconds(600), scheduler: MainScheduler.instance)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, text) in
+                let keyword = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !keyword.isEmpty else {
+                    memberList.accept(self.cachedMemberList)
+                    return
+                }
+                Task { [weak self] in
+                    guard let self else { return }
+                    do {
+                        let results = try await self.addMemberUseCase.searchCollaborators(
+                            capsuleId: self.capsuleId,
+                            nickname: keyword
+                        )
+                        await MainActor.run {
+                            memberList.accept(results)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorToast.accept("멤버 검색에 실패했습니다")
                         }
                     }
                 }
@@ -104,6 +141,8 @@ public final class AddMemberViewModel {
                             capsuleId: self.capsuleId
                         )
                         await MainActor.run {
+                            self.cachedMemberList = updated
+                            isCurrentUserHost.accept(updated.first(where: { $0.isMe })?.role == .host)
                             delegateHostSuccess.accept(())
                             memberList.accept(updated)
                         }
@@ -130,6 +169,8 @@ public final class AddMemberViewModel {
                             capsuleId: self.capsuleId
                         )
                         await MainActor.run {
+                            self.cachedMemberList = updated
+                            isCurrentUserHost.accept(updated.first(where: { $0.isMe })?.role == .host)
                             kickContributorSuccess.accept(())
                             memberList.accept(updated)
                         }
@@ -144,6 +185,7 @@ public final class AddMemberViewModel {
 
         return .init(
             memberList: memberList,
+            isCurrentUserHost: isCurrentUserHost,
             inviteCode: inviteCode,
             errorToast: errorToast,
             delegateHostSuccess: delegateHostSuccess,

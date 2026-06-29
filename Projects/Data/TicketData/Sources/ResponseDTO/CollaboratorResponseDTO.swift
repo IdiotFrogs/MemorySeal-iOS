@@ -1,5 +1,6 @@
 import Foundation
 
+import BaseDomain
 import TicketDomain
 
 struct CollaboratorListResponseDTO: Decodable {
@@ -23,7 +24,7 @@ struct CollaboratorResponseDTO: Decodable {
             userId: userId,
             nickname: nickname,
             profileImageUrl: profileImageUrl,
-            role: CollaboratorRole(rawValue: contributorRole) ?? .contributor,
+            role: TimeCapsuleRole(rawValue: contributorRole) ?? .contributor,
             isMe: isMe
         )
     }

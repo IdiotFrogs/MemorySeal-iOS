@@ -35,6 +35,18 @@ public final class DefaultAddMemberRepository: AddMemberRepository {
         return responseDTO.content.map { $0.toDomain }
     }
 
+    public func searchCollaborators(capsuleId: Int, nickname: String) async throws -> [CollaboratorEntity] {
+        let result = await provider.request(.searchCollaborators(capsuleId: capsuleId, nickname: nickname))
+
+        let responseDTO = try ResultHandler.handleResult(
+            result: result,
+            responseType: CollaboratorListResponseDTO.self,
+            errorType: AddMemberError.self
+        )
+
+        return responseDTO.content.map { $0.toDomain }
+    }
+
     public func delegateHost(capsuleId: Int, targetUserId: Int) async throws {
         let result = await provider.request(.delegateHost(capsuleId: capsuleId, targetUserId: targetUserId))
         try ResultHandler.handleResult(result: result, errorType: AddMemberError.self)

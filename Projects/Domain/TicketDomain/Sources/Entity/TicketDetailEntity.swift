@@ -10,7 +10,7 @@ public struct TicketDetailEntity {
     public let openedAt: Date?
     public let mainImageUrl: String?
     public let timeCapsuleStatus: TimeCapsuleStatus
-    public let userRole: CollaboratorRole
+    public let userRole: TimeCapsuleRole
     public let myContentCount: Int
     public let myImageCount: Int
 
@@ -22,7 +22,7 @@ public struct TicketDetailEntity {
         openedAt: Date?,
         mainImageUrl: String?,
         timeCapsuleStatus: TimeCapsuleStatus,
-        userRole: CollaboratorRole,
+        userRole: TimeCapsuleRole,
         myContentCount: Int,
         myImageCount: Int
     ) {

@@ -24,7 +24,7 @@ struct TicketDetailResponseDTO: Decodable {
             openedAt: openedAt.flatMap { DateFormatter.serverDateTime.date(from: $0) },
             mainImageUrl: mainImageUrl,
             timeCapsuleStatus: TimeCapsuleStatus(rawValue: timeCapsuleStatus) ?? .beforeBuried,
-            userRole: CollaboratorRole(rawValue: userRole) ?? .contributor,
+            userRole: TimeCapsuleRole(rawValue: userRole) ?? .contributor,
             myContentCount: myContentCount,
             myImageCount: myImageCount
         )

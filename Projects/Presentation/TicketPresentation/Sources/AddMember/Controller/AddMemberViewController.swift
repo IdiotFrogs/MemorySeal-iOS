@@ -12,6 +12,8 @@ import RxSwift
 import RxCocoa
 
 import DesignSystem
+
+import BaseDomain
 import TicketDomain
 
 public final class AddMemberViewController: UIViewController {
@@ -146,17 +148,24 @@ extension AddMemberViewController {
     private func bindViewModel() {
         let input = AddMemberViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
+            searchText: searchTextField.rx.text.orEmpty.asObservable(),
             didTapCopyInviteCode: didTapCopyInviteCode,
             didConfirmDelegateHost: didConfirmDelegateHost,
             didConfirmKickContributor: didConfirmKickContributor
         )
         let output = viewModel.transform(input)
 
+        output.isCurrentUserHost
+            .withUnretained(self)
+            .subscribe(onNext: { (self, isHost) in
+                self.isCurrentUserHost = isHost
+            })
+            .disposed(by: disposeBag)
+
         output.memberList
             .withUnretained(self)
             .do(onNext: { (self, list) in
                 self.memberCountLabel.text = "\(list.count)"
-                self.isCurrentUserHost = list.first(where: { $0.isMe })?.role == .host
             })
             .map { $0.1 }
             .bind(to: collectionView.rx.items(
