@@ -5,7 +5,7 @@ import BaseData
 
 public enum AddMemberTargetType {
     case inviteToTimeCapsule(capsuleId: Int)
-    case fetchCollaborators(capsuleId: Int)
+    case fetchCollaborators(capsuleId: Int, page: Int, size: Int)
     case searchCollaborators(capsuleId: Int, nickname: String)
     case delegateHost(capsuleId: Int, targetUserId: Int)
     case kickContributor(capsuleId: Int, targetUserId: Int)
@@ -16,7 +16,7 @@ extension AddMemberTargetType: BaseTargetType {
         switch self {
         case .inviteToTimeCapsule(let capsuleId):
             return "/time-capsules/\(capsuleId)/invite"
-        case .fetchCollaborators(let capsuleId):
+        case .fetchCollaborators(let capsuleId, _, _):
             return "/time-capsules/\(capsuleId)/collaborators"
         case .searchCollaborators(let capsuleId, _):
             return "/time-capsules/\(capsuleId)/collaborators/search"
@@ -42,12 +42,17 @@ extension AddMemberTargetType: BaseTargetType {
 
     public var task: Moya.Task {
         switch self {
+        case .fetchCollaborators(_, let page, let size):
+            return .requestParameters(
+                parameters: ["page": page, "size": size],
+                encoding: URLEncoding.queryString
+            )
         case .searchCollaborators(_, let nickname):
             return .requestParameters(
                 parameters: ["nickname": nickname],
                 encoding: URLEncoding.queryString
             )
-        case .inviteToTimeCapsule, .fetchCollaborators, .delegateHost, .kickContributor:
+        case .inviteToTimeCapsule, .delegateHost, .kickContributor:
             return .requestPlain
         }
     }

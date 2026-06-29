@@ -149,6 +149,7 @@ extension AddMemberViewController {
         let input = AddMemberViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
             searchText: searchTextField.rx.text.orEmpty.asObservable(),
+            prefetchRows: collectionView.rx.prefetchItems.asObservable(),
             didTapCopyInviteCode: didTapCopyInviteCode,
             didConfirmDelegateHost: didConfirmDelegateHost,
             didConfirmKickContributor: didConfirmKickContributor

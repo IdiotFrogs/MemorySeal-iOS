@@ -23,8 +23,12 @@ public final class DefaultAddMemberRepository: AddMemberRepository {
         return responseDTO.code
     }
 
-    public func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity] {
-        let result = await provider.request(.fetchCollaborators(capsuleId: capsuleId))
+    public func fetchCollaborators(
+        capsuleId: Int,
+        page: Int,
+        size: Int
+    ) async throws -> CollaboratorPageEntity {
+        let result = await provider.request(.fetchCollaborators(capsuleId: capsuleId, page: page, size: size))
 
         let responseDTO = try ResultHandler.handleResult(
             result: result,
@@ -32,7 +36,7 @@ public final class DefaultAddMemberRepository: AddMemberRepository {
             errorType: AddMemberError.self
         )
 
-        return responseDTO.content.map { $0.toDomain }
+        return responseDTO.toDomain
     }
 
     public func searchCollaborators(capsuleId: Int, nickname: String) async throws -> [CollaboratorEntity] {

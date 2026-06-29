@@ -20,6 +20,12 @@ public final class AddMemberViewModel {
     private let addMemberUseCase: AddMemberUseCase
     private var cachedMemberList: [CollaboratorEntity] = []
 
+    private let pageSize: Int = 20
+    private var currentPage: Int = 0
+    private var isLast: Bool = false
+    private var isLoading: Bool = false
+    private var isSearching: Bool = false
+
     public init(
         capsuleId: Int,
         addMemberUseCase: AddMemberUseCase
@@ -31,6 +37,7 @@ public final class AddMemberViewModel {
     struct Input {
         let rxViewDidLoad: PublishRelay<Void>
         let searchText: Observable<String>
+        let prefetchRows: Observable<[IndexPath]>
         let didTapCopyInviteCode: PublishRelay<Void>
         let didConfirmDelegateHost: PublishRelay<Int>
         let didConfirmKickContributor: PublishRelay<Int>
@@ -53,25 +60,58 @@ public final class AddMemberViewModel {
         let delegateHostSuccess: PublishRelay<Void> = .init()
         let kickContributorSuccess: PublishRelay<Void> = .init()
 
+        let loadMembers: (Bool) -> Void = { [weak self] reset in
+            guard let self else { return }
+            guard !self.isLoading else { return }
+            if reset {
+                self.currentPage = 0
+                self.isLast = false
+            }
+            guard !self.isLast else { return }
+            self.isLoading = true
+            Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let page = try await self.addMemberUseCase.fetchCollaborators(
+                        capsuleId: self.capsuleId,
+                        page: self.currentPage,
+                        size: self.pageSize
+                    )
+                    await MainActor.run {
+                        if reset {
+                            self.cachedMemberList = page.collaborators
+                        } else {
+                            self.cachedMemberList.append(contentsOf: page.collaborators)
+                        }
+                        self.isLast = page.isLast
+                        self.currentPage += 1
+                        self.isLoading = false
+                        isCurrentUserHost.accept(self.cachedMemberList.first(where: { $0.isMe })?.role == .host)
+                        memberList.accept(self.cachedMemberList)
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.isLoading = false
+                        errorToast.accept("멤버 목록을 불러올 수 없습니다")
+                    }
+                }
+            }
+        }
+
         input.rxViewDidLoad
             .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                Task { [weak self] in
-                    guard let self else { return }
-                    do {
-                        let collaborators = try await self.addMemberUseCase.fetchCollaborators(
-                            capsuleId: self.capsuleId
-                        )
-                        await MainActor.run {
-                            self.cachedMemberList = collaborators
-                            isCurrentUserHost.accept(collaborators.first(where: { $0.isMe })?.role == .host)
-                            memberList.accept(collaborators)
-                        }
-                    } catch {
-                        await MainActor.run {
-                            errorToast.accept("멤버 목록을 불러올 수 없습니다")
-                        }
-                    }
+            .subscribe(onNext: { (_, _) in
+                loadMembers(true)
+            })
+            .disposed(by: disposeBag)
+
+        input.prefetchRows
+            .withUnretained(self)
+            .subscribe(onNext: { (self, indexPaths) in
+                guard !self.isSearching, !self.isLoading, !self.isLast else { return }
+                let threshold = self.cachedMemberList.count - 2
+                if indexPaths.contains(where: { $0.item >= threshold }) {
+                    loadMembers(false)
                 }
             })
             .disposed(by: disposeBag)
@@ -84,9 +124,11 @@ public final class AddMemberViewModel {
             .subscribe(onNext: { (self, text) in
                 let keyword = text.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !keyword.isEmpty else {
+                    self.isSearching = false
                     memberList.accept(self.cachedMemberList)
                     return
                 }
+                self.isSearching = true
                 Task { [weak self] in
                     guard let self else { return }
                     do {
@@ -137,14 +179,9 @@ public final class AddMemberViewModel {
                             capsuleId: self.capsuleId,
                             targetUserId: targetUserId
                         )
-                        let updated = try await self.addMemberUseCase.fetchCollaborators(
-                            capsuleId: self.capsuleId
-                        )
                         await MainActor.run {
-                            self.cachedMemberList = updated
-                            isCurrentUserHost.accept(updated.first(where: { $0.isMe })?.role == .host)
                             delegateHostSuccess.accept(())
-                            memberList.accept(updated)
+                            loadMembers(true)
                         }
                     } catch {
                         await MainActor.run {
@@ -165,14 +202,9 @@ public final class AddMemberViewModel {
                             capsuleId: self.capsuleId,
                             targetUserId: targetUserId
                         )
-                        let updated = try await self.addMemberUseCase.fetchCollaborators(
-                            capsuleId: self.capsuleId
-                        )
                         await MainActor.run {
-                            self.cachedMemberList = updated
-                            isCurrentUserHost.accept(updated.first(where: { $0.isMe })?.role == .host)
                             kickContributorSuccess.accept(())
-                            memberList.accept(updated)
+                            loadMembers(true)
                         }
                     } catch {
                         await MainActor.run {
