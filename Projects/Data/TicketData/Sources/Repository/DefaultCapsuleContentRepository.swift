@@ -19,13 +19,13 @@ public final class DefaultCapsuleContentRepository: CapsuleContentRepository {
     public func fetchCapsuleContents(capsuleId: Int) async throws -> [CapsuleContentGroupEntity] {
         let result = await provider.request(.fetchCapsuleContents(capsuleId: capsuleId))
 
-        let responseDTOs = try ResultHandler.handleResult(
+        let responseDTO = try ResultHandler.handleResult(
             result: result,
-            responseType: [CapsuleContentGroupResponseDTO].self,
+            responseType: CapsuleContentListResponseDTO.self,
             errorType: CapsuleContentError.self
         )
 
-        return responseDTOs.map { $0.toDomain }
+        return responseDTO.content.map { $0.toDomain }
     }
 
     public func fetchCurrentUserId() -> Int? {

@@ -9,6 +9,15 @@ struct CollaboratorListResponseDTO: Decodable {
     let number: Int?
     let totalElements: Int?
     let totalPages: Int?
+
+    var toDomain: CollaboratorPageEntity {
+        return .init(
+            collaborators: content.map { $0.toDomain },
+            currentPage: number ?? 0,
+            isLast: last ?? true,
+            totalElements: totalElements ?? content.count
+        )
+    }
 }
 
 struct CollaboratorResponseDTO: Decodable {

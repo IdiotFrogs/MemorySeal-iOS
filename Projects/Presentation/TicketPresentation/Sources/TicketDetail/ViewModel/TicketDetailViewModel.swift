@@ -138,9 +138,9 @@ extension TicketDetailViewModel {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let list = try await self.addMemberUseCase.fetchCollaborators(capsuleId: self.capsuleId)
+                let page = try await self.addMemberUseCase.fetchCollaborators(capsuleId: self.capsuleId, page: 0, size: 10)
                 await MainActor.run {
-                    self.collaborators.accept(list)
+                    self.collaborators.accept(page.collaborators)
                 }
             } catch {
                 await MainActor.run {

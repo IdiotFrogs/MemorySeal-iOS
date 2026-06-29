@@ -2,7 +2,7 @@ import Foundation
 
 public protocol AddMemberUseCase {
     func inviteToTimeCapsule(capsuleId: Int) async throws -> String
-    func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity]
+    func fetchCollaborators(capsuleId: Int, page: Int, size: Int) async throws -> CollaboratorPageEntity
     func searchCollaborators(capsuleId: Int, nickname: String) async throws -> [CollaboratorEntity]
     func delegateHost(capsuleId: Int, targetUserId: Int) async throws
     func kickContributor(capsuleId: Int, targetUserId: Int) async throws
@@ -19,8 +19,16 @@ public final class DefaultAddMemberUseCase: AddMemberUseCase {
         return try await addMemberRepository.inviteToTimeCapsule(capsuleId: capsuleId)
     }
 
-    public func fetchCollaborators(capsuleId: Int) async throws -> [CollaboratorEntity] {
-        return try await addMemberRepository.fetchCollaborators(capsuleId: capsuleId)
+    public func fetchCollaborators(
+        capsuleId: Int,
+        page: Int,
+        size: Int
+    ) async throws -> CollaboratorPageEntity {
+        return try await addMemberRepository.fetchCollaborators(
+            capsuleId: capsuleId,
+            page: page,
+            size: size
+        )
     }
 
     public func searchCollaborators(capsuleId: Int, nickname: String) async throws -> [CollaboratorEntity] {

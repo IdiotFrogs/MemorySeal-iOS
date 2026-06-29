@@ -24,7 +24,7 @@ public final class DefaultProvider<T: TargetType>: MoyaProvider<T> {
                 done(.failure(MoyaError.underlying(error, nil)))
             }
         }
-        
+
         let interceptor: RequestInterceptor = AuthorizationInterceptor.shared
         let authorizationPlugin: PluginType = AuthorizationPlugin.shared
         let loggerPlugin: MoyaLoggerPlugin = .init()

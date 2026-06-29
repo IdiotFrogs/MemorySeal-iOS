@@ -2,6 +2,14 @@ import Foundation
 
 import TicketDomain
 
+struct CapsuleContentListResponseDTO: Decodable {
+    let content: [CapsuleContentGroupResponseDTO]
+    let last: Bool?
+    let number: Int?
+    let totalElements: Int?
+    let totalPages: Int?
+}
+
 struct CapsuleContentGroupResponseDTO: Decodable {
     let userId: Int
     let nickname: String
