@@ -1,22 +1,19 @@
 import Foundation
 
-public enum CollaboratorRole: String {
-    case host = "HOST"
-    case contributor = "CONTRIBUTOR"
-}
+import BaseDomain
 
 public struct CollaboratorEntity {
     public let userId: Int
     public let nickname: String
     public let profileImageUrl: String?
-    public let role: CollaboratorRole
+    public let role: TimeCapsuleRole
     public let isMe: Bool
 
     public init(
         userId: Int,
         nickname: String,
         profileImageUrl: String?,
-        role: CollaboratorRole,
+        role: TimeCapsuleRole,
         isMe: Bool
     ) {
         self.userId = userId

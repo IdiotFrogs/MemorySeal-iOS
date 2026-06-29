@@ -10,6 +10,7 @@ import Foundation
 import RxSwift
 import RxCocoa
 
+import BaseDomain
 import TicketDomain
 
 public final class AddMemberViewModel {

@@ -12,6 +12,8 @@ import RxSwift
 import RxCocoa
 
 import DesignSystem
+
+import BaseDomain
 import TicketDomain
 
 public final class AddMemberViewController: UIViewController {
