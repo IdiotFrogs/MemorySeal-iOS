@@ -14,10 +14,16 @@ public final class ProfileCoordinator {
     public struct Dependency {
         public let moveToBack: () -> Void
         public let didLogout: () -> Void
+        public let didEditProfile: () -> Void
 
-        public init(moveToBack: @escaping () -> Void, didLogout: @escaping () -> Void) {
+        public init(
+            moveToBack: @escaping () -> Void,
+            didLogout: @escaping () -> Void,
+            didEditProfile: @escaping () -> Void
+        ) {
             self.moveToBack = moveToBack
             self.didLogout = didLogout
+            self.didEditProfile = didEditProfile
         }
     }
 
@@ -52,6 +58,7 @@ public final class ProfileCoordinator {
             moveToBack: popViewController,
             didEditProfile: { [weak self] in
                 self?.profileViewModel?.refresh()
+                self?.dependency.didEditProfile()
             }
         )
         let editProfileViewController = profileDIContainer.makeEditProfileViewController(

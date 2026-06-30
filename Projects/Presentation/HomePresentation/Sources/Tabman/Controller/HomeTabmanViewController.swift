@@ -12,6 +12,7 @@ import RxSwift
 import RxCocoa
 import Tabman
 import Pageboy
+import Kingfisher
 
 import DesignSystem
 
@@ -32,7 +33,8 @@ enum HomeTabMenu: Int, CaseIterable {
 public final class HomeTabmanViewController: TabmanViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let viewModel: HomeTabmanViewModel
-    
+    private let rxViewDidLoad: PublishRelay<Void> = .init()
+
     private var viewControllers: [UIViewController] = []
     
     private let tabManBackgroundView: UIView = {
@@ -52,10 +54,12 @@ public final class HomeTabmanViewController: TabmanViewController {
     private let userProfileButton: UIButton = {
         let button = UIButton()
         button.layer.cornerRadius = 16
+        button.clipsToBounds = true
         button.setImage(
             DesignSystemAsset.ImageAssets.userDefaultProfileImage.image,
             for: .normal
         )
+        button.imageView?.contentMode = .scaleAspectFill
         return button
     }()
     
@@ -188,6 +192,8 @@ public final class HomeTabmanViewController: TabmanViewController {
         )
 
         self.disableClipping(in: homeTabManBar)
+
+        self.rxViewDidLoad.accept(())
     }
 }
 
@@ -201,11 +207,19 @@ extension HomeTabmanViewController {
 extension HomeTabmanViewController {
     private func bindViewModel() {
         let input = HomeTabmanViewModel.Input(
+            rxViewDidLoad: rxViewDidLoad,
             createTicketButtonDidTap: createNewTicketButton.rx.tap,
             profileButtonDidTap: userProfileButton.rx.tap,
             enterTicketButtonDidTap: enterTickButton.rx.tap
         )
-        let _ = viewModel.transform(input)
+        let output = viewModel.transform(input)
+
+        output.profileImageUrl
+            .drive(with: self) { (self, urlString) in
+                guard let urlString, let url = URL(string: urlString) else { return }
+                self.userProfileButton.kf.setImage(with: url, for: .normal)
+            }
+            .disposed(by: disposeBag)
     }
     
     private func bindButtons() {

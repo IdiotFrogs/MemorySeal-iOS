@@ -28,6 +28,7 @@ public final class HomeCoordinator {
     private let dependency: Dependency
 
     private var hostHomeViewModel: HomeViewModel?
+    private var homeTabmanViewModel: HomeTabmanViewModel?
 
     public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
@@ -36,6 +37,10 @@ public final class HomeCoordinator {
 
     public func refreshHome() {
         hostHomeViewModel?.refresh()
+    }
+
+    public func refreshProfile() {
+        homeTabmanViewModel?.refresh()
     }
 
     public func start() {
@@ -52,8 +57,10 @@ public final class HomeCoordinator {
         let hostHomeViewController = homeDIContainer.makeHomeViewController(with: hostHomeViewModel)
         let contributorHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .contributor)
 
+        let homeTabmanViewModel = homeDIContainer.makeHomeTabmanViewModel(action: tabmanAction)
+        self.homeTabmanViewModel = homeTabmanViewModel
         let homeTabManViewController = homeDIContainer.makeHomeTabmanViewController(
-            action: tabmanAction,
+            with: homeTabmanViewModel,
             viewControllers: [
                 hostHomeViewController,
                 contributorHomeViewController

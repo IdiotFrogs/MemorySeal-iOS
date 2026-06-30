@@ -16,8 +16,18 @@ import HomeData
 import HomeDomain
 
 public final class HomeDIContainer {
-    private func makeHomeTabmanViewModel(action: HomeTabmanViewModel.Action) -> HomeTabmanViewModel {
-        return HomeTabmanViewModel(action: action)
+    private func makeUserUseCase() -> UserUseCase {
+        let provider = DefaultProvider<UserTargetType>()
+        let repository = DefaultUserRepository(
+            provider: provider,
+            userDefaultStorage: DefaultUserDefaultStorage(),
+            keyChainStorage: DefaultKeyChainStorage()
+        )
+        return DefaultUserUseCase(userRepository: repository)
+    }
+
+    func makeHomeTabmanViewModel(action: HomeTabmanViewModel.Action) -> HomeTabmanViewModel {
+        return HomeTabmanViewModel(action: action, userUseCase: makeUserUseCase())
     }
 
     func makeHomeTabmanViewController(
@@ -27,6 +37,16 @@ public final class HomeDIContainer {
         return HomeTabmanViewController(
             viewControllers: viewControllers,
             with: makeHomeTabmanViewModel(action: action)
+        )
+    }
+
+    func makeHomeTabmanViewController(
+        with viewModel: HomeTabmanViewModel,
+        viewControllers: [UIViewController]
+    ) -> HomeTabmanViewController {
+        return HomeTabmanViewController(
+            viewControllers: viewControllers,
+            with: viewModel
         )
     }
 
