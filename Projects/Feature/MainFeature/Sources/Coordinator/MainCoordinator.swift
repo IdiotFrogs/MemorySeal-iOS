@@ -23,8 +23,10 @@ public final class MainCoordinator {
     }
 
     private let navigationController: UINavigationController
+    private var homeCoordinator: HomeCoordinator?
     private var profileCoordinator: ProfileCoordinator?
     private var ticketCoordinator: TicketCoordinator?
+    private var createTicketCoordinator: CreateTicketCoordinator?
     private let dependency: Dependency
 
     public init(with navigationController: UINavigationController, dependency: Dependency) {
@@ -39,6 +41,7 @@ public final class MainCoordinator {
             moveToTicket: moveToTicketCoordinator
         )
         let coordinator = HomeCoordinator(with: navigationController, dependency: homeDependency)
+        homeCoordinator = coordinator
         coordinator.start()
     }
 
@@ -59,7 +62,13 @@ public final class MainCoordinator {
     }
 
     private func moveToCreateTicketCoordinator() {
-        let coordinator = CreateTicketCoordinator(with: navigationController)
+        let coordinator = CreateTicketCoordinator(
+            with: navigationController,
+            didCreateTicket: { [weak self] in
+                self?.homeCoordinator?.refreshHome()
+            }
+        )
+        createTicketCoordinator = coordinator
         coordinator.start()
     }
 

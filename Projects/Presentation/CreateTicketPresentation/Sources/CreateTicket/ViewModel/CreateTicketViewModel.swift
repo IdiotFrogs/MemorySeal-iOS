@@ -16,9 +16,14 @@ import DesignSystem
 public final class CreateTicketViewModel {
     public struct Action {
         public let popViewController: () -> Void
+        public let didCreateTicket: () -> Void
 
-        public init(popViewController: @escaping () -> Void) {
+        public init(
+            popViewController: @escaping () -> Void,
+            didCreateTicket: @escaping () -> Void
+        ) {
             self.popViewController = popViewController
+            self.didCreateTicket = didCreateTicket
         }
     }
 
@@ -130,6 +135,7 @@ extension CreateTicketViewModel {
                 await minimumDisplay.value
                 await MainActor.run {
                     isLoading.accept(false)
+                    self.action.didCreateTicket()
                     self.action.popViewController()
                 }
             } catch {

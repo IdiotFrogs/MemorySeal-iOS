@@ -12,15 +12,21 @@ import CreateTicketPresentation
 public final class CreateTicketCoordinator {
     private let navigationController: UINavigationController
     private let createTicketDIContainer: CreateTicketDIContainer = .init()
-    
+    private let didCreateTicket: () -> Void
+
     public init(
-        with navigationController: UINavigationController
+        with navigationController: UINavigationController,
+        didCreateTicket: @escaping () -> Void
     ) {
         self.navigationController = navigationController
+        self.didCreateTicket = didCreateTicket
     }
-    
+
     public func start() {
-        let action = CreateTicketViewModel.Action(popViewController: popViewController)
+        let action = CreateTicketViewModel.Action(
+            popViewController: popViewController,
+            didCreateTicket: didCreateTicket
+        )
         let createTicketViewController = createTicketDIContainer.makeCreateTicketViewController(action: action)
 
         self.navigationController.pushViewController(

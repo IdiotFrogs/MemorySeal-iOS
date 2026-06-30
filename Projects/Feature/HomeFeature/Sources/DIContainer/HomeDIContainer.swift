@@ -30,7 +30,7 @@ public final class HomeDIContainer {
         )
     }
 
-    private func makeHomeViewModel(action: HomeViewModel.Action, role: TimeCapsuleRole) -> HomeViewModel {
+    func makeHomeViewModel(action: HomeViewModel.Action, role: TimeCapsuleRole) -> HomeViewModel {
         let provider = DefaultProvider<HomeTargetType>()
         let repository = DefaultHomeRepository(provider: provider)
         let useCase = DefaultHomeUseCase(homeRepository: repository)
@@ -43,6 +43,10 @@ public final class HomeDIContainer {
 
     func makeHomeViewController(action: HomeViewModel.Action, role: TimeCapsuleRole) -> HomeViewController {
         return HomeViewController(with: makeHomeViewModel(action: action, role: role))
+    }
+
+    func makeHomeViewController(with viewModel: HomeViewModel) -> HomeViewController {
+        return HomeViewController(with: viewModel)
     }
 
     private func makeEnterTicketViewModel() -> EnterTicketViewModel {
