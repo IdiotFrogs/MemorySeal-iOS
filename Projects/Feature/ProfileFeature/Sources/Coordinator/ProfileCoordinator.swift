@@ -25,6 +25,8 @@ public final class ProfileCoordinator {
     private let profileDIContainer: ProfileDIContainer = .init()
     private let dependency: Dependency
 
+    private var profileViewModel: ProfileViewModel?
+
     public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
         self.dependency = dependency
@@ -36,7 +38,9 @@ public final class ProfileCoordinator {
             moveToEditProfile: moveToEditProfile,
             moveToSettings: moveToSettings
         )
-        let profileViewController = profileDIContainer.makeProfileViewController(action: profileAction)
+        let profileViewModel = profileDIContainer.makeProfileViewModel(action: profileAction)
+        self.profileViewModel = profileViewModel
+        let profileViewController = profileDIContainer.makeProfileViewController(with: profileViewModel)
         self.navigationController.pushViewController(
             profileViewController,
             animated: true
@@ -44,7 +48,12 @@ public final class ProfileCoordinator {
     }
 
     private func moveToEditProfile(nickname: String, profileImageUrl: String) {
-        let editAction = EditProfileViewModel.Action(moveToBack: popViewController)
+        let editAction = EditProfileViewModel.Action(
+            moveToBack: popViewController,
+            didEditProfile: { [weak self] in
+                self?.profileViewModel?.refresh()
+            }
+        )
         let editProfileViewController = profileDIContainer.makeEditProfileViewController(
             action: editAction,
             nickname: nickname,

@@ -27,9 +27,15 @@ public final class HomeCoordinator {
     private let homeDIContainer: HomeDIContainer = .init()
     private let dependency: Dependency
 
+    private var hostHomeViewModel: HomeViewModel?
+
     public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
         self.dependency = dependency
+    }
+
+    public func refreshHome() {
+        hostHomeViewModel?.refresh()
     }
 
     public func start() {
@@ -41,7 +47,9 @@ public final class HomeCoordinator {
 
         let homeAction = HomeViewModel.Action(moveToTicket: dependency.moveToTicket)
 
-        let hostHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .host)
+        let hostHomeViewModel = homeDIContainer.makeHomeViewModel(action: homeAction, role: .host)
+        self.hostHomeViewModel = hostHomeViewModel
+        let hostHomeViewController = homeDIContainer.makeHomeViewController(with: hostHomeViewModel)
         let contributorHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .contributor)
 
         let homeTabManViewController = homeDIContainer.makeHomeTabmanViewController(

@@ -60,12 +60,16 @@ public final class ProfileDIContainer {
         )
     }
 
-    private func makeProfileViewModel(action: ProfileViewModel.Action) -> ProfileViewModel {
+    func makeProfileViewModel(action: ProfileViewModel.Action) -> ProfileViewModel {
         return ProfileViewModel(userUseCase: makeUserUseCase(), action: action)
     }
 
     public func makeProfileViewController(action: ProfileViewModel.Action) -> ProfileViewController {
         return ProfileViewController(with: makeProfileViewModel(action: action))
+    }
+
+    public func makeProfileViewController(with viewModel: ProfileViewModel) -> ProfileViewController {
+        return ProfileViewController(with: viewModel)
     }
 
     private func makeEditProfileViewModel(

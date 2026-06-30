@@ -21,9 +21,14 @@ public final class EditProfileViewModel {
 
     public struct Action {
         public let moveToBack: () -> Void
+        public let didEditProfile: () -> Void
 
-        public init(moveToBack: @escaping () -> Void) {
+        public init(
+            moveToBack: @escaping () -> Void,
+            didEditProfile: @escaping () -> Void
+        ) {
             self.moveToBack = moveToBack
+            self.didEditProfile = didEditProfile
         }
     }
     public let action: Action
@@ -79,6 +84,7 @@ extension EditProfileViewModel {
                     profileImage: profileImage
                 )
                 await MainActor.run {
+                    self.action.didEditProfile()
                     self.action.moveToBack()
                 }
             } catch {}

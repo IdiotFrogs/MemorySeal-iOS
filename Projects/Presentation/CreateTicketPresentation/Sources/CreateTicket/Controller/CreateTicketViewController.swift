@@ -29,6 +29,8 @@ public final class CreateTicketViewController: UIViewController {
 
     private let imageSelectedRelay: PublishRelay<UIImage> = .init()
 
+    private var loadingView: CreateTicketLoadingView?
+
     private var ticketImageWavyLayer: WavyStrokeLayer?
     private var ticketTitleWavyLayer: WavyStrokeLayer?
     private var descriptionWavyLayer: WavyStrokeLayer?
@@ -192,6 +194,13 @@ extension CreateTicketViewController {
         output.canCreate
             .drive(with: self) { (self, canCreate) in
                 self.applyCreateButtonState(enabled: canCreate)
+            }
+            .disposed(by: disposeBag)
+
+        output.isLoading
+            .asDriver()
+            .drive(with: self) { (self, isLoading) in
+                self.setLoading(isLoading)
             }
             .disposed(by: disposeBag)
     }
@@ -377,6 +386,16 @@ extension CreateTicketViewController {
         descriptionTextView.onLayoutSubviews = { [weak self] in
             guard let self else { return }
             self.syncWavyStrokeLayer(self.descriptionWavyLayer, to: self.descriptionTextView.bounds)
+        }
+    }
+    
+    private func setLoading(_ isLoading: Bool) {
+        if isLoading {
+            view.endEditing(true)
+            loadingView = CreateTicketLoadingView.show(on: view)
+        } else {
+            loadingView?.hide()
+            loadingView = nil
         }
     }
 
