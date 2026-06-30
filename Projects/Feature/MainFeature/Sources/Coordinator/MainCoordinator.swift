@@ -54,6 +54,9 @@ public final class MainCoordinator {
             didLogout: { [weak self] in
                 self?.profileCoordinator = nil
                 self?.dependency.didRequestLogout()
+            },
+            didEditProfile: { [weak self] in
+                self?.homeCoordinator?.refreshProfile()
             }
         )
         let coordinator = ProfileCoordinator(with: navigationController, dependency: profileDependency)
