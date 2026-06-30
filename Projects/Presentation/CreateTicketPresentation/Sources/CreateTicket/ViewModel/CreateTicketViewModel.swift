@@ -118,17 +118,22 @@ extension CreateTicketViewModel {
     ) {
         isLoading.accept(true)
         Task {
+            let minimumDisplay = Task {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
             do {
                 try await createTicketUseCase.execute(
                     title: title,
                     description: description,
                     mainImage: mainImage
                 )
+                await minimumDisplay.value
                 await MainActor.run {
                     isLoading.accept(false)
                     self.action.popViewController()
                 }
             } catch {
+                await minimumDisplay.value
                 await MainActor.run {
                     isLoading.accept(false)
                 }
