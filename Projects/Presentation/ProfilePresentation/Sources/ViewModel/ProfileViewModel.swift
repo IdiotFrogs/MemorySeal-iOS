@@ -29,6 +29,11 @@ public final class ProfileViewModel {
     public let action: Action
 
     private let userInfo: BehaviorRelay<UserInfoEntity?> = .init(value: nil)
+    private let refreshRelay: PublishRelay<Void> = .init()
+
+    public func refresh() {
+        refreshRelay.accept(())
+    }
 
     struct Input {
         let viewDidLoad: PublishRelay<Void>
@@ -47,19 +52,22 @@ public final class ProfileViewModel {
     }
 
     func translation(_ input: Input) -> Output {
-        input.viewDidLoad
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                Task {
-                    do {
-                        let user = try await self.userUseCase.fetchUserInfo()
-                        await MainActor.run {
-                            self.userInfo.accept(user)
-                        }
-                    } catch {}
-                }
-            })
-            .disposed(by: disposeBag)
+        Observable.merge(
+            input.viewDidLoad.asObservable(),
+            refreshRelay.asObservable()
+        )
+        .withUnretained(self)
+        .subscribe(onNext: { (self, _) in
+            Task {
+                do {
+                    let user = try await self.userUseCase.fetchUserInfo()
+                    await MainActor.run {
+                        self.userInfo.accept(user)
+                    }
+                } catch {}
+            }
+        })
+        .disposed(by: disposeBag)
 
         input.backButtonDidTap
             .withUnretained(self)
