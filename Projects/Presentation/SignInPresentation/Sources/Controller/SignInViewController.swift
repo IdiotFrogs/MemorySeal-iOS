@@ -24,7 +24,9 @@ public final class SignInViewController: UIViewController {
         authorizationCode: String
     )> = .init()
     private let googleAuthorizationCompleted: PublishRelay<String> = .init()
-    
+
+    private var loadingView: BasicLoadingView?
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "메실"
@@ -89,7 +91,23 @@ extension SignInViewController {
             appleAuthorizationCompleted: appleAuthorizationCompleted,
             googleAuthorizationCompleted: googleAuthorizationCompleted
         )
-        let _ = viewModel.translation(input)
+        let output = viewModel.translation(input)
+
+        output.isLoading
+            .asDriver()
+            .drive(with: self) { (self, isLoading) in
+                self.setLoading(isLoading)
+            }
+            .disposed(by: disposeBag)
+    }
+
+    private func setLoading(_ isLoading: Bool) {
+        if isLoading {
+            loadingView = BasicLoadingView.show(on: view)
+        } else {
+            loadingView?.hide()
+            loadingView = nil
+        }
     }
     
     private func bindButtons() {
