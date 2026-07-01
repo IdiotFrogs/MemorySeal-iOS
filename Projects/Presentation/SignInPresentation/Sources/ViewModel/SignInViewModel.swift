@@ -37,50 +37,70 @@ public final class SignInViewModel {
     }
     
     struct Output {
-        
+        let isLoading: BehaviorRelay<Bool>
     }
-    
+
     func translation(_ input: Input) -> Output {
-        
+        let isLoading = BehaviorRelay<Bool>(value: false)
+
         input.appleAuthorizationCompleted
             .withUnretained(self)
             .subscribe(onNext: { (self, element) in
                 self.requestSignIn(
                     idToken: element.idToken,
                     authorizationCode: element.authorizationCode,
-                    type: .apple
+                    type: .apple,
+                    isLoading: isLoading
                 )
             })
             .disposed(by: disposeBag)
-        
+
         input.googleAuthorizationCompleted
             .subscribe(with: self, onNext: { (self, idToken) in
                 self.requestSignIn(
                     idToken: idToken,
                     authorizationCode: nil,
-                    type: .google
+                    type: .google,
+                    isLoading: isLoading
                 )
             })
             .disposed(by: disposeBag)
-        
-        return Output()
+
+        return Output(isLoading: isLoading)
     }
 }
 
 extension SignInViewModel {
-    private func requestSignIn(idToken: String, authorizationCode: String?, type: SignInType) {
+    private func requestSignIn(
+        idToken: String,
+        authorizationCode: String?,
+        type: SignInType,
+        isLoading: BehaviorRelay<Bool>
+    ) {
+        isLoading.accept(true)
         Task {
-            let isOnboardingFinished: Bool = try await authUseCase.executeSignIn(
-                idToken: idToken,
-                authorizationCode: authorizationCode,
-                type: type
-            )
-
-            await MainActor.run {
-                if isOnboardingFinished {
-                    action.moveToHome()
-                } else {
-                    action.moveToSignUp()
+            let minimumDisplay = Task {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+            do {
+                let isOnboardingFinished: Bool = try await authUseCase.executeSignIn(
+                    idToken: idToken,
+                    authorizationCode: authorizationCode,
+                    type: type
+                )
+                await minimumDisplay.value
+                await MainActor.run {
+                    isLoading.accept(false)
+                    if isOnboardingFinished {
+                        action.moveToHome()
+                    } else {
+                        action.moveToSignUp()
+                    }
+                }
+            } catch {
+                await minimumDisplay.value
+                await MainActor.run {
+                    isLoading.accept(false)
                 }
             }
         }

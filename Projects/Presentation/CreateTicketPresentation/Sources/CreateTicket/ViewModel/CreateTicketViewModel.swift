@@ -124,7 +124,8 @@ extension CreateTicketViewModel {
         isLoading.accept(true)
         Task {
             let minimumDisplay = Task {
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                // 최소 노출 시간 1.5초
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
             }
             do {
                 try await createTicketUseCase.execute(
