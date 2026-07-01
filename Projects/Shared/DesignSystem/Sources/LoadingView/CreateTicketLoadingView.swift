@@ -48,11 +48,12 @@ public final class CreateTicketLoadingView: UIView {
     private let shimmerGradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
         layer.colors = [
+            UIColor.white.withAlphaComponent(1).cgColor,
+            UIColor.white.withAlphaComponent(1).cgColor,
             UIColor.white.withAlphaComponent(0).cgColor,
-            UIColor.white.withAlphaComponent(0.85).cgColor,
             UIColor.white.withAlphaComponent(0).cgColor
         ]
-        layer.locations = [0, 0.5, 1]
+        layer.locations = [0, 0.4, 0.567, 1.0]
         layer.startPoint = CGPoint(x: 0, y: 0.5)
         layer.endPoint = CGPoint(x: 1, y: 0.5)
         return layer
@@ -78,7 +79,12 @@ public final class CreateTicketLoadingView: UIView {
 
     public override func layoutSubviews() {
         super.layoutSubviews()
-        shimmerGradientLayer.frame = shimmerView.bounds
+        shimmerGradientLayer.frame = CGRect(
+            x: -shimmerView.bounds.width * 1.8,
+            y: 0,
+            width: shimmerView.bounds.width * 3,
+            height: shimmerView.bounds.height
+        )
     }
 
     // MARK: - Message
@@ -126,10 +132,12 @@ public final class CreateTicketLoadingView: UIView {
 
     // MARK: - Animation
     public func startAnimating() {
-        let animation = CABasicAnimation(keyPath: "locations")
-        animation.fromValue = [-0.5, -0.25, 0.0]
-        animation.toValue = [1.0, 1.25, 1.5]
-        animation.duration = 1.2
+        let width = shimmerView.bounds.width
+
+        let animation = CAKeyframeAnimation(keyPath: "transform.translation.x")
+        animation.values = [0, 0.35 * width, 0.55 * width, 1.8 * width]
+        animation.keyTimes = [0, 0.2, 0.6, 1.0]
+        animation.duration = 1.0
         animation.repeatCount = .infinity
         shimmerGradientLayer.add(animation, forKey: shimmerAnimationKey)
     }
