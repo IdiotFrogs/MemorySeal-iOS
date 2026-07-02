@@ -10,7 +10,7 @@ import Foundation
 
 public protocol UserUseCase {
     func fetchUserInfo() async throws -> UserInfoEntity
-    func editProfile(nickname: String?, profileImage: Data?) async throws
+    func editProfile(nickname: String?, profileImage: Data?, resetProfileImage: Bool) async throws
     func deleteAccount() async throws
 }
 
@@ -25,8 +25,8 @@ public final class DefaultUserUseCase: UserUseCase {
         return try await userRepository.fetchUserInfo()
     }
 
-    public func editProfile(nickname: String?, profileImage: Data?) async throws {
-        try await userRepository.editProfile(nickname: nickname, profileImage: profileImage)
+    public func editProfile(nickname: String?, profileImage: Data?, resetProfileImage: Bool) async throws {
+        try await userRepository.editProfile(nickname: nickname, profileImage: profileImage, resetProfileImage: resetProfileImage)
     }
 
     public func deleteAccount() async throws {

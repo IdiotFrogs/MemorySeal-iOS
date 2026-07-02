@@ -19,6 +19,8 @@ public final class EditProfileViewModel {
     let nickname: String
     let profileImageUrl: String
 
+    private let maximumNicknameLength: Int = 16
+
     public struct Action {
         public let moveToBack: () -> Void
         public let didEditProfile: () -> Void
@@ -33,6 +35,8 @@ public final class EditProfileViewModel {
     }
     public let action: Action
 
+    private let saveErrorRelay: PublishRelay<String> = .init()
+
     public init(userUseCase: UserUseCase, action: Action, nickname: String, profileImageUrl: String) {
         self.userUseCase = userUseCase
         self.action = action
@@ -45,9 +49,12 @@ public final class EditProfileViewModel {
         let saveButtonDidTap: ControlEvent<Void>
         let nicknameText: ControlProperty<String?>
         let selectedProfileImage: BehaviorRelay<Data?>
+        let resetProfileImage: BehaviorRelay<Bool>
     }
 
-    struct Output {}
+    struct Output {
+        let saveError: Signal<String>
+    }
 
     func translation(_ input: Input) -> Output {
         input.backButtonDidTap
@@ -59,29 +66,46 @@ public final class EditProfileViewModel {
 
         input.saveButtonDidTap
             .withLatestFrom(Observable.combineLatest(
-                input.nicknameText.asObservable(),
-                input.selectedProfileImage.asObservable()
+                input.nicknameText.orEmpty.asObservable(),
+                input.selectedProfileImage.asObservable(),
+                input.resetProfileImage.asObservable()
             ))
             .withUnretained(self)
             .subscribe(onNext: { (self, args) in
-                let (nicknameText, imageData) = args
-                let nickname: String? = (nicknameText != self.nickname) ? nicknameText : nil
+                let (nicknameText, imageData, resetProfileImage) = args
 
-                self.editUserProfileInfo(nickname: nickname, profileImage: imageData)
+                guard nicknameText.count <= self.maximumNicknameLength else {
+                    return
+                }
+
+                let nicknameChanged = nicknameText != self.nickname && !nicknameText.isEmpty
+                let imageChanged = imageData != nil
+
+                guard nicknameChanged || imageChanged || resetProfileImage else {
+                    self.saveErrorRelay.accept("이미 사용 중인 별명입니다.")
+                    return
+                }
+
+                self.editUserProfileInfo(
+                    nickname: nicknameChanged ? nicknameText : nil,
+                    profileImage: imageData,
+                    resetProfileImage: resetProfileImage
+                )
             })
             .disposed(by: disposeBag)
 
-        return Output()
+        return Output(saveError: saveErrorRelay.asSignal())
     }
 }
 
 extension EditProfileViewModel {
-    private func editUserProfileInfo(nickname: String?, profileImage: Data?) {
+    private func editUserProfileInfo(nickname: String?, profileImage: Data?, resetProfileImage: Bool) {
         Task {
             do {
                 try await self.userUseCase.editProfile(
                     nickname: nickname,
-                    profileImage: profileImage
+                    profileImage: profileImage,
+                    resetProfileImage: resetProfileImage
                 )
                 await MainActor.run {
                     self.action.didEditProfile()

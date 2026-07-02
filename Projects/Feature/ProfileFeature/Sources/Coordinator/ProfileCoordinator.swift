@@ -15,15 +15,18 @@ public final class ProfileCoordinator {
         public let moveToBack: () -> Void
         public let didLogout: () -> Void
         public let didEditProfile: () -> Void
+        public let moveToTicket: (_ capsuleId: Int) -> Void
 
         public init(
             moveToBack: @escaping () -> Void,
             didLogout: @escaping () -> Void,
-            didEditProfile: @escaping () -> Void
+            didEditProfile: @escaping () -> Void,
+            moveToTicket: @escaping (_ capsuleId: Int) -> Void
         ) {
             self.moveToBack = moveToBack
             self.didLogout = didLogout
             self.didEditProfile = didEditProfile
+            self.moveToTicket = moveToTicket
         }
     }
 
@@ -42,7 +45,8 @@ public final class ProfileCoordinator {
         let profileAction = ProfileViewModel.Action(
             moveToBack: dependency.moveToBack,
             moveToEditProfile: moveToEditProfile,
-            moveToSettings: moveToSettings
+            moveToSettings: moveToSettings,
+            moveToTicket: dependency.moveToTicket
         )
         let profileViewModel = profileDIContainer.makeProfileViewModel(action: profileAction)
         self.profileViewModel = profileViewModel

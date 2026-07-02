@@ -15,7 +15,7 @@ public final class MemorySealNavigationView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = .black
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 20)
         return label
     }()
     

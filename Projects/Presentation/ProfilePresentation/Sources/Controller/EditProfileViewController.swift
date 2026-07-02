@@ -19,12 +19,15 @@ public final class EditProfileViewController: UIViewController {
     private let viewModel: EditProfileViewModel
 
     private let selectedProfileImage: BehaviorRelay<Data?> = .init(value: nil)
+    private let resetProfileImage: BehaviorRelay<Bool> = .init(value: false)
+
+    private var nicknameWavyLayer: WavyStrokeLayer?
 
     // MARK: - Navigation
 
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
-        view.setTitle("프로필")
+        view.setTitle("프로필 수정")
         return view
     }()
 
@@ -32,15 +35,12 @@ public final class EditProfileViewController: UIViewController {
         let button = UIButton()
         button.setTitle("저장", for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-        button.setTitleColor(
-            DesignSystemAsset.ColorAssests.grey2.color,
-            for: .disabled
-        )
-        button.setTitleColor(
-            DesignSystemAsset.ColorAssests.primaryNormal.color,
-            for: .normal
-        )
-        button.isEnabled = false
+        button.setTitleColor(UIColor(hex: "#84B591"), for: .disabled)
+        button.setTitleColor(DesignSystemAsset.ColorAssests.primaryDark.color, for: .normal)
+        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryLight.color
+        button.layer.cornerRadius = 8
+        button.clipsToBounds = true
+        button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
         return button
     }()
 
@@ -52,22 +52,40 @@ public final class EditProfileViewController: UIViewController {
         let imageView = UIImageView()
         imageView.layer.cornerRadius = 60
         imageView.clipsToBounds = true
-        imageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
-        imageView.contentMode = .scaleAspectFill
+        imageView.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
+        imageView.contentMode = .scaleAspectFit
         return imageView
     }()
 
-    private let editImageButton: UIButton = {
-        let button = UIButton()
-        button.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
-        button.layer.cornerRadius = 20
-        button.setImage(
-            DesignSystemAsset.ImageAssets.editIcon.image.withRenderingMode(.alwaysTemplate),
-            for: .normal
-        )
-        button.tintColor = DesignSystemAsset.ColorAssests.grey3.color
-        return button
+    private let photoPlaceholderImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.photoIcon.image.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = DesignSystemAsset.ColorAssests.grey3.color
+        imageView.contentMode = .scaleAspectFit
+        return imageView
     }()
+
+    private let editBadgeWavyView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.grey5.color,
+            strokeColor: DesignSystemAsset.ColorAssests.grey5.color,
+            lineWidth: 2
+        )
+        view.waveCornerRadius = 20
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
+    private let editPencilImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.editPencilIcon.image.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = .white
+        imageView.contentMode = .scaleAspectFit
+        imageView.isUserInteractionEnabled = false
+        return imageView
+    }()
+
+    private let editImageButton = UIButton()
 
     // MARK: - Nickname
 
@@ -84,9 +102,6 @@ public final class EditProfileViewController: UIViewController {
         let textField = UITextField()
         textField.textColor = DesignSystemAsset.ColorAssests.grey5.color
         textField.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
-        textField.layer.cornerRadius = 12
-        textField.layer.borderWidth = 1
-        textField.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
         textField.leftView = paddingView
         textField.leftViewMode = .always
         return textField
@@ -95,25 +110,11 @@ public final class EditProfileViewController: UIViewController {
     private let nicknameHelperLabel: UILabel = {
         let label = UILabel()
         label.isHidden = true
-
-        let attachment = NSTextAttachment()
-        let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-        attachment.image = UIImage(systemName: "exclamationmark.circle.fill", withConfiguration: config)?
-            .withTintColor(.red, renderingMode: .alwaysOriginal)
-        let imageString = NSAttributedString(attachment: attachment)
-        let textString = NSAttributedString(
-            string: " 최소 1글자에서 16글자까지 입력할 수 있습니다.",
-            attributes: [
-                .foregroundColor: UIColor.red,
-                .font: DesignSystemFontFamily.Pretendard.regular.font(size: 12)
-            ]
-        )
-        let result = NSMutableAttributedString()
-        result.append(imageString)
-        result.append(textString)
-        label.attributedText = result
+        label.numberOfLines = 0
         return label
     }()
+
+    private let maximumNicknameLength: Int = 16
 
     // MARK: - Bottom Sheet
 
@@ -171,9 +172,19 @@ public final class EditProfileViewController: UIViewController {
         setInitialValues()
         addSubviews()
         setLayout()
+        setupWavyStroke()
         bindViewModel()
 
         bottomSheetView.transform = CGAffineTransform(translationX: 0, y: bottomSheetHeight)
+    }
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let nicknameWavyLayer else { return }
+        if nicknameWavyLayer.frame != nicknameTextField.bounds {
+            nicknameWavyLayer.frame = nicknameTextField.bounds
+        }
+        nicknameWavyLayer.setNeedsPathRefresh()
     }
 
     public override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -184,7 +195,19 @@ public final class EditProfileViewController: UIViewController {
         nicknameTextField.text = viewModel.nickname
         if let url = URL(string: viewModel.profileImageUrl) {
             userProfileImageView.kf.setImage(with: url)
+            photoPlaceholderImageView.isHidden = true
+        } else {
+            photoPlaceholderImageView.isHidden = false
         }
+    }
+
+    private func setupWavyStroke() {
+        nicknameWavyLayer = nicknameTextField.addWavyStrokeLayer(
+            strokeColor: DesignSystemAsset.ColorAssests.grey2.color,
+            lineWidth: 3,
+            cornerRadius: 12,
+            alignment: .outside
+        )
     }
 }
 
@@ -196,9 +219,10 @@ extension EditProfileViewController {
             backButtonDidTap: navigationView.backButtonDidTap,
             saveButtonDidTap: saveButton.rx.tap,
             nicknameText: nicknameTextField.rx.text,
-            selectedProfileImage: selectedProfileImage
+            selectedProfileImage: selectedProfileImage,
+            resetProfileImage: resetProfileImage
         )
-        let _ = viewModel.translation(input)
+        let output = viewModel.translation(input)
 
         editImageButton.rx.tap
             .withUnretained(self)
@@ -220,8 +244,10 @@ extension EditProfileViewController {
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.hideBottomSheet {
-                    self.userProfileImageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+                    self.userProfileImageView.image = nil
+                    self.photoPlaceholderImageView.isHidden = false
                     self.selectedProfileImage.accept(nil)
+                    self.resetProfileImage.accept(true)
                 }
             })
             .disposed(by: disposeBag)
@@ -235,39 +261,57 @@ extension EditProfileViewController {
             })
             .disposed(by: disposeBag)
 
-        let nicknameValidation = nicknameTextField.rx.controlEvent(.editingChanged)
-            .withLatestFrom(nicknameTextField.rx.text.orEmpty)
+        nicknameTextField.rx.text.orEmpty
             .distinctUntilChanged()
-            .scan((validatedText: viewModel.nickname, isLimitExceeded: false)) { previous, newText in
-                guard newText.count <= 16 else {
-                    return (previous.validatedText, true)
-                }
-                return (newText, false)
-            }
-            .share(replay: 1)
-
-        nicknameValidation
             .withUnretained(self)
-            .bind { (self, result) in
-                let isInvalid = result.validatedText.isEmpty || result.isLimitExceeded
-                self.nicknameHelperLabel.isHidden = !isInvalid
-                self.nicknameTextField.text = result.validatedText
+            .bind { (self, text) in
+                if text.count > self.maximumNicknameLength {
+                    self.showNicknameError(
+                        "최소 1글자에서 \(self.maximumNicknameLength)글자까지 입력할 수 있습니다.",
+                        isTextInvalid: true
+                    )
+                } else {
+                    self.hideNicknameError()
+                }
             }
             .disposed(by: disposeBag)
 
-        let nicknameChanged = nicknameValidation
-            .map {
-                $0.validatedText != self.viewModel.nickname && !$0.validatedText.isEmpty
-            }
-            .startWith(false)
-
-        let imageSelected = selectedProfileImage
-            .map { $0 != nil }
-
-        Observable.combineLatest(nicknameChanged, imageSelected)
-            .map { $0 || $1 }
-            .bind(to: saveButton.rx.isEnabled)
+        output.saveError
+            .emit(with: self, onNext: { (self, message) in
+                self.showNicknameError(message, isTextInvalid: false)
+            })
             .disposed(by: disposeBag)
+    }
+
+    private func showNicknameError(_ message: String, isTextInvalid: Bool) {
+        nicknameHelperLabel.attributedText = makeHelperText(message)
+        nicknameHelperLabel.isHidden = false
+        nicknameTextField.textColor = isTextInvalid
+            ? .red
+            : DesignSystemAsset.ColorAssests.grey5.color
+    }
+
+    private func hideNicknameError() {
+        nicknameHelperLabel.isHidden = true
+        nicknameTextField.textColor = DesignSystemAsset.ColorAssests.grey5.color
+    }
+
+    private func makeHelperText(_ message: String) -> NSAttributedString {
+        let attachment = NSTextAttachment()
+        let config = UIImage.SymbolConfiguration(pointSize: 12, weight: .medium)
+        attachment.image = UIImage(systemName: "exclamationmark.circle.fill", withConfiguration: config)?
+            .withTintColor(.red, renderingMode: .alwaysOriginal)
+        let result = NSMutableAttributedString(attachment: attachment)
+        result.append(
+            NSAttributedString(
+                string: " " + message,
+                attributes: [
+                    .foregroundColor: UIColor.red,
+                    .font: DesignSystemFontFamily.Pretendard.regular.font(size: 12)
+                ]
+            )
+        )
+        return result
     }
 
     private func showBottomSheet() {
@@ -310,7 +354,9 @@ extension EditProfileViewController: UIImagePickerControllerDelegate, UINavigati
               let imageData = image.jpegData(compressionQuality: 0.8) else { return }
 
         userProfileImageView.image = image
+        photoPlaceholderImageView.isHidden = true
         selectedProfileImage.accept(imageData)
+        resetProfileImage.accept(false)
     }
 
     public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
@@ -327,6 +373,9 @@ extension EditProfileViewController {
 
         view.addSubview(profileContainerView)
         profileContainerView.addSubview(userProfileImageView)
+        userProfileImageView.addSubview(photoPlaceholderImageView)
+        profileContainerView.addSubview(editBadgeWavyView)
+        editBadgeWavyView.addSubview(editPencilImageView)
         profileContainerView.addSubview(editImageButton)
 
         view.addSubview(nicknameTitleLabel)
@@ -349,8 +398,7 @@ extension EditProfileViewController {
         }
 
         saveButton.snp.makeConstraints {
-            $0.height.equalTo(24)
-            $0.width.greaterThanOrEqualTo(24)
+            $0.height.equalTo(32)
         }
 
         profileContainerView.snp.makeConstraints {
@@ -365,9 +413,23 @@ extension EditProfileViewController {
             $0.width.height.equalTo(120)
         }
 
-        editImageButton.snp.makeConstraints {
+        photoPlaceholderImageView.snp.makeConstraints {
+            $0.center.equalToSuperview()
+            $0.width.height.equalTo(44)
+        }
+
+        editBadgeWavyView.snp.makeConstraints {
             $0.trailing.bottom.equalToSuperview()
             $0.width.height.equalTo(40)
+        }
+
+        editPencilImageView.snp.makeConstraints {
+            $0.center.equalToSuperview()
+            $0.width.height.equalTo(20)
+        }
+
+        editImageButton.snp.makeConstraints {
+            $0.edges.equalTo(editBadgeWavyView)
         }
 
         nicknameTitleLabel.snp.makeConstraints {

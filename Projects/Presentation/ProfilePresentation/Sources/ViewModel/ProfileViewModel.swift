@@ -6,29 +6,36 @@
 //  Copyright © 2026 MemorySeal. All rights reserved.
 //
 
+import Foundation
+
 import RxSwift
 import RxCocoa
 
 import BaseDomain
+import HomeDomain
 
 public final class ProfileViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
     private let userUseCase: UserUseCase
+    private let homeUseCase: HomeUseCase
 
     public struct Action {
         public let moveToBack: () -> Void
         public let moveToEditProfile: (_ nickname: String, _ profileImageUrl: String) -> Void
         public let moveToSettings: () -> Void
+        public let moveToTicket: (_ capsuleId: Int) -> Void
 
-        public init(moveToBack: @escaping () -> Void, moveToEditProfile: @escaping (_ nickname: String, _ profileImageUrl: String) -> Void, moveToSettings: @escaping () -> Void) {
+        public init(moveToBack: @escaping () -> Void, moveToEditProfile: @escaping (_ nickname: String, _ profileImageUrl: String) -> Void, moveToSettings: @escaping () -> Void, moveToTicket: @escaping (_ capsuleId: Int) -> Void) {
             self.moveToBack = moveToBack
             self.moveToEditProfile = moveToEditProfile
             self.moveToSettings = moveToSettings
+            self.moveToTicket = moveToTicket
         }
     }
     public let action: Action
 
     private let userInfo: BehaviorRelay<UserInfoEntity?> = .init(value: nil)
+    private let openedTickets: BehaviorRelay<[TimeCapsuleEntity]> = .init(value: [])
     private let refreshRelay: PublishRelay<Void> = .init()
 
     public func refresh() {
@@ -40,14 +47,17 @@ public final class ProfileViewModel {
         let backButtonDidTap: ControlEvent<Void>
         let editProfileButtonDidTap: ControlEvent<Void>
         let settingButtonDidTap: ControlEvent<Void>
+        let ticketDidTap: Observable<IndexPath>
     }
 
     struct Output {
         let userInfo: Driver<UserInfoEntity?>
+        let openedTickets: Driver<[TimeCapsuleEntity]>
     }
 
-    public init(userUseCase: UserUseCase, action: Action) {
+    public init(userUseCase: UserUseCase, homeUseCase: HomeUseCase, action: Action) {
         self.userUseCase = userUseCase
+        self.homeUseCase = homeUseCase
         self.action = action
     }
 
@@ -65,6 +75,19 @@ public final class ProfileViewModel {
                         self.userInfo.accept(user)
                     }
                 } catch {}
+            }
+
+            Task {
+                do {
+                    let tickets = try await self.homeUseCase.fetchOpenedTimeCapsules()
+                    await MainActor.run {
+                        self.openedTickets.accept(tickets)
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.openedTickets.accept([])
+                    }
+                }
             }
         })
         .disposed(by: disposeBag)
@@ -92,6 +115,18 @@ public final class ProfileViewModel {
             })
             .disposed(by: disposeBag)
 
-        return Output(userInfo: userInfo.asDriver())
+        input.ticketDidTap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, indexPath) in
+                guard indexPath.item < self.openedTickets.value.count else { return }
+                let capsuleId = self.openedTickets.value[indexPath.item].timeCapsuleId
+                self.action.moveToTicket(capsuleId)
+            })
+            .disposed(by: disposeBag)
+
+        return Output(
+            userInfo: userInfo.asDriver(),
+            openedTickets: openedTickets.asDriver()
+        )
     }
 }
