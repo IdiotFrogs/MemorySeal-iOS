@@ -4,6 +4,7 @@ import BaseDomain
 
 public protocol HomeUseCase {
     func fetchMyTimeCapsules(role: TimeCapsuleRole) async throws -> [TimeCapsuleEntity]
+    func fetchOpenedTimeCapsules() async throws -> [TimeCapsuleEntity]
 }
 
 public final class DefaultHomeUseCase: HomeUseCase {
@@ -18,6 +19,14 @@ public final class DefaultHomeUseCase: HomeUseCase {
 
         return allCapsules.filter { capsule in
             capsule.timeCapsuleStatus != .opened && capsule.role == role
+        }
+    }
+
+    public func fetchOpenedTimeCapsules() async throws -> [TimeCapsuleEntity] {
+        let allCapsules = try await homeRepository.fetchMyTimeCapsules()
+
+        return allCapsules.filter { capsule in
+            capsule.timeCapsuleStatus == .opened
         }
     }
 }

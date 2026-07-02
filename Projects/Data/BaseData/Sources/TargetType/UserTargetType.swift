@@ -12,7 +12,7 @@ import Moya
 public enum UserTargetType {
     case userInfo
     case uploadProfileImage(userId: Int, file: String)
-    case editProfile(nickname: String?, profileImage: Data?)
+    case editProfile(nickname: String?, profileImage: Data?, resetProfileImage: Bool)
     case deleteAccount
 }
 
@@ -51,7 +51,12 @@ extension UserTargetType: BaseTargetType {
             )
         case .deleteAccount:
             return .requestPlain
-        case .editProfile(let nickname, let profileImage):
+        case .editProfile(let nickname, let profileImage, let resetProfileImage):
+            var urlParameters: [String: Any] = ["resetProfileImage": resetProfileImage]
+            if let nickname {
+                urlParameters["nickname"] = nickname
+            }
+
             if let imageData = profileImage {
                 let multipartData = [MultipartFormData(
                     provider: .data(imageData),
@@ -61,7 +66,7 @@ extension UserTargetType: BaseTargetType {
                 )]
                 return .uploadCompositeMultipart(
                     multipartData,
-                    urlParameters: nickname.map { ["nickname": $0] } ?? [:]
+                    urlParameters: urlParameters
                 )
             } else {
                 let emptyImagePart = MultipartFormData(
@@ -70,7 +75,7 @@ extension UserTargetType: BaseTargetType {
                 )
                 return .uploadCompositeMultipart(
                     [emptyImagePart],
-                    urlParameters: nickname.map { ["nickname": $0] } ?? [:]
+                    urlParameters: urlParameters
                 )
             }
         }

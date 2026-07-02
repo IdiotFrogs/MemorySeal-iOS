@@ -57,6 +57,9 @@ public final class MainCoordinator {
             },
             didEditProfile: { [weak self] in
                 self?.homeCoordinator?.refreshProfile()
+            },
+            moveToTicket: { [weak self] capsuleId in
+                self?.moveToTicketCoordinator(capsuleId: capsuleId)
             }
         )
         let coordinator = ProfileCoordinator(with: navigationController, dependency: profileDependency)

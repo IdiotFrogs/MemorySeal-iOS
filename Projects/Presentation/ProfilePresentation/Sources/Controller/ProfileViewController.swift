@@ -13,13 +13,22 @@ import RxCocoa
 import Kingfisher
 
 import DesignSystem
+import BaseDomain
 
 public final class ProfileViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let viewModel: ProfileViewModel
 
     private let rxViewDidLoad: PublishRelay<Void> = .init()
-    private let editProfileButtonDidTap: PublishRelay<Void> = .init()
+    private let ticketSelectedRelay: PublishRelay<IndexPath> = .init()
+
+    private var openedTickets: [TimeCapsuleEntity] = []
+
+    private static let openedDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy. MM. dd."
+        return formatter
+    }()
 
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
@@ -29,9 +38,10 @@ public final class ProfileViewController: UIViewController {
 
     private let settingButton: UIButton = {
         let button = UIButton()
-        button.setTitle("설정", for: .normal)
-        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.medium.font(size: 14)
-        button.setTitleColor(DesignSystemAsset.ColorAssests.grey3.color, for: .normal)
+        button.setImage(
+            DesignSystemAsset.ImageAssets.settingIcon.image,
+            for: .normal
+        )
         return button
     }()
 
@@ -48,25 +58,16 @@ public final class ProfileViewController: UIViewController {
         return view
     }()
 
-    private let profileSectionView: UIView = {
-        let view = UIView()
-        view.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
-        return view
-    }()
+    // MARK: - Profile Header
 
-    private let profileCardView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 10
-        return view
-    }()
+    private let profileSectionView = UIView()
 
     private let userProfileImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.layer.cornerRadius = 27
+        imageView.layer.cornerRadius = 40
         imageView.clipsToBounds = true
         imageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
-        imageView.contentMode = .scaleAspectFill
+        imageView.contentMode = .scaleAspectFit
         return imageView
     }()
 
@@ -74,7 +75,8 @@ public final class ProfileViewController: UIViewController {
         let label = UILabel()
         label.text = "닉네임"
         label.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 20)
+        label.textAlignment = .center
         return label
     }()
 
@@ -82,17 +84,30 @@ public final class ProfileViewController: UIViewController {
 
     // MARK: - Open Ticket Section
 
-    private let openTicketSectionView: UIView = {
-        let view = UIView()
-        view.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
-        return view
-    }()
+    private let openTicketSectionView = UIView()
 
     private let openTicketTitleLabel: UILabel = {
         let label = UILabel()
         label.text = "오픈된 티켓"
         label.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 20)
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
+        label.textAlignment = .center
+        return label
+    }()
+
+    private let ticketDashedSeparator = DashedLineView(
+        lineColor: DesignSystemAsset.ColorAssests.grey2.color,
+        lineWidth: 2,
+        dashPattern: [8, 8]
+    )
+
+    private let emptyStateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "아직 오픈된 티켓이 없어요"
+        label.textColor = DesignSystemAsset.ColorAssests.grey3.color
+        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 14)
+        label.textAlignment = .center
+        label.isHidden = true
         return label
     }()
 
@@ -114,7 +129,7 @@ public final class ProfileViewController: UIViewController {
         )
         return collectionView
     }()
-    
+
     public init(with viewModel: ProfileViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -140,13 +155,16 @@ public final class ProfileViewController: UIViewController {
     }
 }
 
+// MARK: - Bind
+
 extension ProfileViewController {
     private func bindViewModel() {
         let input = ProfileViewModel.Input(
             viewDidLoad: rxViewDidLoad,
             backButtonDidTap: navigationView.backButtonDidTap,
             editProfileButtonDidTap: editProfileButton.rx.tap,
-            settingButtonDidTap: settingButton.rx.tap
+            settingButtonDidTap: settingButton.rx.tap,
+            ticketDidTap: ticketSelectedRelay.asObservable()
         )
         let output = viewModel.translation(input)
 
@@ -158,6 +176,14 @@ extension ProfileViewController {
                 if let url = URL(string: user.profileImageUrl) {
                     self.userProfileImageView.kf.setImage(with: url)
                 }
+            })
+            .disposed(by: disposeBag)
+
+        output.openedTickets
+            .drive(with: self, onNext: { (self, tickets) in
+                self.openedTickets = tickets
+                self.emptyStateLabel.isHidden = !tickets.isEmpty
+                self.ticketCollectionView.reloadData()
             })
             .disposed(by: disposeBag)
     }
@@ -174,14 +200,15 @@ extension ProfileViewController {
         scrollView.addSubview(contentView)
 
         contentView.addSubview(profileSectionView)
-        profileSectionView.addSubview(profileCardView)
-        profileCardView.addSubview(userProfileImageView)
-        profileCardView.addSubview(nickNameLabel)
-        profileCardView.addSubview(editProfileButton)
+        profileSectionView.addSubview(userProfileImageView)
+        profileSectionView.addSubview(nickNameLabel)
+        profileSectionView.addSubview(editProfileButton)
 
         contentView.addSubview(openTicketSectionView)
         openTicketSectionView.addSubview(openTicketTitleLabel)
+        openTicketSectionView.addSubview(ticketDashedSeparator)
         openTicketSectionView.addSubview(ticketCollectionView)
+        openTicketSectionView.addSubview(emptyStateLabel)
     }
 
     private func setLayout() {
@@ -193,8 +220,7 @@ extension ProfileViewController {
         }
 
         settingButton.snp.makeConstraints {
-            $0.height.equalTo(24)
-            $0.width.greaterThanOrEqualTo(24)
+            $0.width.height.equalTo(24)
         }
 
         scrollView.snp.makeConstraints {
@@ -211,29 +237,25 @@ extension ProfileViewController {
             $0.top.leading.trailing.equalToSuperview()
         }
 
-        profileCardView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(24)
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.bottom.equalToSuperview().inset(20)
-        }
-
         userProfileImageView.snp.makeConstraints {
-            $0.top.bottom.equalToSuperview().inset(20)
-            $0.leading.equalToSuperview().offset(16)
-            $0.width.height.equalTo(54)
+            $0.top.equalToSuperview().offset(24)
+            $0.centerX.equalToSuperview()
+            $0.width.height.equalTo(80)
         }
 
         nickNameLabel.snp.makeConstraints {
-            $0.leading.equalTo(userProfileImageView.snp.trailing).offset(10)
-            $0.centerY.equalToSuperview()
+            $0.top.equalTo(userProfileImageView.snp.bottom).offset(16)
+            $0.centerX.equalToSuperview()
+            $0.leading.greaterThanOrEqualToSuperview().offset(20)
+            $0.trailing.lessThanOrEqualToSuperview().inset(20)
         }
 
         editProfileButton.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(16)
-            $0.centerY.equalToSuperview()
+            $0.top.equalTo(nickNameLabel.snp.bottom).offset(12)
+            $0.centerX.equalToSuperview()
+            $0.bottom.equalToSuperview().inset(24)
         }
 
-        // Open Ticket Section
         openTicketSectionView.snp.makeConstraints {
             $0.top.equalTo(profileSectionView.snp.bottom)
             $0.leading.trailing.bottom.equalToSuperview()
@@ -241,13 +263,24 @@ extension ProfileViewController {
 
         openTicketTitleLabel.snp.makeConstraints {
             $0.top.equalToSuperview().offset(12)
-            $0.leading.equalToSuperview().offset(20)
+            $0.centerX.equalToSuperview()
+        }
+
+        ticketDashedSeparator.snp.makeConstraints {
+            $0.top.equalTo(openTicketTitleLabel.snp.bottom).offset(12)
+            $0.leading.trailing.equalToSuperview().inset(28)
+            $0.height.equalTo(2)
         }
 
         ticketCollectionView.snp.makeConstraints {
-            $0.top.equalTo(openTicketTitleLabel.snp.bottom).offset(16)
+            $0.top.equalTo(ticketDashedSeparator.snp.bottom).offset(16)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.bottom.equalToSuperview().inset(20)
+        }
+
+        emptyStateLabel.snp.makeConstraints {
+            $0.top.equalTo(openTicketTitleLabel.snp.bottom).offset(60)
+            $0.centerX.equalToSuperview()
         }
     }
 }
@@ -256,7 +289,7 @@ extension ProfileViewController {
 
 extension ProfileViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 8
+        return openedTickets.count
     }
 
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -264,10 +297,19 @@ extension ProfileViewController: UICollectionViewDataSource, UICollectionViewDel
             withReuseIdentifier: OpenedTicketCollectionViewCell.reuseIdentifier,
             for: indexPath
         ) as? OpenedTicketCollectionViewCell else { return UICollectionViewCell() }
-        
-        cell.configure(title: "제목입니다.", date: "2027. 10. 24.")
-        
+
+        let ticket = openedTickets[indexPath.item]
+        let date = (ticket.openedAt ?? ticket.createdAt).map { Self.openedDateFormatter.string(from: $0) } ?? ""
+        cell.configure(
+            title: ticket.title,
+            date: date
+        )
+
         return cell
+    }
+
+    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        ticketSelectedRelay.accept(indexPath)
     }
 
     public func collectionView(
@@ -276,8 +318,7 @@ extension ProfileViewController: UICollectionViewDataSource, UICollectionViewDel
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
         let itemWidth = floor((collectionView.bounds.width - 12) / 2)
-        let imageSize = itemWidth - 24
-        let itemHeight = 16 + imageSize + 6 + 20 + 4 + 15 + 16
+        let itemHeight = itemWidth * 1.08
         return CGSize(width: itemWidth, height: itemHeight)
     }
 }
