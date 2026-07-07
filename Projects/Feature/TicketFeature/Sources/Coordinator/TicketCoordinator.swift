@@ -8,6 +8,8 @@ public final class TicketCoordinator {
     private let navigationController: UINavigationController
     private let capsuleId: Int
     private let ticketDIContainer: TicketDIContainer = .init()
+    private let store: OpenedCapsuleStore
+    private var externalOnOpened: (() -> Void)?
 
     public init(
         with navigationController: UINavigationController,
@@ -15,6 +17,7 @@ public final class TicketCoordinator {
     ) {
         self.navigationController = navigationController
         self.capsuleId = capsuleId
+        self.store = ticketDIContainer.makeOpenedCapsuleStore()
     }
 
     public func start() {
@@ -32,6 +35,43 @@ public final class TicketCoordinator {
         )
     }
 
+    // MARK: - OpenFlow
+
+    public func startOpenFlow(onOpened: (() -> Void)?) {
+        self.externalOnOpened = onOpened
+        if store.isOpened(capsuleId: capsuleId) {
+            startMemoryMessages()
+        } else {
+            startOpenIntro()
+        }
+    }
+
+    public func startOpenIntro() {
+        let action = OpenIntroViewModel.Action(
+            ticketDidTap: { [weak self] in
+                self?.startOpenConfirm()
+            }
+        )
+        let viewController = ticketDIContainer.makeOpenIntroViewController(action: action)
+        self.navigationController.pushViewController(
+            viewController,
+            animated: true
+        )
+    }
+
+    public func startOpenConfirm() {
+        let action = OpenConfirmViewModel.Action(
+            confirmDidTap: { [weak self] in
+                self?.startMemoryMessages()
+            }
+        )
+        let viewController = ticketDIContainer.makeOpenConfirmViewController(action: action)
+        self.navigationController.pushViewController(
+            viewController,
+            animated: true
+        )
+    }
+
     // MARK: - MemoryMessages
 
     public func startMemoryMessages() {
@@ -40,9 +80,21 @@ public final class TicketCoordinator {
                 self?.navigationController.popViewController(animated: true)
             }
         )
-        let viewController = ticketDIContainer.makeMemoryMessagesViewController(action: action)
-        self.navigationController.pushViewController(
-            viewController,
+        let onOpened: () -> Void = { [weak self] in
+            guard let self else { return }
+            self.store.markOpened(capsuleId: self.capsuleId)
+            self.externalOnOpened?()
+        }
+        let viewController = ticketDIContainer.makeMemoryMessagesViewController(
+            action: action,
+            capsuleId: capsuleId,
+            onOpened: onOpened
+        )
+        let baseViewControllers = navigationController.viewControllers.filter {
+            !($0 is OpenIntroViewController) && !($0 is OpenConfirmViewController)
+        }
+        self.navigationController.setViewControllers(
+            baseViewControllers + [viewController],
             animated: true
         )
     }

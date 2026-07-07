@@ -2,6 +2,8 @@ import Foundation
 
 public protocol CapsuleContentUseCase {
     func execute(capsuleId: Int) async throws -> [CapsuleContent]
+    func fetchAllGroups(capsuleId: Int) async throws -> [CapsuleContentGroupEntity]
+    func fetchMyContents(capsuleId: Int) async throws -> [CapsuleContent]
     func createText(capsuleId: Int, content: String) async throws -> CapsuleContent
     func createPhotos(capsuleId: Int, images: [Data]) async throws -> CapsuleContent
     func delete(contentId: Int) async throws
@@ -23,6 +25,14 @@ public final class DefaultCapsuleContentUseCase: CapsuleContentUseCase {
         }
 
         return groups.first { $0.userId == currentUserId }?.contents ?? []
+    }
+
+    public func fetchAllGroups(capsuleId: Int) async throws -> [CapsuleContentGroupEntity] {
+        return try await capsuleContentRepository.fetchCapsuleContents(capsuleId: capsuleId)
+    }
+
+    public func fetchMyContents(capsuleId: Int) async throws -> [CapsuleContent] {
+        return try await capsuleContentRepository.fetchMyContents(capsuleId: capsuleId)
     }
 
     public func createText(capsuleId: Int, content: String) async throws -> CapsuleContent {

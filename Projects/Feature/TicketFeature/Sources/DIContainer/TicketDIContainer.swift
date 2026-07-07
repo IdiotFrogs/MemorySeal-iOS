@@ -91,11 +91,45 @@ public final class TicketDIContainer {
         )
     }
 
+    // MARK: - OpenedCapsuleStore
+
+    func makeOpenedCapsuleStore() -> OpenedCapsuleStore {
+        return DefaultOpenedCapsuleStore()
+    }
+
     // MARK: - MemoryMessages
 
-    public func makeMemoryMessagesViewController(action: MemoryMessagesViewModel.Action) -> MemoryMessagesViewController {
-        let viewModel = MemoryMessagesViewModel(action: action)
+    public func makeMemoryMessagesViewController(
+        action: MemoryMessagesViewModel.Action,
+        capsuleId: Int,
+        onOpened: (() -> Void)?
+    ) -> MemoryMessagesViewController {
+        let provider = DefaultProvider<CapsuleContentTargetType>()
+        let userDefaultStorage = DefaultUserDefaultStorage()
+        let repository = DefaultCapsuleContentRepository(
+            provider: provider,
+            userDefaultStorage: userDefaultStorage
+        )
+        let useCase = DefaultCapsuleContentUseCase(capsuleContentRepository: repository)
+        let currentUserId = repository.fetchCurrentUserId()
+        let viewModel = MemoryMessagesViewModel(
+            action: action,
+            capsuleId: capsuleId,
+            capsuleContentUseCase: useCase,
+            currentUserId: currentUserId,
+            onOpened: onOpened
+        )
         return MemoryMessagesViewController(with: viewModel)
+    }
+
+    // MARK: - OpenCapsule
+
+    public func makeOpenIntroViewController(action: OpenIntroViewModel.Action) -> OpenIntroViewController {
+        return OpenIntroViewController(with: OpenIntroViewModel(action: action))
+    }
+
+    public func makeOpenConfirmViewController(action: OpenConfirmViewModel.Action) -> OpenConfirmViewController {
+        return OpenConfirmViewController(with: OpenConfirmViewModel(action: action))
     }
 
     private func makeMyTicketMessagesViewModel(capsuleId: Int) -> MyTicketMessagesViewModel {

@@ -28,6 +28,18 @@ public final class DefaultCapsuleContentRepository: CapsuleContentRepository {
         return responseDTO.content.map { $0.toDomain }
     }
 
+    public func fetchMyContents(capsuleId: Int) async throws -> [CapsuleContent] {
+        let result = await provider.request(.fetchMyCapsuleContents(capsuleId: capsuleId))
+
+        let responseDTOs = try ResultHandler.handleResult(
+            result: result,
+            responseType: [MyCapsuleContentResponseDTO].self,
+            errorType: CapsuleContentError.self
+        )
+
+        return responseDTOs.map { $0.toDomain }
+    }
+
     public func fetchCurrentUserId() -> Int? {
         return userDefaultStorage.get(forKey: .userId) as? Int
     }

@@ -5,6 +5,7 @@ import BaseData
 
 public enum CapsuleContentTargetType {
     case fetchCapsuleContents(capsuleId: Int)
+    case fetchMyCapsuleContents(capsuleId: Int)
     case createTextContent(capsuleId: Int, content: String)
     case createPhotoContent(capsuleId: Int, images: [Data])
     case deleteContent(contentId: Int)
@@ -15,6 +16,8 @@ extension CapsuleContentTargetType: BaseTargetType {
         switch self {
         case .fetchCapsuleContents(let capsuleId):
             return "/api/time-capsule-content/\(capsuleId)/contents"
+        case .fetchMyCapsuleContents(let capsuleId):
+            return "/api/time-capsule-content/\(capsuleId)/my-contents"
         case .createTextContent(let capsuleId, _),
              .createPhotoContent(let capsuleId, _):
             return "/api/time-capsule-content/\(capsuleId)"
@@ -25,7 +28,7 @@ extension CapsuleContentTargetType: BaseTargetType {
 
     public var method: Moya.Method {
         switch self {
-        case .fetchCapsuleContents:
+        case .fetchCapsuleContents, .fetchMyCapsuleContents:
             return .get
         case .createTextContent, .createPhotoContent:
             return .post
@@ -36,7 +39,7 @@ extension CapsuleContentTargetType: BaseTargetType {
 
     public var task: Moya.Task {
         switch self {
-        case .fetchCapsuleContents:
+        case .fetchCapsuleContents, .fetchMyCapsuleContents:
             return .requestPlain
 
         case .createTextContent(_, let content):
@@ -69,7 +72,7 @@ extension CapsuleContentTargetType: BaseTargetType {
 
     public var isNeededAccessToken: Bool {
         switch self {
-        case .fetchCapsuleContents, .createTextContent, .createPhotoContent, .deleteContent:
+        case .fetchCapsuleContents, .fetchMyCapsuleContents, .createTextContent, .createPhotoContent, .deleteContent:
             return true
         }
     }
