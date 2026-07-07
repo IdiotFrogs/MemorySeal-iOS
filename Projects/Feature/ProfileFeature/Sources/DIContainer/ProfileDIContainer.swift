@@ -46,7 +46,10 @@ public final class ProfileDIContainer {
     private func makeHomeUseCase() -> HomeUseCase {
         let provider = DefaultProvider<HomeTargetType>()
         let repository = DefaultHomeRepository(provider: provider)
-        return DefaultHomeUseCase(homeRepository: repository)
+        return DefaultHomeUseCase(
+            homeRepository: repository,
+            openedCapsuleStore: DefaultOpenedCapsuleStore()
+        )
     }
 
     private func makeAuthProvider() -> DefaultProvider<AuthTargetType> {

@@ -7,25 +7,19 @@ import DesignSystem
 
 public final class MemoryMessagesViewController: UIViewController {
 
-    // MARK: - Row
-
-    private struct Row {
-        let message: MemoryMessage
-        let participant: MemoryParticipant
-        let showAvatarAndName: Bool
-        let topSpacing: CGFloat
-    }
-
     // MARK: - Properties
 
     private let viewModel: MemoryMessagesViewModel
     private let disposeBag: DisposeBag = DisposeBag()
     private let rxViewDidLoad: PublishRelay<Void> = .init()
+    private let retryDidTap: PublishRelay<Void> = .init()
 
     private var participants: [MemoryParticipant] = []
-    private var sections: [[Row]] = []
+    private var groups: [MemoryGroup] = []
     private var isProgrammaticScrolling: Bool = false
     private var didSetInitialOffset: Bool = false
+    private var didLoadOnce: Bool = false
+    private var loadingView: BasicLoadingView?
 
     // MARK: - UI
 
@@ -56,14 +50,52 @@ public final class MemoryMessagesViewController: UIViewController {
         view.separatorStyle = .none
         view.showsVerticalScrollIndicator = false
         view.decelerationRate = .fast
-        view.estimatedRowHeight = 120
+        view.estimatedRowHeight = 200
         view.rowHeight = UITableView.automaticDimension
         view.contentInsetAdjustmentBehavior = .never
-        view.register(MemoryTextBubbleCell.self, forCellReuseIdentifier: MemoryTextBubbleCell.identifier)
-        view.register(MemoryPhotoCardCell.self, forCellReuseIdentifier: MemoryPhotoCardCell.identifier)
+        view.register(MemoryGroupCell.self, forCellReuseIdentifier: MemoryGroupCell.identifier)
         view.dataSource = self
         view.delegate = self
         return view
+    }()
+
+    private let emptyStateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "아직 도착한 추억 메시지가 없어요"
+        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
+        label.textColor = DesignSystemAsset.ColorAssests.grey3.color
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+
+    private let errorStackView: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 16
+        stack.isHidden = true
+        return stack
+    }()
+
+    private let errorLabel: UILabel = {
+        let label = UILabel()
+        label.text = "추억 메시지를 불러오지 못했어요"
+        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
+        label.textColor = DesignSystemAsset.ColorAssests.grey4.color
+        label.textAlignment = .center
+        return label
+    }()
+
+    private let retryButton: UIButton = {
+        let button = UIButton(type: .custom)
+        button.setTitle("다시 시도", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
+        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
+        button.layer.cornerRadius = 12
+        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 24, bottom: 12, right: 24)
+        return button
     }()
 
     // MARK: - Init
@@ -93,7 +125,7 @@ public final class MemoryMessagesViewController: UIViewController {
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         updateBottomInsetForCentering()
-        if !didSetInitialOffset, !sections.isEmpty, tableView.bounds.height > 0 {
+        if !didSetInitialOffset, !groups.isEmpty, tableView.bounds.height > 0 {
             didSetInitialOffset = true
             tableView.setContentOffset(.zero, animated: false)
             profileBarView.setFocusedIndex(0, animated: false)
@@ -112,6 +144,10 @@ extension MemoryMessagesViewController {
 
     private func addSubviews() {
         view.addSubview(tableView)
+        view.addSubview(emptyStateLabel)
+        view.addSubview(errorStackView)
+        errorStackView.addArrangedSubview(errorLabel)
+        errorStackView.addArrangedSubview(retryButton)
         view.addSubview(headerContainerView)
         headerContainerView.addSubview(navigationView)
         headerContainerView.addSubview(profileBarView)
@@ -143,11 +179,25 @@ extension MemoryMessagesViewController {
             $0.leading.trailing.equalToSuperview()
             $0.bottom.equalToSuperview()
         }
+        emptyStateLabel.snp.makeConstraints {
+            $0.center.equalTo(tableView)
+            $0.leading.trailing.equalToSuperview().inset(20)
+        }
+        errorStackView.snp.makeConstraints {
+            $0.center.equalTo(tableView)
+            $0.leading.greaterThanOrEqualToSuperview().offset(20)
+            $0.trailing.lessThanOrEqualToSuperview().inset(20)
+        }
     }
 
     private func bindViewModel() {
+        retryButton.rx.tap
+            .bind(to: retryDidTap)
+            .disposed(by: disposeBag)
+
         let input = MemoryMessagesViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
+            retryDidTap: retryDidTap,
             backButtonDidTap: navigationView.backButtonDidTap
         )
         let output = viewModel.transform(input)
@@ -157,6 +207,18 @@ extension MemoryMessagesViewController {
                 self?.apply(conversations: conversations)
             })
             .disposed(by: disposeBag)
+
+        output.isLoading
+            .drive(onNext: { [weak self] isLoading in
+                self?.setLoading(isLoading)
+            })
+            .disposed(by: disposeBag)
+
+        output.showError
+            .emit(onNext: { [weak self] in
+                self?.showErrorState()
+            })
+            .disposed(by: disposeBag)
     }
 }
 
@@ -164,35 +226,45 @@ extension MemoryMessagesViewController {
 
 extension MemoryMessagesViewController {
     private func apply(conversations: [MemoryConversation]) {
+        errorStackView.isHidden = true
         participants = conversations.map { $0.participant }
-        sections = conversations.map { Self.makeRows(from: $0) }
+        groups = conversations.map { Self.makeGroup(from: $0) }
         profileBarView.configure(participants: participants, focusedIndex: 0)
         tableView.reloadData()
+        updateEmptyState()
     }
 
-    private static func makeRows(from conversation: MemoryConversation) -> [Row] {
-        conversation.messages.enumerated().map { index, message in
-            let previous = index > 0 ? conversation.messages[index - 1] : nil
-            let senderChanged = previous == nil || previous?.isMine != message.isMine
-
-            let topSpacing: CGFloat
-            if index == 0 {
-                topSpacing = MemoryMessageMetrics.feedTopInset
-            } else if senderChanged {
-                topSpacing = MemoryMessageMetrics.groupSpacing
-            } else {
-                topSpacing = MemoryMessageMetrics.intraGroupSpacing
+    private func setLoading(_ isLoading: Bool) {
+        if isLoading {
+            errorStackView.isHidden = true
+            emptyStateLabel.isHidden = true
+            if loadingView == nil {
+                loadingView = BasicLoadingView.show(on: view)
             }
-
-            let showAvatarAndName = !message.isMine && senderChanged
-
-            return Row(
-                message: message,
-                participant: conversation.participant,
-                showAvatarAndName: showAvatarAndName,
-                topSpacing: topSpacing
-            )
+        } else {
+            loadingView?.hide()
+            loadingView = nil
+            didLoadOnce = true
+            updateEmptyState()
         }
+    }
+
+    private func showErrorState() {
+        didLoadOnce = true
+        emptyStateLabel.isHidden = true
+        errorStackView.isHidden = false
+    }
+
+    private func updateEmptyState() {
+        emptyStateLabel.isHidden = !(didLoadOnce && groups.isEmpty && errorStackView.isHidden)
+    }
+
+    private static func makeGroup(from conversation: MemoryConversation) -> MemoryGroup {
+        MemoryGroup(
+            participant: conversation.participant,
+            isMine: conversation.isMine,
+            contents: conversation.messages.map { $0.content }
+        )
     }
 }
 
@@ -200,37 +272,20 @@ extension MemoryMessagesViewController {
 
 extension MemoryMessagesViewController: UITableViewDataSource {
     public func numberOfSections(in tableView: UITableView) -> Int {
-        sections.count
+        groups.count
     }
 
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        sections[section].count
+        1
     }
 
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let row = sections[indexPath.section][indexPath.row]
-
-        switch row.message.content {
-        case .text:
-            let cell = tableView.dequeueReusableCell(
-                withIdentifier: MemoryTextBubbleCell.identifier,
-                for: indexPath
-            ) as? MemoryTextBubbleCell ?? MemoryTextBubbleCell()
-            cell.configure(
-                message: row.message,
-                participant: row.participant,
-                showAvatarAndName: row.showAvatarAndName,
-                topSpacing: row.topSpacing
-            )
-            return cell
-        case .photo:
-            let cell = tableView.dequeueReusableCell(
-                withIdentifier: MemoryPhotoCardCell.identifier,
-                for: indexPath
-            ) as? MemoryPhotoCardCell ?? MemoryPhotoCardCell()
-            cell.configure(message: row.message, topSpacing: row.topSpacing)
-            return cell
-        }
+        let cell = tableView.dequeueReusableCell(
+            withIdentifier: MemoryGroupCell.identifier,
+            for: indexPath
+        ) as? MemoryGroupCell ?? MemoryGroupCell()
+        cell.configure(group: groups[indexPath.section])
+        return cell
     }
 }
 
@@ -250,21 +305,38 @@ extension MemoryMessagesViewController: UITableViewDelegate {
         let tops = sectionTops()
         guard !tops.isEmpty else { return }
 
+        let viewportHeight = scrollView.bounds.height
+        let contentHeight = scrollView.contentSize.height
+        let maxOffset = max(contentHeight + scrollView.contentInset.bottom - viewportHeight, 0)
+        let minOffset = -scrollView.contentInset.top
+
         let current = scrollView.contentOffset.y
         let proposed = targetContentOffset.pointee.y
-        let threshold: CGFloat = 1
+        let epsilon: CGFloat = 1
+
+        let section = sectionIndex(forOffset: current, tops: tops)
+        let sectionTop = tops[section]
+        let sectionBottom = section + 1 < tops.count ? tops[section + 1] : contentHeight
+        let maxWithinSection = max(sectionTop, sectionBottom - viewportHeight)
 
         let target: CGFloat
         if velocity.y > 0.2 {
-            target = tops.first(where: { $0 > current + threshold }) ?? tops.last ?? current
+            if current >= maxWithinSection - epsilon {
+                target = section + 1 < tops.count ? tops[section + 1] : maxOffset
+            } else {
+                target = min(proposed, maxWithinSection)
+            }
         } else if velocity.y < -0.2 {
-            target = tops.last(where: { $0 < current - threshold }) ?? tops.first ?? current
+            if current <= sectionTop + epsilon {
+                target = section - 1 >= 0 ? tops[section - 1] : minOffset
+            } else {
+                target = max(proposed, sectionTop)
+            }
         } else {
-            target = tops.min(by: { abs($0 - proposed) < abs($1 - proposed) }) ?? proposed
+            target = min(max(proposed, sectionTop), maxWithinSection)
         }
 
-        let maxOffset = scrollView.contentSize.height + scrollView.contentInset.bottom - scrollView.bounds.height
-        targetContentOffset.pointee.y = min(max(target, -scrollView.contentInset.top), max(maxOffset, 0))
+        targetContentOffset.pointee.y = min(max(target, minOffset), maxOffset)
     }
 
     public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
@@ -280,20 +352,19 @@ extension MemoryMessagesViewController {
         (0..<tableView.numberOfSections).map { tableView.rect(forSection: $0).minY }
     }
 
+    private func sectionIndex(forOffset offset: CGFloat, tops: [CGFloat]) -> Int {
+        var index = 0
+        for (i, top) in tops.enumerated() where top <= offset + 1 {
+            index = i
+        }
+        return index
+    }
+
     private func updateFocusedProfile() {
         let tops = sectionTops()
         guard !tops.isEmpty else { return }
-        let offset = tableView.contentOffset.y
-        var nearest = 0
-        var minDistance = CGFloat.greatestFiniteMagnitude
-        for (index, top) in tops.enumerated() {
-            let distance = abs(top - offset)
-            if distance < minDistance {
-                minDistance = distance
-                nearest = index
-            }
-        }
-        profileBarView.setFocusedIndex(nearest, animated: true)
+        let index = sectionIndex(forOffset: tableView.contentOffset.y, tops: tops)
+        profileBarView.setFocusedIndex(index, animated: true)
     }
 
     private func scrollToSection(_ section: Int, animated: Bool) {

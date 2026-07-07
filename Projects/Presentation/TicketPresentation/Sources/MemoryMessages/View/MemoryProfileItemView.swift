@@ -1,5 +1,6 @@
 import UIKit
 import SnapKit
+import Kingfisher
 
 import DesignSystem
 
@@ -71,7 +72,12 @@ final class MemoryProfileItemView: UIView {
     // MARK: - Configure
 
     func configure(participant: MemoryParticipant) {
-        avatarImageView.image = participant.displayImage
+        let placeholder = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+        if let profileImageUrl = participant.profileImageUrl, let url = URL(string: profileImageUrl) {
+            avatarImageView.kf.setImage(with: url, placeholder: placeholder)
+        } else {
+            avatarImageView.image = placeholder
+        }
         nameLabel.text = participant.name
         applyState(animated: false)
     }

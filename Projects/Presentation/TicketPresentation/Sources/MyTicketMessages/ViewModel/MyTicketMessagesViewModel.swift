@@ -26,7 +26,7 @@ public final class MyTicketMessagesViewModel {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let result = try await capsuleContentUseCase.execute(capsuleId: capsuleId)
+                let result = try await capsuleContentUseCase.fetchMyContents(capsuleId: capsuleId)
                 await MainActor.run {
                     self.contents.accept(result)
                 }

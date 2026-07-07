@@ -34,7 +34,7 @@ enum MemoryMessageMetrics {
     static let feedRightInset: CGFloat = 8
     static let feedBottomInset: CGFloat = 24
 
-    static let groupSpacing: CGFloat = 24
+    static let groupSpacing: CGFloat = 12
     static let intraGroupSpacing: CGFloat = 8
 
     static let feedAvatarSize: CGFloat = 24

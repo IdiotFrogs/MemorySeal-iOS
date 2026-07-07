@@ -38,7 +38,8 @@ public final class MainCoordinator {
         let homeDependency = HomeCoordinator.Dependency(
             moveToCreateTicket: moveToCreateTicketCoordinator,
             moveToProfile: moveToProfileCoordinator,
-            moveToTicket: moveToTicketCoordinator
+            moveToTicket: moveToTicketCoordinator,
+            moveToOpenCapsule: moveToOpenCapsuleCoordinator
         )
         let coordinator = HomeCoordinator(with: navigationController, dependency: homeDependency)
         homeCoordinator = coordinator
@@ -60,6 +61,9 @@ public final class MainCoordinator {
             },
             moveToTicket: { [weak self] capsuleId in
                 self?.moveToTicketCoordinator(capsuleId: capsuleId)
+            },
+            moveToOpenCapsule: { [weak self] capsuleId in
+                self?.moveToOpenCapsuleCoordinator(capsuleId: capsuleId)
             }
         )
         let coordinator = ProfileCoordinator(with: navigationController, dependency: profileDependency)
@@ -82,5 +86,13 @@ public final class MainCoordinator {
         let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
         ticketCoordinator = coordinator
         coordinator.start()
+    }
+
+    private func moveToOpenCapsuleCoordinator(capsuleId: Int) {
+        let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
+        ticketCoordinator = coordinator
+        coordinator.startOpenFlow(onOpened: { [weak self] in
+            self?.homeCoordinator?.refreshHome()
+        })
     }
 }

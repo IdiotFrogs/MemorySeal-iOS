@@ -18,9 +18,14 @@ public final class HomeViewModel {
 
     public struct Action {
         public let moveToTicket: (_ capsuleId: Int) -> Void
+        public let moveToOpenCapsule: (_ capsuleId: Int) -> Void
 
-        public init(moveToTicket: @escaping (_ capsuleId: Int) -> Void) {
+        public init(
+            moveToTicket: @escaping (_ capsuleId: Int) -> Void,
+            moveToOpenCapsule: @escaping (_ capsuleId: Int) -> Void
+        ) {
             self.moveToTicket = moveToTicket
+            self.moveToOpenCapsule = moveToOpenCapsule
         }
     }
 
@@ -72,8 +77,13 @@ public final class HomeViewModel {
             .withUnretained(self)
             .subscribe(onNext: { (self, indexPath) in
                 guard indexPath.item < self.ticketList.value.count else { return }
-                let capsuleId = self.ticketList.value[indexPath.item].timeCapsuleId
-                self.action.moveToTicket(capsuleId)
+                let entity = self.ticketList.value[indexPath.item]
+                let capsuleId = entity.timeCapsuleId
+                if entity.timeCapsuleStatus == .opened {
+                    self.action.moveToOpenCapsule(capsuleId)
+                } else {
+                    self.action.moveToTicket(capsuleId)
+                }
             })
             .disposed(by: disposeBag)
 

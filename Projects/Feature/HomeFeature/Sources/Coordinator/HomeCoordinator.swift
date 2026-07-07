@@ -15,11 +15,18 @@ public final class HomeCoordinator {
         public let moveToCreateTicket: () -> Void
         public let moveToProfile: () -> Void
         public let moveToTicket: (_ capsuleId: Int) -> Void
+        public let moveToOpenCapsule: (_ capsuleId: Int) -> Void
 
-        public init(moveToCreateTicket: @escaping () -> Void, moveToProfile: @escaping () -> Void, moveToTicket: @escaping (_ capsuleId: Int) -> Void) {
+        public init(
+            moveToCreateTicket: @escaping () -> Void,
+            moveToProfile: @escaping () -> Void,
+            moveToTicket: @escaping (_ capsuleId: Int) -> Void,
+            moveToOpenCapsule: @escaping (_ capsuleId: Int) -> Void
+        ) {
             self.moveToCreateTicket = moveToCreateTicket
             self.moveToProfile = moveToProfile
             self.moveToTicket = moveToTicket
+            self.moveToOpenCapsule = moveToOpenCapsule
         }
     }
 
@@ -28,6 +35,7 @@ public final class HomeCoordinator {
     private let dependency: Dependency
 
     private var hostHomeViewModel: HomeViewModel?
+    private var contributorHomeViewModel: HomeViewModel?
     private var homeTabmanViewModel: HomeTabmanViewModel?
 
     public init(with navigationController: UINavigationController, dependency: Dependency) {
@@ -37,6 +45,7 @@ public final class HomeCoordinator {
 
     public func refreshHome() {
         hostHomeViewModel?.refresh()
+        contributorHomeViewModel?.refresh()
     }
 
     public func refreshProfile() {
@@ -50,12 +59,18 @@ public final class HomeCoordinator {
             moveToEnterTicket: moveToEnterTicket
         )
 
-        let homeAction = HomeViewModel.Action(moveToTicket: dependency.moveToTicket)
+        let homeAction = HomeViewModel.Action(
+            moveToTicket: dependency.moveToTicket,
+            moveToOpenCapsule: dependency.moveToOpenCapsule
+        )
 
         let hostHomeViewModel = homeDIContainer.makeHomeViewModel(action: homeAction, role: .host)
         self.hostHomeViewModel = hostHomeViewModel
         let hostHomeViewController = homeDIContainer.makeHomeViewController(with: hostHomeViewModel)
-        let contributorHomeViewController = homeDIContainer.makeHomeViewController(action: homeAction, role: .contributor)
+
+        let contributorHomeViewModel = homeDIContainer.makeHomeViewModel(action: homeAction, role: .contributor)
+        self.contributorHomeViewModel = contributorHomeViewModel
+        let contributorHomeViewController = homeDIContainer.makeHomeViewController(with: contributorHomeViewModel)
 
         let homeTabmanViewModel = homeDIContainer.makeHomeTabmanViewModel(action: tabmanAction)
         self.homeTabmanViewModel = homeTabmanViewModel

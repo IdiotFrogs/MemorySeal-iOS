@@ -53,7 +53,10 @@ public final class HomeDIContainer {
     func makeHomeViewModel(action: HomeViewModel.Action, role: TimeCapsuleRole) -> HomeViewModel {
         let provider = DefaultProvider<HomeTargetType>()
         let repository = DefaultHomeRepository(provider: provider)
-        let useCase = DefaultHomeUseCase(homeRepository: repository)
+        let useCase = DefaultHomeUseCase(
+            homeRepository: repository,
+            openedCapsuleStore: DefaultOpenedCapsuleStore()
+        )
         return HomeViewModel(
             action: action,
             homeUseCase: useCase,
