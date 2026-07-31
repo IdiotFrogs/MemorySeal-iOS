@@ -54,9 +54,15 @@ public final class DefaultAuthRepository: AuthRepository {
     }
 
     public func logout() async throws {
-        _ = await authProvider.request(.logout)
+        let result = await authProvider.request(.logout)
+
         _ = keyChainStorage.delete(key: .accessToken)
         _ = keyChainStorage.delete(key: .refreshToken)
         userDefaultStorage.remove(forKey: .userId)
+
+        try ResultHandler.handleResult(
+            result: result,
+            errorType: LogoutError.self
+        )
     }
 }
