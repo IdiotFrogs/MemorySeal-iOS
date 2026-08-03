@@ -9,11 +9,13 @@ import UIKit
 
 import AuthFeature
 import MainFeature
+import BaseDomain
 
 public final class AppCoordinator {
     private let navigationController: UINavigationController
     private var authCoordinator: AuthCoordinator?
     private var mainCoordinator: MainCoordinator?
+    private var pendingDestination: LandingDestination?
 
     public init(
         with navigationController: UINavigationController
@@ -21,8 +23,17 @@ public final class AppCoordinator {
         self.navigationController = navigationController
     }
 
-    public func start() {
+    public func start(destination: LandingDestination? = nil) {
+        pendingDestination = destination
         moveToAuthCoordinator()
+    }
+
+    public func handle(destination: LandingDestination) {
+        guard let mainCoordinator else {
+            pendingDestination = destination
+            return
+        }
+        mainCoordinator.land(destination)
     }
 
     private func moveToAuthCoordinator() {
@@ -47,5 +58,13 @@ public final class AppCoordinator {
         let coordinator = MainCoordinator(with: navigationController, dependency: dependency)
         mainCoordinator = coordinator
         coordinator.start()
+
+        consumePendingDestination()
+    }
+
+    private func consumePendingDestination() {
+        guard let destination = pendingDestination else { return }
+        pendingDestination = nil
+        mainCoordinator?.land(destination)
     }
 }
