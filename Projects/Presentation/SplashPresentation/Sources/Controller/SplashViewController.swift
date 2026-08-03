@@ -9,22 +9,32 @@
 import UIKit
 import SnapKit
 
+import DesignSystem
+
 public final class SplashViewController: UIViewController {
+    // MARK: - Constant
+    private enum Metric {
+        static let logoLeading: CGFloat = 29
+        static let logoTop: CGFloat = 259
+        static let logoSize: CGFloat = 335
+    }
+
+    private enum Constant {
+        static let backgroundColorHex: String = "#F4F4CC"
+        static let logoImageName: String = "MemorySealLogo"
+    }
+
     private let viewModel: SplashViewModel
 
+    // MARK: - UI
     private let logoImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "MemorySeal_Logo")
+        imageView.image = UIImage(named: Constant.logoImageName)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
 
-    private let activityIndicator: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .medium)
-        indicator.hidesWhenStopped = true
-        return indicator
-    }()
-
+    // MARK: - Init
     public init(with viewModel: SplashViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -34,6 +44,7 @@ public final class SplashViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // MARK: - Life Cycle
     public override func viewDidLoad() {
         super.viewDidLoad()
         setUpView()
@@ -42,28 +53,22 @@ public final class SplashViewController: UIViewController {
 
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        activityIndicator.startAnimating()
         viewModel.executeAutoSignIn()
     }
 }
 
 private extension SplashViewController {
     func setUpView() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor(hex: Constant.backgroundColorHex)
         view.addSubview(logoImageView)
-        view.addSubview(activityIndicator)
     }
 
     func setUpConstraints() {
         logoImageView.snp.makeConstraints {
-            $0.center.equalToSuperview()
-            $0.width.equalTo(200)
-            $0.height.equalTo(200)
-        }
-
-        activityIndicator.snp.makeConstraints {
-            $0.centerX.equalToSuperview()
-            $0.top.equalTo(logoImageView.snp.bottom).offset(24)
+            $0.leading.equalToSuperview().offset(Metric.logoLeading)
+            $0.top.equalToSuperview().offset(Metric.logoTop)
+            $0.width.equalTo(Metric.logoSize)
+            $0.height.equalTo(Metric.logoSize)
         }
     }
 }
