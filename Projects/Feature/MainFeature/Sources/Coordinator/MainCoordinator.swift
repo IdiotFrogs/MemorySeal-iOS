@@ -12,6 +12,8 @@ import HomeFeature
 import ProfileFeature
 import CreateTicketFeature
 import TicketFeature
+import BaseDomain
+import TicketDomain
 
 public final class MainCoordinator {
     public struct Dependency {
@@ -28,6 +30,8 @@ public final class MainCoordinator {
     private var ticketCoordinator: TicketCoordinator?
     private var createTicketCoordinator: CreateTicketCoordinator?
     private let dependency: Dependency
+    private let mainDIContainer: MainDIContainer = .init()
+    private lazy var landingUseCase: LandingUseCase = mainDIContainer.makeLandingUseCase()
 
     public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
@@ -94,5 +98,43 @@ public final class MainCoordinator {
         coordinator.startOpenFlow(onOpened: { [weak self] in
             self?.homeCoordinator?.refreshHome()
         })
+    }
+
+    private func moveToMemberListCoordinator(capsuleId: Int) {
+        let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
+        ticketCoordinator = coordinator
+        coordinator.startMemberList()
+    }
+
+    // MARK: - Landing
+
+    public func land(_ destination: LandingDestination) {
+        Task { [weak self] in
+            guard let self else { return }
+            let resolution = await self.landingUseCase.resolve(destination)
+            await MainActor.run {
+                self.route(resolution, from: destination)
+            }
+        }
+    }
+
+    private func route(_ resolution: LandingResolution, from destination: LandingDestination) {
+        if case .none = resolution { return }
+
+        navigationController.popToRootViewController(animated: false)
+
+        switch resolution {
+        case .memberList(let capsuleId):
+            moveToMemberListCoordinator(capsuleId: capsuleId)
+        case .openCapsule(let capsuleId):
+            moveToOpenCapsuleCoordinator(capsuleId: capsuleId)
+        case .ticketDetail(let capsuleId):
+            if case .invite = destination {
+                homeCoordinator?.refreshHome()
+            }
+            moveToTicketCoordinator(capsuleId: capsuleId)
+        case .none:
+            break
+        }
     }
 }

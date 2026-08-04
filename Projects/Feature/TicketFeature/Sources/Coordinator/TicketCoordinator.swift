@@ -21,18 +21,30 @@ public final class TicketCoordinator {
     }
 
     public func start() {
+        self.navigationController.pushViewController(
+            makeTicketDetailViewController(),
+            animated: true
+        )
+    }
+
+    public func startMemberList() {
+        let ticketDetailViewController = makeTicketDetailViewController()
+        let addMemberViewController = ticketDIContainer.makeAddMemberViewController(capsuleId: capsuleId)
+
+        self.navigationController.setViewControllers(
+            navigationController.viewControllers + [ticketDetailViewController, addMemberViewController],
+            animated: true
+        )
+    }
+
+    private func makeTicketDetailViewController() -> TicketDetailViewController {
         let ticketDetailAction = TicketDetailViewModel.Action(
             moveToAddMember: moveToAddMember,
             moveToManageTicket: moveToManageTicket,
             moveToMyTicketMessages: moveToMyTicketMessages,
             moveToBuryTicket: moveToBuryTicket
         )
-        let ticketDetailViewController = ticketDIContainer.makeTicketDetailViewController(action: ticketDetailAction, capsuleId: capsuleId)
-
-        self.navigationController.pushViewController(
-            ticketDetailViewController,
-            animated: true
-        )
+        return ticketDIContainer.makeTicketDetailViewController(action: ticketDetailAction, capsuleId: capsuleId)
     }
 
     // MARK: - OpenFlow

@@ -18,6 +18,7 @@ public final class AddMemberViewModel {
 
     private let capsuleId: Int
     private let addMemberUseCase: AddMemberUseCase
+    private let ticketDetailUseCase: TicketDetailUseCase
     private var cachedMemberList: [CollaboratorEntity] = []
 
     private let pageSize: Int = 20
@@ -28,10 +29,12 @@ public final class AddMemberViewModel {
 
     public init(
         capsuleId: Int,
-        addMemberUseCase: AddMemberUseCase
+        addMemberUseCase: AddMemberUseCase,
+        ticketDetailUseCase: TicketDetailUseCase
     ) {
         self.capsuleId = capsuleId
         self.addMemberUseCase = addMemberUseCase
+        self.ticketDetailUseCase = ticketDetailUseCase
     }
 
     struct Input {
@@ -39,6 +42,7 @@ public final class AddMemberViewModel {
         let searchText: Observable<String>
         let prefetchRows: Observable<[IndexPath]>
         let didTapCopyInviteCode: PublishRelay<Void>
+        let didTapShareLink: PublishRelay<Void>
         let didConfirmDelegateHost: PublishRelay<Int>
         let didConfirmKickContributor: PublishRelay<Int>
     }
@@ -47,6 +51,7 @@ public final class AddMemberViewModel {
         let memberList: PublishRelay<[CollaboratorEntity]>
         let isCurrentUserHost: BehaviorRelay<Bool>
         let inviteCode: PublishRelay<String>
+        let inviteShare: PublishRelay<InviteShareContent>
         let errorToast: PublishRelay<String>
         let delegateHostSuccess: PublishRelay<Void>
         let kickContributorSuccess: PublishRelay<Void>
@@ -56,6 +61,7 @@ public final class AddMemberViewModel {
         let memberList: PublishRelay<[CollaboratorEntity]> = .init()
         let isCurrentUserHost: BehaviorRelay<Bool> = .init(value: false)
         let inviteCode: PublishRelay<String> = .init()
+        let inviteShare: PublishRelay<InviteShareContent> = .init()
         let errorToast: PublishRelay<String> = .init()
         let delegateHostSuccess: PublishRelay<Void> = .init()
         let kickContributorSuccess: PublishRelay<Void> = .init()
@@ -169,6 +175,50 @@ public final class AddMemberViewModel {
             })
             .disposed(by: disposeBag)
 
+        input.didTapShareLink
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                Task { [weak self] in
+                    guard let self else { return }
+                    do {
+                        async let inviteCodeResult = self.addMemberUseCase.inviteToTimeCapsule(
+                            capsuleId: self.capsuleId
+                        )
+                        async let ticketDetailResult = self.ticketDetailUseCase.fetchDetail(
+                            capsuleId: self.capsuleId
+                        )
+                        let (code, ticketDetail) = try await (inviteCodeResult, ticketDetailResult)
+
+                        guard let link = LandingLinkBuilder.inviteLink(
+                            code: code,
+                            capsuleId: self.capsuleId
+                        ) else {
+                            await MainActor.run {
+                                errorToast.accept("참여 링크를 만들 수 없습니다")
+                            }
+                            return
+                        }
+
+                        let title = "\(ticketDetail.title)에서 초대가 왔어요!"
+                        let content = InviteShareContent(
+                            title: title,
+                            message: "\(title)\n\(link.absoluteString)",
+                            link: link,
+                            thumbnailUrl: ticketDetail.mainImageUrl.flatMap { URL(string: $0) }
+                        )
+
+                        await MainActor.run {
+                            inviteShare.accept(content)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            errorToast.accept("참여 링크를 가져올 수 없습니다")
+                        }
+                    }
+                }
+            })
+            .disposed(by: disposeBag)
+
         input.didConfirmDelegateHost
             .withUnretained(self)
             .subscribe(onNext: { (self, targetUserId) in
@@ -219,6 +269,7 @@ public final class AddMemberViewModel {
             memberList: memberList,
             isCurrentUserHost: isCurrentUserHost,
             inviteCode: inviteCode,
+            inviteShare: inviteShare,
             errorToast: errorToast,
             delegateHostSuccess: delegateHostSuccess,
             kickContributorSuccess: kickContributorSuccess
