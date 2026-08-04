@@ -38,9 +38,15 @@ public final class TicketDIContainer {
         let provider = DefaultProvider<AddMemberTargetType>()
         let repository = DefaultAddMemberRepository(provider: provider)
         let useCase = DefaultAddMemberUseCase(addMemberRepository: repository)
+
+        let detailProvider = DefaultProvider<TicketDetailTargetType>()
+        let detailRepository = DefaultTicketDetailRepository(provider: detailProvider)
+        let ticketDetailUseCase = DefaultTicketDetailUseCase(ticketDetailRepository: detailRepository)
+
         return AddMemberViewModel(
             capsuleId: capsuleId,
-            addMemberUseCase: useCase
+            addMemberUseCase: useCase,
+            ticketDetailUseCase: ticketDetailUseCase
         )
     }
 

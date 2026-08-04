@@ -2,13 +2,6 @@ import Foundation
 
 public enum LandingLinkParser {
 
-    private enum LandingAction: String {
-        case member
-        case open
-        case detail
-        case invite
-    }
-
     public static func parse(url: URL) -> LandingDestination? {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               components.host == LandingLinkConfiguration.host,

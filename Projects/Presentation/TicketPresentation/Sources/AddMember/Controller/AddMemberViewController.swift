@@ -10,6 +10,7 @@ import UIKit
 import SnapKit
 import RxSwift
 import RxCocoa
+import Kingfisher
 
 import DesignSystem
 
@@ -151,6 +152,7 @@ extension AddMemberViewController {
             searchText: searchTextField.rx.text.orEmpty.asObservable(),
             prefetchRows: collectionView.rx.prefetchItems.asObservable(),
             didTapCopyInviteCode: didTapCopyInviteCode,
+            didTapShareLink: didTapShareLink,
             didConfirmDelegateHost: didConfirmDelegateHost,
             didConfirmKickContributor: didConfirmKickContributor
         )
@@ -206,6 +208,13 @@ extension AddMemberViewController {
             })
             .disposed(by: disposeBag)
 
+        output.inviteShare
+            .withUnretained(self)
+            .subscribe(onNext: { (self, content) in
+                self.presentShareSheet(with: content)
+            })
+            .disposed(by: disposeBag)
+
         output.errorToast
             .withUnretained(self)
             .subscribe(onNext: { (self, message) in
@@ -226,6 +235,29 @@ extension AddMemberViewController {
                 ToastView.show(on: self.view, message: "멤버를 추방했습니다.", position: .top)
             })
             .disposed(by: disposeBag)
+    }
+
+    private func presentShareSheet(with content: InviteShareContent) {
+        guard let thumbnailUrl = content.thumbnailUrl else {
+            presentActivityViewController(with: content, thumbnail: nil)
+            return
+        }
+
+        KingfisherManager.shared.retrieveImage(with: thumbnailUrl) { [weak self] result in
+            self?.presentActivityViewController(with: content, thumbnail: try? result.get().image)
+        }
+    }
+
+    private func presentActivityViewController(with content: InviteShareContent, thumbnail: UIImage?) {
+        let itemSource = InviteShareItemSource(content: content, thumbnail: thumbnail)
+        let activityViewController = UIActivityViewController(
+            activityItems: [itemSource],
+            applicationActivities: nil
+        )
+        activityViewController.popoverPresentationController?.sourceView = shareLinkPill
+        activityViewController.popoverPresentationController?.sourceRect = shareLinkPill.bounds
+
+        self.present(activityViewController, animated: true)
     }
 
     private func showMemberMoreSheet(for collaborator: CollaboratorEntity) {
