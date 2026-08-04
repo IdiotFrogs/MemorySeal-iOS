@@ -24,9 +24,9 @@ public final class ProfileViewModel {
         public let moveToEditProfile: (_ nickname: String, _ profileImageUrl: String) -> Void
         public let moveToSettings: () -> Void
         public let moveToTicket: (_ capsuleId: Int) -> Void
-        public let moveToOpenCapsule: (_ capsuleId: Int) -> Void
+        public let moveToOpenCapsule: (_ capsuleId: Int, _ imageUrl: String?) -> Void
 
-        public init(moveToBack: @escaping () -> Void, moveToEditProfile: @escaping (_ nickname: String, _ profileImageUrl: String) -> Void, moveToSettings: @escaping () -> Void, moveToTicket: @escaping (_ capsuleId: Int) -> Void, moveToOpenCapsule: @escaping (_ capsuleId: Int) -> Void) {
+        public init(moveToBack: @escaping () -> Void, moveToEditProfile: @escaping (_ nickname: String, _ profileImageUrl: String) -> Void, moveToSettings: @escaping () -> Void, moveToTicket: @escaping (_ capsuleId: Int) -> Void, moveToOpenCapsule: @escaping (_ capsuleId: Int, _ imageUrl: String?) -> Void) {
             self.moveToBack = moveToBack
             self.moveToEditProfile = moveToEditProfile
             self.moveToSettings = moveToSettings
@@ -121,8 +121,8 @@ public final class ProfileViewModel {
             .withUnretained(self)
             .subscribe(onNext: { (self, indexPath) in
                 guard indexPath.item < self.openedTickets.value.count else { return }
-                let capsuleId = self.openedTickets.value[indexPath.item].timeCapsuleId
-                self.action.moveToOpenCapsule(capsuleId)
+                let entity = self.openedTickets.value[indexPath.item]
+                self.action.moveToOpenCapsule(entity.timeCapsuleId, entity.imageUrl)
             })
             .disposed(by: disposeBag)
 

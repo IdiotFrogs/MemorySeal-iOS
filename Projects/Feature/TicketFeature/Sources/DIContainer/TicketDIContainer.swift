@@ -130,12 +130,22 @@ public final class TicketDIContainer {
 
     // MARK: - OpenCapsule
 
-    public func makeOpenIntroViewController(action: OpenIntroViewModel.Action) -> OpenIntroViewController {
-        return OpenIntroViewController(with: OpenIntroViewModel(action: action))
+    public func makeOpenIntroViewController(
+        action: OpenIntroViewModel.Action,
+        ticketImageUrl: String?
+    ) -> OpenIntroViewController {
+        return OpenIntroViewController(
+            with: OpenIntroViewModel(action: action, ticketImageUrl: ticketImageUrl)
+        )
     }
 
-    public func makeOpenConfirmViewController(action: OpenConfirmViewModel.Action) -> OpenConfirmViewController {
-        return OpenConfirmViewController(with: OpenConfirmViewModel(action: action))
+    public func makeOpenConfirmViewController(
+        action: OpenConfirmViewModel.Action,
+        ticketImageUrl: String?
+    ) -> OpenConfirmViewController {
+        return OpenConfirmViewController(
+            with: OpenConfirmViewModel(action: action, ticketImageUrl: ticketImageUrl)
+        )
     }
 
     private func makeMyTicketMessagesViewModel(capsuleId: Int) -> MyTicketMessagesViewModel {

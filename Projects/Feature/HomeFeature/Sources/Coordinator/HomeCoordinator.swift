@@ -15,13 +15,13 @@ public final class HomeCoordinator {
         public let moveToCreateTicket: () -> Void
         public let moveToProfile: () -> Void
         public let moveToTicket: (_ capsuleId: Int) -> Void
-        public let moveToOpenCapsule: (_ capsuleId: Int) -> Void
+        public let moveToOpenCapsule: (_ capsuleId: Int, _ imageUrl: String?) -> Void
 
         public init(
             moveToCreateTicket: @escaping () -> Void,
             moveToProfile: @escaping () -> Void,
             moveToTicket: @escaping (_ capsuleId: Int) -> Void,
-            moveToOpenCapsule: @escaping (_ capsuleId: Int) -> Void
+            moveToOpenCapsule: @escaping (_ capsuleId: Int, _ imageUrl: String?) -> Void
         ) {
             self.moveToCreateTicket = moveToCreateTicket
             self.moveToProfile = moveToProfile
