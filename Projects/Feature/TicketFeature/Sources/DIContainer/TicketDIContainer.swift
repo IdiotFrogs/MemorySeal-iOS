@@ -85,6 +85,12 @@ public final class TicketDIContainer {
         return BuryTicketViewController(with: makeBuryTicketViewModel(action: action, capsuleId: capsuleId))
     }
 
+    // MARK: - Watering
+
+    func makeWateringViewController(action: WateringViewModel.Action) -> WateringViewController {
+        return WateringViewController(with: WateringViewModel(action: action))
+    }
+
     // MARK: - MyTicketMessages
 
     public func makeMyTicketMessagesViewController(capsuleId: Int) -> MyTicketMessagesViewController {

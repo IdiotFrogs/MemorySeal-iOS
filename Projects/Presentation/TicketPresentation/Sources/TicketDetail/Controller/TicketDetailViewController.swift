@@ -284,7 +284,8 @@ extension TicketDetailViewController {
             didTapAddMemberButton: didTapAddMemberButton,
             didTapManageButton: didTapManageButton,
             didTapSeeMessagesButton: didTapSeeMessagesButton,
-            didTapBuryTicketButton: didTapBuryTicketButton
+            didTapBuryTicketButton: didTapBuryTicketButton,
+            didTapWaterButton: didTapWaterButton
         )
         let output = viewModel.transform(input)
 

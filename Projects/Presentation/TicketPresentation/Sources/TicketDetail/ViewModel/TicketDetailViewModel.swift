@@ -21,17 +21,20 @@ public final class TicketDetailViewModel {
         public let moveToManageTicket: () -> Void
         public let moveToMyTicketMessages: () -> Void
         public let moveToBuryTicket: () -> Void
+        public let moveToWatering: () -> Void
 
         public init(
             moveToAddMember: @escaping () -> Void,
             moveToManageTicket: @escaping () -> Void,
             moveToMyTicketMessages: @escaping () -> Void,
-            moveToBuryTicket: @escaping () -> Void
+            moveToBuryTicket: @escaping () -> Void,
+            moveToWatering: @escaping () -> Void
         ) {
             self.moveToAddMember = moveToAddMember
             self.moveToManageTicket = moveToManageTicket
             self.moveToMyTicketMessages = moveToMyTicketMessages
             self.moveToBuryTicket = moveToBuryTicket
+            self.moveToWatering = moveToWatering
         }
     }
 
@@ -63,6 +66,7 @@ public final class TicketDetailViewModel {
         let didTapManageButton: PublishRelay<Void>
         let didTapSeeMessagesButton: PublishRelay<Void>
         let didTapBuryTicketButton: PublishRelay<Void>
+        let didTapWaterButton: PublishRelay<Void>
     }
 
     struct Output {
@@ -106,6 +110,13 @@ public final class TicketDetailViewModel {
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.action.moveToBuryTicket()
+            })
+            .disposed(by: disposeBag)
+
+        input.didTapWaterButton
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.action.moveToWatering()
             })
             .disposed(by: disposeBag)
 
