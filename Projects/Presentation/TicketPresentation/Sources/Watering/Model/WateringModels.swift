@@ -1,6 +1,7 @@
 import UIKit
 
 import DesignSystem
+import TicketDomain
 
 public enum WateringGrowthStage {
     case sprout
@@ -40,17 +41,44 @@ enum WateringDayChipState {
     case today
     case missed
     case upcoming(day: Int)
-
-    var chipImage: UIImage {
-        switch self {
-        case .watered: return DesignSystemAsset.ImageAssets.wateringDayChipDone.image
-        case .today, .upcoming: return DesignSystemAsset.ImageAssets.wateringDayChip.image
-        case .missed: return DesignSystemAsset.ImageAssets.wateringDayChipEmpty.image
-        }
-    }
 }
 
 struct WateringDayItem {
     let isToday: Bool
     let state: WateringDayChipState
+}
+
+enum WateringDayItemBuilder {
+    static func makeItems(
+        days: [WateringDayEntity],
+        totalDays: Int
+    ) -> [WateringDayItem] {
+        guard totalDays > 0 else { return [] }
+
+        return (0..<totalDays).map { index in
+            guard index < days.count else {
+                return WateringDayItem(isToday: false, state: .upcoming(day: index + 1))
+            }
+
+            let day = days[index]
+            let isToday = isToday(day)
+
+            if day.isWatered {
+                return WateringDayItem(
+                    isToday: isToday,
+                    state: .watered(profileImageUrl: day.profileImageUrl)
+                )
+            }
+            return WateringDayItem(isToday: isToday, state: isToday ? .today : .missed)
+        }
+    }
+
+    static func isWateredToday(_ days: [WateringDayEntity]) -> Bool {
+        return days.first(where: isToday)?.isWatered ?? false
+    }
+
+    private static func isToday(_ day: WateringDayEntity) -> Bool {
+        guard let wateredDate = day.wateredDate else { return false }
+        return Calendar.current.isDateInToday(wateredDate)
+    }
 }

@@ -5,26 +5,9 @@ import Kingfisher
 import DesignSystem
 
 final class WateringDayCollectionViewCell: UICollectionViewCell {
-    private let chipBackgroundImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        return imageView
-    }()
-
-    private let photoImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFill
-        imageView.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
-        imageView.clipsToBounds = true
-        imageView.isHidden = true
-        return imageView
-    }()
-
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.textAlignment = .center
-        label.isHidden = true
-        return label
+    private let chipView: WateringDayChipView = {
+        let view = WateringDayChipView()
+        return view
     }()
 
     override init(frame: CGRect) {
@@ -38,76 +21,40 @@ final class WateringDayCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        photoImageView.layer.cornerRadius = photoImageView.bounds.width / 2
-    }
-
     override func prepareForReuse() {
         super.prepareForReuse()
-        photoImageView.kf.cancelDownloadTask()
-        photoImageView.image = nil
-        photoImageView.isHidden = true
-        titleLabel.isHidden = true
+        chipView.photoImageView.kf.cancelDownloadTask()
+        chipView.photoImageView.image = nil
     }
 
     func configure(with item: WateringDayItem) {
-        chipBackgroundImageView.image = item.state.chipImage
+        chipView.configure(with: item.state)
 
-        switch item.state {
-        case .watered(let profileImageUrl):
-            photoImageView.isHidden = false
-            titleLabel.isHidden = true
+        if case .watered(let profileImageUrl) = item.state {
             setProfileImage(urlString: profileImageUrl)
-        case .today:
-            photoImageView.isHidden = true
-            titleLabel.isHidden = false
-            titleLabel.text = "오늘"
-            titleLabel.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-            titleLabel.textColor = DesignSystemAsset.ColorAssests.grey5.color
-        case .upcoming(let day):
-            photoImageView.isHidden = true
-            titleLabel.isHidden = false
-            titleLabel.text = "\(day)"
-            titleLabel.font = DesignSystemFontFamily.Pretendard.regular.font(size: 14)
-            titleLabel.textColor = DesignSystemAsset.ColorAssests.grey3.color
-        case .missed:
-            photoImageView.isHidden = true
-            titleLabel.isHidden = true
         }
     }
 
     private func setProfileImage(urlString: String?) {
         let placeholder = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
         guard let urlString, let url = URL(string: urlString) else {
-            photoImageView.image = placeholder
+            chipView.photoImageView.image = placeholder
             return
         }
-        photoImageView.kf.setImage(with: url, placeholder: placeholder)
+        chipView.photoImageView.kf.setImage(with: url, placeholder: placeholder)
     }
 }
 
 extension WateringDayCollectionViewCell {
     private func addSubviews() {
-        contentView.addSubview(chipBackgroundImageView)
-        contentView.addSubview(photoImageView)
-        contentView.addSubview(titleLabel)
+        contentView.addSubview(chipView)
     }
 
     private func setLayout() {
-        chipBackgroundImageView.snp.makeConstraints {
+        chipView.snp.makeConstraints {
             $0.center.equalToSuperview()
             $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(chipBackgroundImageView.snp.width)
-        }
-
-        photoImageView.snp.makeConstraints {
-            $0.center.equalTo(chipBackgroundImageView)
-            $0.width.height.equalTo(chipBackgroundImageView.snp.width).multipliedBy(0.53)
-        }
-
-        titleLabel.snp.makeConstraints {
-            $0.center.equalToSuperview()
+            $0.height.equalTo(chipView.snp.width)
         }
     }
 }
