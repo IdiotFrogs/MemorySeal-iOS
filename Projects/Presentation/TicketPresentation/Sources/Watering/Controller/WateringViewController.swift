@@ -10,9 +10,11 @@ public final class WateringViewController: UIViewController {
     // MARK: - Properties
 
     private let viewModel: WateringViewModel
+    private let rxViewDidLoad: PublishRelay<Void> = .init()
+    private let prefetchItems: PublishRelay<[IndexPath]> = .init()
     private let disposeBag: DisposeBag = DisposeBag()
     private var days: [WateringDayItem] = []
-    private var todayIndex: Int = 0
+    private var todayIndex: Int = -1
     private var hasScrolledToToday: Bool = false
 
     private enum Layout {
@@ -88,6 +90,7 @@ public final class WateringViewController: UIViewController {
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
         collectionView.showsHorizontalScrollIndicator = false
+        collectionView.isPrefetchingEnabled = true
         collectionView.register(
             WateringDayCollectionViewCell.self,
             forCellWithReuseIdentifier: WateringDayCollectionViewCell.reuseIdentifier
@@ -136,6 +139,7 @@ public final class WateringViewController: UIViewController {
         addSubviews()
         setLayout()
         bindViewModel()
+        rxViewDidLoad.accept(())
     }
 
     public override func viewDidLayoutSubviews() {
@@ -151,6 +155,7 @@ extension WateringViewController {
         view.backgroundColor = .white
         dayCollectionView.dataSource = self
         dayCollectionView.delegate = self
+        dayCollectionView.prefetchDataSource = self
     }
 
     private func addSubviews() {
@@ -214,6 +219,8 @@ extension WateringViewController {
 
     private func bindViewModel() {
         let input = WateringViewModel.Input(
+            rxViewDidLoad: rxViewDidLoad,
+            prefetchItems: prefetchItems,
             backButtonDidTap: navigationView.backButtonDidTap,
             allDaysDidTap: progressView.allDaysDidTap,
             waterButtonDidTap: waterButton.rx.tap
@@ -260,10 +267,17 @@ extension WateringViewController {
                 self.applyWaterButtonState(isWateredToday: isWateredToday)
             })
             .disposed(by: disposeBag)
+
+        output.errorToast
+            .emit(with: self, onNext: { (self, message) in
+                ToastView.show(on: self.view, message: message)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func scrollToTodayIfNeeded() {
         guard !hasScrolledToToday,
+              todayIndex >= 0,
               dayCollectionView.bounds.width > 0,
               days.indices.contains(todayIndex) else { return }
 
@@ -329,6 +343,17 @@ extension WateringViewController: UICollectionViewDataSource {
         ) as? WateringDayCollectionViewCell else { return .init() }
         cell.configure(with: days[indexPath.item])
         return cell
+    }
+}
+
+// MARK: - UICollectionViewDataSourcePrefetching
+
+extension WateringViewController: UICollectionViewDataSourcePrefetching {
+    public func collectionView(
+        _ collectionView: UICollectionView,
+        prefetchItemsAt indexPaths: [IndexPath]
+    ) {
+        prefetchItems.accept(indexPaths)
     }
 }
 

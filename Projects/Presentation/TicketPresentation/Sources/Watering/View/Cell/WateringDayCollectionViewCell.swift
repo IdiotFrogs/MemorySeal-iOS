@@ -1,5 +1,6 @@
 import UIKit
 import SnapKit
+import Kingfisher
 
 import DesignSystem
 
@@ -22,6 +23,7 @@ final class WateringDayCollectionViewCell: UICollectionViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .center
+        label.isHidden = true
         return label
     }()
 
@@ -43,26 +45,45 @@ final class WateringDayCollectionViewCell: UICollectionViewCell {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        photoImageView.kf.cancelDownloadTask()
         photoImageView.image = nil
         photoImageView.isHidden = true
-        titleLabel.isHidden = false
+        titleLabel.isHidden = true
     }
 
     func configure(with item: WateringDayItem) {
-        titleLabel.text = item.title
-        titleLabel.font = item.isToday
-            ? DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-            : DesignSystemFontFamily.Pretendard.regular.font(size: 14)
-        titleLabel.textColor = item.isToday
-            ? DesignSystemAsset.ColorAssests.grey5.color
-            : DesignSystemAsset.ColorAssests.grey3.color
+        chipBackgroundImageView.image = item.state.chipImage
 
-        chipBackgroundImageView.image = item.isWatered
-            ? DesignSystemAsset.ImageAssets.wateringDayChipDone.image
-            : DesignSystemAsset.ImageAssets.wateringDayChip.image
+        switch item.state {
+        case .watered(let profileImageUrl):
+            photoImageView.isHidden = false
+            titleLabel.isHidden = true
+            setProfileImage(urlString: profileImageUrl)
+        case .today:
+            photoImageView.isHidden = true
+            titleLabel.isHidden = false
+            titleLabel.text = "오늘"
+            titleLabel.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
+            titleLabel.textColor = DesignSystemAsset.ColorAssests.grey5.color
+        case .upcoming(let day):
+            photoImageView.isHidden = true
+            titleLabel.isHidden = false
+            titleLabel.text = "\(day)"
+            titleLabel.font = DesignSystemFontFamily.Pretendard.regular.font(size: 14)
+            titleLabel.textColor = DesignSystemAsset.ColorAssests.grey3.color
+        case .missed:
+            photoImageView.isHidden = true
+            titleLabel.isHidden = true
+        }
+    }
 
-        photoImageView.isHidden = !item.isWatered
-        titleLabel.isHidden = item.isWatered
+    private func setProfileImage(urlString: String?) {
+        let placeholder = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+        guard let urlString, let url = URL(string: urlString) else {
+            photoImageView.image = placeholder
+            return
+        }
+        photoImageView.kf.setImage(with: url, placeholder: placeholder)
     }
 }
 

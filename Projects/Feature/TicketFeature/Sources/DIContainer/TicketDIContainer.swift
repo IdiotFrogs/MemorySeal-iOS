@@ -87,8 +87,19 @@ public final class TicketDIContainer {
 
     // MARK: - Watering
 
-    func makeWateringViewController(action: WateringViewModel.Action) -> WateringViewController {
-        return WateringViewController(with: WateringViewModel(action: action))
+    private func makeWateringViewModel(action: WateringViewModel.Action, capsuleId: Int) -> WateringViewModel {
+        let provider = DefaultProvider<WateringTargetType>()
+        let repository = DefaultWateringRepository(provider: provider)
+        let useCase = DefaultWateringUseCase(wateringRepository: repository)
+        return WateringViewModel(
+            action: action,
+            capsuleId: capsuleId,
+            wateringUseCase: useCase
+        )
+    }
+
+    func makeWateringViewController(action: WateringViewModel.Action, capsuleId: Int) -> WateringViewController {
+        return WateringViewController(with: makeWateringViewModel(action: action, capsuleId: capsuleId))
     }
 
     // MARK: - MyTicketMessages

@@ -132,7 +132,10 @@ public final class TicketCoordinator {
             },
             moveToAllDays: {}
         )
-        let viewController = ticketDIContainer.makeWateringViewController(action: wateringAction)
+        let viewController = ticketDIContainer.makeWateringViewController(
+            action: wateringAction,
+            capsuleId: capsuleId
+        )
         self.navigationController.pushViewController(viewController, animated: true)
     }
 

@@ -8,12 +8,11 @@ public enum WateringGrowthStage {
     case flower
     case fruit
 
-    static func stage(wateredDays: Int, totalDays: Int) -> WateringGrowthStage {
-        guard totalDays > 0 else { return .sprout }
-        switch Double(wateredDays) / Double(totalDays) {
-        case ..<0.25: return .sprout
-        case ..<0.5: return .tree
-        case ..<0.75: return .flower
+    static func stage(serverStage: Int) -> WateringGrowthStage {
+        switch serverStage {
+        case ..<2: return .sprout
+        case 2: return .tree
+        case 3: return .flower
         default: return .fruit
         }
     }
@@ -36,8 +35,22 @@ public enum WateringGrowthStage {
     }
 }
 
+enum WateringDayChipState {
+    case watered(profileImageUrl: String?)
+    case today
+    case missed
+    case upcoming(day: Int)
+
+    var chipImage: UIImage {
+        switch self {
+        case .watered: return DesignSystemAsset.ImageAssets.wateringDayChipDone.image
+        case .today, .upcoming: return DesignSystemAsset.ImageAssets.wateringDayChip.image
+        case .missed: return DesignSystemAsset.ImageAssets.wateringDayChipEmpty.image
+        }
+    }
+}
+
 struct WateringDayItem {
-    let title: String
     let isToday: Bool
-    let isWatered: Bool
+    let state: WateringDayChipState
 }
