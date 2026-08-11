@@ -7,6 +7,19 @@ import DesignSystem
 
 public final class OpenConfirmViewController: UIViewController {
 
+    // MARK: - Constant
+
+    private enum Metric {
+        static let ticketWidth: CGFloat = 308
+        static let ticketHeight: CGFloat = 405.26
+        static let ticketBottomOffset: CGFloat = 169.87
+        static let buttonHorizontalInset: CGFloat = 20
+        static let buttonBottomInset: CGFloat = 24
+        static let buttonHeight: CGFloat = 48
+        static let buttonCornerRadius: CGFloat = 12
+        static let appearDuration: TimeInterval = 0.45
+    }
+
     // MARK: - Properties
 
     private let viewModel: OpenConfirmViewModel
@@ -14,12 +27,23 @@ public final class OpenConfirmViewController: UIViewController {
 
     // MARK: - UI
 
-    private let ticketImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.image = DesignSystemAsset.ImageAssets.ticketWavyFrame.image
-        imageView.contentMode = .scaleAspectFit
-        imageView.clipsToBounds = false
-        return imageView
+    private let baseGradientLayer: CAGradientLayer = {
+        let layer = CAGradientLayer()
+        layer.colors = [
+            UIColor(red: 210 / 255, green: 211 / 255, blue: 214 / 255, alpha: 1).cgColor,
+            UIColor(red: 245 / 255, green: 245 / 255, blue: 246 / 255, alpha: 1).cgColor
+        ]
+        layer.startPoint = CGPoint(x: 0.5, y: 0)
+        layer.endPoint = CGPoint(x: 0.5, y: 1)
+        return layer
+    }()
+
+    private let backgroundView: MemoryGradientBackgroundView = MemoryGradientBackgroundView()
+
+    private let ticketOpenView: TicketOpenView = {
+        let view = TicketOpenView()
+        view.isUserInteractionEnabled = false
+        return view
     }()
 
     private let confirmButton: UIButton = {
@@ -28,7 +52,7 @@ public final class OpenConfirmViewController: UIViewController {
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
         button.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
-        button.layer.cornerRadius = 12
+        button.layer.cornerRadius = Metric.buttonCornerRadius
         button.clipsToBounds = true
         return button
     }()
@@ -55,6 +79,18 @@ public final class OpenConfirmViewController: UIViewController {
         setLayout()
         bindViewModel()
     }
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        baseGradientLayer.frame = view.bounds
+    }
+
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        UIView.animate(withDuration: Metric.appearDuration) {
+            self.confirmButton.alpha = 1
+        }
+    }
 }
 
 // MARK: - Setup
@@ -62,28 +98,32 @@ public final class OpenConfirmViewController: UIViewController {
 extension OpenConfirmViewController {
     private func setInitialValues() {
         view.backgroundColor = .white
-        ticketImageView.layer.shadowColor = UIColor.black.cgColor
-        ticketImageView.layer.shadowOpacity = 0.12
-        ticketImageView.layer.shadowRadius = 12
-        ticketImageView.layer.shadowOffset = CGSize(width: 0, height: 4)
+        view.layer.insertSublayer(baseGradientLayer, at: 0)
+        confirmButton.alpha = 0
+        ticketOpenView.setTicketImage(urlString: viewModel.ticketImageUrl)
+        ticketOpenView.showOpenedLid()
     }
 
     private func addSubviews() {
-        view.addSubview(ticketImageView)
+        view.addSubview(backgroundView)
+        view.addSubview(ticketOpenView)
         view.addSubview(confirmButton)
     }
 
     private func setLayout() {
-        ticketImageView.snp.makeConstraints {
+        backgroundView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        ticketOpenView.snp.makeConstraints {
             $0.centerX.equalToSuperview()
-            $0.centerY.equalToSuperview().offset(-40)
-            $0.width.equalTo(269)
-            $0.height.equalTo(ticketImageView.snp.width).multipliedBy(317.0 / 315.0)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(Metric.ticketBottomOffset)
+            $0.width.equalTo(Metric.ticketWidth)
+            $0.height.equalTo(Metric.ticketHeight)
         }
         confirmButton.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
-            $0.height.equalTo(48)
+            $0.leading.trailing.equalToSuperview().inset(Metric.buttonHorizontalInset)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(Metric.buttonBottomInset)
+            $0.height.equalTo(Metric.buttonHeight)
         }
     }
 

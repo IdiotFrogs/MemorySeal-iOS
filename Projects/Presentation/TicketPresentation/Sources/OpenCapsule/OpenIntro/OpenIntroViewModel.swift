@@ -17,8 +17,11 @@ public final class OpenIntroViewModel {
 
     private let action: Action
 
-    public init(action: Action) {
+    public let ticketImageUrl: String?
+
+    public init(action: Action, ticketImageUrl: String? = nil) {
         self.action = action
+        self.ticketImageUrl = ticketImageUrl
     }
 
     // MARK: - Input / Output

@@ -16,14 +16,14 @@ public final class ProfileCoordinator {
         public let didLogout: () -> Void
         public let didEditProfile: () -> Void
         public let moveToTicket: (_ capsuleId: Int) -> Void
-        public let moveToOpenCapsule: (_ capsuleId: Int) -> Void
+        public let moveToOpenCapsule: (_ capsuleId: Int, _ imageUrl: String?) -> Void
 
         public init(
             moveToBack: @escaping () -> Void,
             didLogout: @escaping () -> Void,
             didEditProfile: @escaping () -> Void,
             moveToTicket: @escaping (_ capsuleId: Int) -> Void,
-            moveToOpenCapsule: @escaping (_ capsuleId: Int) -> Void
+            moveToOpenCapsule: @escaping (_ capsuleId: Int, _ imageUrl: String?) -> Void
         ) {
             self.moveToBack = moveToBack
             self.didLogout = didLogout

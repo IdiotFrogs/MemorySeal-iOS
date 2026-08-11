@@ -10,6 +10,7 @@ public final class TicketCoordinator {
     private let ticketDIContainer: TicketDIContainer = .init()
     private let store: OpenedCapsuleStore
     private var externalOnOpened: (() -> Void)?
+    private var ticketImageUrl: String?
 
     public init(
         with navigationController: UINavigationController,
@@ -49,8 +50,9 @@ public final class TicketCoordinator {
 
     // MARK: - OpenFlow
 
-    public func startOpenFlow(onOpened: (() -> Void)?) {
+    public func startOpenFlow(ticketImageUrl: String? = nil, onOpened: (() -> Void)?) {
         self.externalOnOpened = onOpened
+        self.ticketImageUrl = ticketImageUrl
         if store.isOpened(capsuleId: capsuleId) {
             startMemoryMessages()
         } else {
@@ -64,7 +66,10 @@ public final class TicketCoordinator {
                 self?.startOpenConfirm()
             }
         )
-        let viewController = ticketDIContainer.makeOpenIntroViewController(action: action)
+        let viewController = ticketDIContainer.makeOpenIntroViewController(
+            action: action,
+            ticketImageUrl: ticketImageUrl
+        )
         self.navigationController.pushViewController(
             viewController,
             animated: true
@@ -77,10 +82,13 @@ public final class TicketCoordinator {
                 self?.startMemoryMessages()
             }
         )
-        let viewController = ticketDIContainer.makeOpenConfirmViewController(action: action)
+        let viewController = ticketDIContainer.makeOpenConfirmViewController(
+            action: action,
+            ticketImageUrl: ticketImageUrl
+        )
         self.navigationController.pushViewController(
             viewController,
-            animated: true
+            animated: false
         )
     }
 
