@@ -43,7 +43,8 @@ public final class TicketCoordinator {
             moveToAddMember: moveToAddMember,
             moveToManageTicket: moveToManageTicket,
             moveToMyTicketMessages: moveToMyTicketMessages,
-            moveToBuryTicket: moveToBuryTicket
+            moveToBuryTicket: moveToBuryTicket,
+            moveToWatering: moveToWatering
         )
         return ticketDIContainer.makeTicketDetailViewController(action: ticketDetailAction, capsuleId: capsuleId)
     }
@@ -130,6 +131,35 @@ public final class TicketCoordinator {
             capsuleId: capsuleId
         )
         self.navigationController.present(viewController, animated: true)
+    }
+
+    public func moveToWatering() {
+        let wateringAction = WateringViewModel.Action(
+            moveToBack: { [weak self] in
+                self?.navigationController.popViewController(animated: true)
+            },
+            moveToAllDays: { [weak self] in
+                self?.moveToWateringAllDays()
+            }
+        )
+        let viewController = ticketDIContainer.makeWateringViewController(
+            action: wateringAction,
+            capsuleId: capsuleId
+        )
+        self.navigationController.pushViewController(viewController, animated: true)
+    }
+
+    public func moveToWateringAllDays() {
+        let allDaysAction = WateringAllDaysViewModel.Action(
+            moveToBack: { [weak self] in
+                self?.navigationController.popViewController(animated: true)
+            }
+        )
+        let viewController = ticketDIContainer.makeWateringAllDaysViewController(
+            action: allDaysAction,
+            capsuleId: capsuleId
+        )
+        self.navigationController.pushViewController(viewController, animated: true)
     }
 
     public func moveToAddMember() {
