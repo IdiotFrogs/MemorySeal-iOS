@@ -46,6 +46,10 @@ final class WateringProgressView: UIView {
         return allDaysButton.rx.tap
     }
 
+    func setAllDaysButtonHidden(_ isHidden: Bool) {
+        allDaysButton.isHidden = isHidden
+    }
+
     init() {
         super.init(frame: .zero)
 

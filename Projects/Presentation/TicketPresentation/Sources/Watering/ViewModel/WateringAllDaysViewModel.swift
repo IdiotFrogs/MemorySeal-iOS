@@ -4,26 +4,21 @@ import RxCocoa
 
 import TicketDomain
 
-public final class WateringViewModel {
+public final class WateringAllDaysViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
 
     // MARK: - Action
 
     public struct Action {
         public let moveToBack: () -> Void
-        public let moveToAllDays: () -> Void
 
-        public init(
-            moveToBack: @escaping () -> Void,
-            moveToAllDays: @escaping () -> Void
-        ) {
+        public init(moveToBack: @escaping () -> Void) {
             self.moveToBack = moveToBack
-            self.moveToAllDays = moveToAllDays
         }
     }
 
     private enum Page {
-        static let size: Int = 10
+        static let size: Int = 50
     }
 
     private let action: Action
@@ -48,7 +43,6 @@ public final class WateringViewModel {
         let rxViewDidLoad: PublishRelay<Void>
         let prefetchItems: PublishRelay<[IndexPath]>
         let backButtonDidTap: ControlEvent<Void>
-        let allDaysDidTap: ControlEvent<Void>
         let waterButtonDidTap: ControlEvent<Void>
     }
 
@@ -56,9 +50,7 @@ public final class WateringViewModel {
         let wateredDays: Driver<Int>
         let totalDays: Driver<Int>
         let progressRatio: Driver<Double>
-        let growthStage: Driver<WateringGrowthStage>
         let days: Driver<[WateringDayItem]>
-        let todayIndex: Driver<Int>
         let isWateredToday: Driver<Bool>
         let errorToast: Signal<String>
     }
@@ -82,13 +74,6 @@ public final class WateringViewModel {
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.action.moveToBack()
-            })
-            .disposed(by: disposeBag)
-
-        input.allDaysDidTap
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.action.moveToAllDays()
             })
             .disposed(by: disposeBag)
 
@@ -119,18 +104,11 @@ public final class WateringViewModel {
                 return min(Double(watered) / Double(total), 1)
             }
 
-        let growthStage = state
-            .map { WateringGrowthStage.stage(serverStage: $0.0?.stage ?? 0) }
-            .asDriver(onErrorJustReturn: .sprout)
-
         let dayItems = state
             .map { summary, days in
                 WateringDayItemBuilder.makeItems(days: days, totalDays: summary?.totalDays ?? 0)
             }
             .asDriver(onErrorJustReturn: [])
-
-        let todayIndex = dayItems
-            .map { items in items.firstIndex(where: { $0.isToday }) ?? -1 }
 
         let isWateredToday = state
             .map { WateringDayItemBuilder.isWateredToday($0.1) }
@@ -140,9 +118,7 @@ public final class WateringViewModel {
             wateredDays: wateredDays,
             totalDays: totalDays,
             progressRatio: progressRatio,
-            growthStage: growthStage,
             days: dayItems,
-            todayIndex: todayIndex,
             isWateredToday: isWateredToday,
             errorToast: store.errorToast.asSignal()
         )
