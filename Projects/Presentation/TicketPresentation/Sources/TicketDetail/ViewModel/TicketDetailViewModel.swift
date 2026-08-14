@@ -47,6 +47,11 @@ public final class TicketDetailViewModel {
     private let ticketDetail: BehaviorRelay<TicketDetailEntity?> = .init(value: nil)
     private let collaborators: BehaviorRelay<[CollaboratorEntity]> = .init(value: [])
     private let errorToast: PublishRelay<String> = .init()
+    private let refreshRelay: PublishRelay<Void> = .init()
+
+    public func refresh() {
+        refreshRelay.accept(())
+    }
 
     public init(
         action: Action,
@@ -77,13 +82,16 @@ public final class TicketDetailViewModel {
 
     func transform(_ input: Input) -> Output {
 
-        input.rxViewDidLoad
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.fetchTicketDetail()
-                self.fetchCollaborators()
-            })
-            .disposed(by: disposeBag)
+        Observable.merge(
+            input.rxViewDidLoad.asObservable(),
+            refreshRelay.asObservable()
+        )
+        .withUnretained(self)
+        .subscribe(onNext: { (self, _) in
+            self.fetchTicketDetail()
+            self.fetchCollaborators()
+        })
+        .disposed(by: disposeBag)
 
         input.didTapAddMemberButton
             .withUnretained(self)

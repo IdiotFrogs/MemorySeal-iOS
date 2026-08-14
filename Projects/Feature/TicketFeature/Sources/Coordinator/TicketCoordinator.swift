@@ -9,15 +9,19 @@ public final class TicketCoordinator {
     private let capsuleId: Int
     private let ticketDIContainer: TicketDIContainer = .init()
     private let store: OpenedCapsuleStore
+    private let didBuryTicket: () -> Void
     private var externalOnOpened: (() -> Void)?
     private var ticketImageUrl: String?
+    private var ticketDetailViewModel: TicketDetailViewModel?
 
     public init(
         with navigationController: UINavigationController,
-        capsuleId: Int
+        capsuleId: Int,
+        didBuryTicket: @escaping () -> Void
     ) {
         self.navigationController = navigationController
         self.capsuleId = capsuleId
+        self.didBuryTicket = didBuryTicket
         self.store = ticketDIContainer.makeOpenedCapsuleStore()
     }
 
@@ -46,7 +50,12 @@ public final class TicketCoordinator {
             moveToBuryTicket: moveToBuryTicket,
             moveToWatering: moveToWatering
         )
-        return ticketDIContainer.makeTicketDetailViewController(action: ticketDetailAction, capsuleId: capsuleId)
+        let viewModel = ticketDIContainer.makeTicketDetailViewModel(
+            action: ticketDetailAction,
+            capsuleId: capsuleId
+        )
+        self.ticketDetailViewModel = viewModel
+        return ticketDIContainer.makeTicketDetailViewController(with: viewModel)
     }
 
     // MARK: - OpenFlow
@@ -124,6 +133,12 @@ public final class TicketCoordinator {
         let buryAction = BuryTicketViewModel.Action(
             dismiss: { [weak self] in
                 self?.navigationController.presentedViewController?.dismiss(animated: true)
+            },
+            didBuryTicket: { [weak self] in
+                guard let self else { return }
+                self.navigationController.presentedViewController?.dismiss(animated: true)
+                self.ticketDetailViewModel?.refresh()
+                self.didBuryTicket()
             }
         )
         let viewController = ticketDIContainer.makeBuryTicketViewController(

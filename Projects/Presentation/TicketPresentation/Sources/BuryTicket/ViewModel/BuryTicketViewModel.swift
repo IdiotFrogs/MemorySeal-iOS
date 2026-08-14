@@ -11,9 +11,14 @@ public final class BuryTicketViewModel {
 
     public struct Action {
         public let dismiss: () -> Void
+        public let didBuryTicket: () -> Void
 
-        public init(dismiss: @escaping () -> Void) {
+        public init(
+            dismiss: @escaping () -> Void,
+            didBuryTicket: @escaping () -> Void
+        ) {
             self.dismiss = dismiss
+            self.didBuryTicket = didBuryTicket
         }
     }
 
@@ -118,7 +123,7 @@ public final class BuryTicketViewModel {
                         )
                         await MainActor.run {
                             isLoading.accept(false)
-                            self.action.dismiss()
+                            self.action.didBuryTicket()
                         }
                     } catch {
                         await MainActor.run {

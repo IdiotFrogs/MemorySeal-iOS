@@ -87,13 +87,13 @@ public final class MainCoordinator {
     }
 
     private func moveToTicketCoordinator(capsuleId: Int) {
-        let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
+        let coordinator = makeTicketCoordinator(capsuleId: capsuleId)
         ticketCoordinator = coordinator
         coordinator.start()
     }
 
     private func moveToOpenCapsuleCoordinator(capsuleId: Int, ticketImageUrl: String? = nil) {
-        let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
+        let coordinator = makeTicketCoordinator(capsuleId: capsuleId)
         ticketCoordinator = coordinator
         coordinator.startOpenFlow(ticketImageUrl: ticketImageUrl, onOpened: { [weak self] in
             self?.homeCoordinator?.refreshHome()
@@ -101,9 +101,19 @@ public final class MainCoordinator {
     }
 
     private func moveToMemberListCoordinator(capsuleId: Int) {
-        let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
+        let coordinator = makeTicketCoordinator(capsuleId: capsuleId)
         ticketCoordinator = coordinator
         coordinator.startMemberList()
+    }
+
+    private func makeTicketCoordinator(capsuleId: Int) -> TicketCoordinator {
+        TicketCoordinator(
+            with: navigationController,
+            capsuleId: capsuleId,
+            didBuryTicket: { [weak self] in
+                self?.homeCoordinator?.refreshHome()
+            }
+        )
     }
 
     // MARK: - Landing
