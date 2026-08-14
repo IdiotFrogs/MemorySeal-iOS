@@ -122,11 +122,30 @@ final class TicketCollectionViewCell: UICollectionViewCell {
 
     // MARK: - Init
 
+    private let stageDecorationImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleToFill
+        imageView.isUserInteractionEnabled = false
+        imageView.isHidden = true
+        return imageView
+    }()
+
+    private var stageDecoration: TicketStageDecoration?
+
     override init(frame: CGRect) {
         super.init(frame: frame)
 
+        self.clipsToBounds = false
+        self.contentView.clipsToBounds = false
         self.addSubviews()
         self.setLayout()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        guard let stageDecoration else { return }
+        stageDecorationImageView.frame = stageDecoration.frame(fittingTicketBounds: contentView.bounds)
     }
 
     required init?(coder: NSCoder) {
@@ -137,6 +156,9 @@ final class TicketCollectionViewCell: UICollectionViewCell {
         super.prepareForReuse()
         ticketImageView.imageView.kf.cancelDownloadTask()
         ticketImageView.image = DesignSystemAsset.ImageAssets.ticketDummyImage.image
+        stageDecoration = nil
+        stageDecorationImageView.image = nil
+        stageDecorationImageView.isHidden = true
     }
 
     override func preferredLayoutAttributesFitting(
@@ -169,7 +191,25 @@ extension TicketCollectionViewCell {
             applyActiveState(createdAt: entity.createdAt)
         }
 
+        applyStageDecoration(
+            stage: entity.stage,
+            isBuried: entity.timeCapsuleStatus == .buried
+        )
         loadImage(from: entity.imageUrl)
+    }
+
+    private func applyStageDecoration(stage: Int, isBuried: Bool) {
+        stageDecoration = isBuried ? TicketStageDecoration(stage: stage) : nil
+
+        guard let stageDecoration else {
+            stageDecorationImageView.image = nil
+            stageDecorationImageView.isHidden = true
+            return
+        }
+
+        stageDecorationImageView.image = stageDecoration.image
+        stageDecorationImageView.isHidden = false
+        setNeedsLayout()
     }
 
     private func applyActiveState(createdAt: Date?) {
@@ -234,6 +274,8 @@ extension TicketCollectionViewCell {
 
         contentView.addSubview(ticketContentView)
         ticketContentView.addSubview(ticketImageView)
+
+        contentView.addSubview(stageDecorationImageView)
     }
 
     private func setLayout() {
