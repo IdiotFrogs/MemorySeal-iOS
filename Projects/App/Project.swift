@@ -80,5 +80,30 @@ let project = Project(
             resources: [],
             dependencies: [.target(name: "MemorySeal")]
         ),
+        .target(
+            name: "MemorySealUITests",
+            destinations: .iOS,
+            product: .uiTests,
+            bundleId: "io.tuist.MemorySealUITests",
+            infoPlist: .default,
+            sources: ["UITests/**"],
+            resources: [],
+            dependencies: [.target(name: "MemorySeal")]
+        ),
+    ],
+    schemes: [
+        .scheme(
+            name: "MemorySeal",
+            shared: true,
+            buildAction: .buildAction(targets: ["MemorySeal"]),
+            testAction: .targets(
+                ["MemorySealTests", "MemorySealUITests"],
+                configuration: .debug
+            ),
+            runAction: .runAction(configuration: .debug),
+            archiveAction: .archiveAction(configuration: .release),
+            profileAction: .profileAction(configuration: .release),
+            analyzeAction: .analyzeAction(configuration: .debug)
+        )
     ]
 )

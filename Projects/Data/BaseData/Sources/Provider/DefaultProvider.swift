@@ -11,6 +11,26 @@ import Moya
 
 public final class DefaultProvider<T: TargetType>: MoyaProvider<T> {
     public init(timeoutInterval: TimeInterval = 15.0) {
+        #if DEBUG
+        if UITestStubResponse.isStubNetworkEnabled {
+            super.init(
+                endpointClosure: { target in
+                    Endpoint(
+                        url: URL(target: target).absoluteString,
+                        sampleResponseClosure: {
+                            .networkResponse(200, UITestStubResponse.data(for: target))
+                        },
+                        method: target.method,
+                        task: target.task,
+                        httpHeaderFields: target.headers
+                    )
+                },
+                stubClosure: MoyaProvider<T>.immediatelyStub
+            )
+            return
+        }
+        #endif
+
         let requestClosure = { (endPoint: Endpoint, done: MoyaProvider.RequestResultClosure) in
             do {
                 var request = try endPoint.urlRequest()

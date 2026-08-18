@@ -16,6 +16,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         Messaging.messaging().delegate = self
 
+        #if DEBUG
+        if UITestLaunchSupport.isEnabled { return true }
+        #endif
+
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { _, _ in }
 

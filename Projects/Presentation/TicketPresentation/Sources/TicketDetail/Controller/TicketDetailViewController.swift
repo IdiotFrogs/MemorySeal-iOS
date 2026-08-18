@@ -110,6 +110,7 @@ public final class TicketDetailViewController: UIViewController {
     public override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
+        self.view.accessibilityIdentifier = "TicketDetailView"
         self.navigationController?.isNavigationBarHidden = true
         self.setDelegate()
 
