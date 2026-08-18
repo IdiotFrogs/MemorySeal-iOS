@@ -36,13 +36,14 @@ public final class HomeViewModel {
 
     private let ticketList: BehaviorRelay<[TimeCapsuleEntity]> = .init(value: [])
     private let refreshRelay: PublishRelay<Void> = .init()
+    private var loadGeneration: Int = 0
 
     public func refresh() {
         refreshRelay.accept(())
     }
 
     struct Input {
-        let rxViewDidLoad: PublishRelay<Void>
+        let rxViewWillAppear: PublishRelay<Void>
         let didTapTicketList: ControlEvent<IndexPath>
     }
 
@@ -53,19 +54,23 @@ public final class HomeViewModel {
     func transform(_ input: Input) -> Output {
 
         Observable.merge(
-            input.rxViewDidLoad.asObservable(),
+            input.rxViewWillAppear.asObservable(),
             refreshRelay.asObservable()
         )
         .withUnretained(self)
         .subscribe(onNext: { (self, _) in
+            self.loadGeneration += 1
+            let generation = self.loadGeneration
             Task {
                 do {
                     let capsules = try await self.homeUseCase.fetchMyTimeCapsules(role: self.role)
                     await MainActor.run {
+                        guard generation == self.loadGeneration else { return }
                         self.ticketList.accept(capsules)
                     }
                 } catch {
                     await MainActor.run {
+                        guard generation == self.loadGeneration else { return }
                         self.ticketList.accept([])
                     }
                 }

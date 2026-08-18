@@ -17,7 +17,7 @@ import BaseDomain
 public final class HomeViewController: UIViewController {
     private let viewModel: HomeViewModel
     private let disposeBag: DisposeBag = DisposeBag()
-    private let rxViewDidLoad: PublishRelay<Void> = .init()
+    private let rxViewWillAppear: PublishRelay<Void> = .init()
 
     private let collectionView: UICollectionView = {
         let collectionViewFlowLayout = UICollectionViewFlowLayout()
@@ -81,14 +81,19 @@ public final class HomeViewController: UIViewController {
         self.setLayout()
 
         self.bindViewModel()
-        self.rxViewDidLoad.accept(())
+    }
+
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        self.rxViewWillAppear.accept(())
     }
 }
 
 extension HomeViewController {
     private func bindViewModel() {
         let input = HomeViewModel.Input(
-            rxViewDidLoad: rxViewDidLoad,
+            rxViewWillAppear: rxViewWillAppear,
             didTapTicketList: collectionView.rx.itemSelected
         )
         let output = viewModel.transform(input)
