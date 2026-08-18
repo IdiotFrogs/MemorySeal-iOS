@@ -90,7 +90,12 @@ public final class HomeCoordinator {
     }
 
     private func moveToEnterTicket() {
-        let enterTicketViewController = homeDIContainer.makeEnterTicketViewController()
+        let action = EnterTicketViewModel.Action(
+            didJoinTicket: { [weak self] in
+                self?.refreshHome()
+            }
+        )
+        let enterTicketViewController = homeDIContainer.makeEnterTicketViewController(action: action)
         enterTicketViewController.modalPresentationStyle = .overFullScreen
         self.navigationController.present(
             enterTicketViewController,
