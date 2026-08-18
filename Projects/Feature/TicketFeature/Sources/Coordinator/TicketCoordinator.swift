@@ -201,7 +201,27 @@ public final class TicketCoordinator {
     // MARK: - MyTicketMessages
 
     public func moveToMyTicketMessages() {
-        let vc = ticketDIContainer.makeMyTicketMessagesViewController(capsuleId: capsuleId)
+        let action = MyTicketMessagesViewModel.Action(
+            moveToPreview: { [weak self] in
+                self?.moveToMyMessagesPreview()
+            }
+        )
+        let vc = ticketDIContainer.makeMyTicketMessagesViewController(action: action, capsuleId: capsuleId)
         navigationController.pushViewController(vc, animated: true)
+    }
+
+    // MARK: - MyMessagesPreview
+
+    public func moveToMyMessagesPreview() {
+        let action = MyMessagesPreviewViewModel.Action(
+            moveToBack: { [weak self] in
+                self?.navigationController.popViewController(animated: true)
+            }
+        )
+        let viewController = ticketDIContainer.makeMyMessagesPreviewViewController(
+            action: action,
+            capsuleId: capsuleId
+        )
+        navigationController.pushViewController(viewController, animated: true)
     }
 }

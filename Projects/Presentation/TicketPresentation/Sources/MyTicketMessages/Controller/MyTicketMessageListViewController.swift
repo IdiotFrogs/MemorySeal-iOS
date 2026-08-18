@@ -280,19 +280,7 @@ extension MyTicketMessageListViewController {
 
 extension MyTicketMessageListViewController {
     private func showBannerPreview() {
-        let title: String
-        let body: String
-        switch type {
-        case .text:
-            title = "메세지"
-            body = "말하고 싶은 메시지를 작성해보세요."
-        case .photo:
-            title = "사진"
-            body = "공유하고 싶은 사진을 등록해보세요."
-        }
-        let alert = UIAlertController(title: title, message: body, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "닫기", style: .default))
-        present(alert, animated: true)
+        viewModel.moveToPreview()
     }
 
     private func showTextPreview(for content: CapsuleContent) {

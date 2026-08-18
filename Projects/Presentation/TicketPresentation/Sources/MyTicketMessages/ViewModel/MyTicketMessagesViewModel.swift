@@ -7,17 +7,39 @@ import TicketDomain
 
 public final class MyTicketMessagesViewModel {
 
+    // MARK: - Action
+
+    public struct Action {
+        public let moveToPreview: () -> Void
+
+        public init(moveToPreview: @escaping () -> Void) {
+            self.moveToPreview = moveToPreview
+        }
+    }
+
     // MARK: - Properties
 
+    private let action: Action
     private let capsuleId: Int
     private let capsuleContentUseCase: CapsuleContentUseCase
     private let contents: BehaviorRelay<[CapsuleContent]> = BehaviorRelay(value: [])
 
     // MARK: - Init
 
-    public init(capsuleId: Int, capsuleContentUseCase: CapsuleContentUseCase) {
+    public init(
+        action: Action,
+        capsuleId: Int,
+        capsuleContentUseCase: CapsuleContentUseCase
+    ) {
+        self.action = action
         self.capsuleId = capsuleId
         self.capsuleContentUseCase = capsuleContentUseCase
+    }
+
+    // MARK: - Preview
+
+    public func moveToPreview() {
+        action.moveToPreview()
     }
 
     // MARK: - Fetch
