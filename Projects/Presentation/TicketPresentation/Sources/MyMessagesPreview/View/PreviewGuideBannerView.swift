@@ -12,6 +12,8 @@ final class PreviewGuideBannerView: UIView {
             fillColor: MyMessagesPreviewMetrics.bannerBackgroundColor
         )
         view.waveCornerRadius = MyMessagesPreviewMetrics.bannerCornerRadius
+        view.waveSpacing = MyMessagesPreviewMetrics.bannerWaveSpacing
+        view.waveAmplitude = MyMessagesPreviewMetrics.bannerWaveAmplitude
         return view
     }()
 

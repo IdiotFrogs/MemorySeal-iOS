@@ -15,6 +15,8 @@ enum MyMessagesPreviewMetrics {
     static let bannerContentHorizontalPadding: CGFloat = 20
     static let bannerContentVerticalPadding: CGFloat = 12
     static let bannerCornerRadius: CGFloat = 12
+    static let bannerWaveSpacing: CGFloat = 6.0
+    static let bannerWaveAmplitude: CGFloat = 2.0
 
     // MARK: Feed
 

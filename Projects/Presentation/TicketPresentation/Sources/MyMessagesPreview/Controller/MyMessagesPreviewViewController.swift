@@ -37,6 +37,8 @@ public final class MyMessagesPreviewViewController: UIViewController {
 
     private let guideBannerView: PreviewGuideBannerView = PreviewGuideBannerView()
 
+    private let bannerContainerView: UIView = UIView()
+
     private lazy var tableView: UITableView = {
         let view = UITableView(frame: .zero, style: .plain)
         view.backgroundColor = .white
@@ -46,7 +48,7 @@ public final class MyMessagesPreviewViewController: UIViewController {
         view.rowHeight = UITableView.automaticDimension
         view.contentInsetAdjustmentBehavior = .never
         view.contentInset = UIEdgeInsets(
-            top: MyMessagesPreviewMetrics.feedTopInset,
+            top: 0,
             left: 0,
             bottom: MyMessagesPreviewMetrics.feedBottomInset,
             right: 0
@@ -121,6 +123,11 @@ public final class MyMessagesPreviewViewController: UIViewController {
 
         rxViewDidLoad.accept(())
     }
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        sizeTableHeaderView()
+    }
 }
 
 // MARK: - Setup
@@ -128,6 +135,7 @@ public final class MyMessagesPreviewViewController: UIViewController {
 extension MyMessagesPreviewViewController {
     private func setInitialValues() {
         guideBannerView.configure(message: Self.guideMessage)
+        tableView.tableHeaderView = bannerContainerView
     }
 
     private func addSubviews() {
@@ -138,12 +146,13 @@ extension MyMessagesPreviewViewController {
         errorStackView.addArrangedSubview(retryButton)
         view.addSubview(headerContainerView)
         headerContainerView.addSubview(navigationView)
-        headerContainerView.addSubview(guideBannerView)
+        bannerContainerView.addSubview(guideBannerView)
     }
 
     private func setLayout() {
         headerContainerView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(navigationView)
         }
         navigationView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide)
@@ -151,9 +160,11 @@ extension MyMessagesPreviewViewController {
             $0.height.equalTo(MyMessagesPreviewMetrics.navigationBarHeight)
         }
         guideBannerView.snp.makeConstraints {
-            $0.top.equalTo(navigationView.snp.bottom).offset(MyMessagesPreviewMetrics.bannerVerticalPadding)
+            $0.top.equalToSuperview().offset(MyMessagesPreviewMetrics.bannerVerticalPadding)
             $0.leading.trailing.equalToSuperview().inset(MyMessagesPreviewMetrics.bannerHorizontalInset)
-            $0.bottom.equalToSuperview().inset(MyMessagesPreviewMetrics.bannerVerticalPadding)
+            $0.bottom.equalToSuperview().inset(
+                MyMessagesPreviewMetrics.bannerVerticalPadding + MyMessagesPreviewMetrics.feedTopInset
+            )
         }
         tableView.snp.makeConstraints {
             $0.top.equalTo(headerContainerView.snp.bottom)
@@ -200,6 +211,31 @@ extension MyMessagesPreviewViewController {
                 self.showErrorState()
             }
             .disposed(by: disposeBag)
+    }
+}
+
+// MARK: - Table Header
+
+extension MyMessagesPreviewViewController {
+    private func sizeTableHeaderView() {
+        guard let headerView = tableView.tableHeaderView else { return }
+
+        let targetWidth = tableView.bounds.width
+        guard targetWidth > 0 else { return }
+
+        headerView.frame.size.width = targetWidth
+        headerView.layoutIfNeeded()
+
+        let fittingHeight = headerView.systemLayoutSizeFitting(
+            CGSize(width: targetWidth, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height
+
+        guard headerView.frame.height != fittingHeight else { return }
+
+        headerView.frame.size.height = fittingHeight
+        tableView.tableHeaderView = headerView
     }
 }
 
