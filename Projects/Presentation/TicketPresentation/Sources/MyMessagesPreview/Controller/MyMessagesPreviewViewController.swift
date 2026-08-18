@@ -9,12 +9,14 @@ public final class MyMessagesPreviewViewController: UIViewController {
 
     // MARK: - Properties
 
+    private static let guideMessage: String = "미리보기는 자신이 등록한 내용만\n확인하실 수 있습니다."
+
     private let viewModel: MyMessagesPreviewViewModel
     private let disposeBag: DisposeBag = DisposeBag()
     private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let retryDidTap: PublishRelay<Void> = .init()
 
-    private var group: MemoryGroup?
+    private var contents: [PreviewMessageContent] = []
     private var didLoadOnce: Bool = false
     private var loadingView: BasicLoadingView?
 
@@ -29,17 +31,13 @@ public final class MyMessagesPreviewViewController: UIViewController {
     private let navigationView: MemorySealNavigationView = {
         let view = MemorySealNavigationView()
         view.setTitle("미리보기")
-        view.setTitleFont(MemoryMessageMetrics.titleFont)
+        view.setTitleFont(MyMessagesPreviewMetrics.titleFont)
         return view
     }()
 
-    private let profileBarView: MemoryProfileBarView = MemoryProfileBarView()
+    private let guideBannerView: PreviewGuideBannerView = PreviewGuideBannerView()
 
-    private let headerSeparatorView: UIView = {
-        let view = UIView()
-        view.backgroundColor = MemoryMessageMetrics.headerBorderColor
-        return view
-    }()
+    private let bannerContainerView: UIView = UIView()
 
     private lazy var tableView: UITableView = {
         let view = UITableView(frame: .zero, style: .plain)
@@ -50,12 +48,13 @@ public final class MyMessagesPreviewViewController: UIViewController {
         view.rowHeight = UITableView.automaticDimension
         view.contentInsetAdjustmentBehavior = .never
         view.contentInset = UIEdgeInsets(
-            top: MemoryMessageMetrics.feedTopInset,
+            top: 0,
             left: 0,
-            bottom: MemoryMessageMetrics.feedBottomInset,
+            bottom: MyMessagesPreviewMetrics.feedBottomInset,
             right: 0
         )
-        view.register(MemoryGroupCell.self, forCellReuseIdentifier: MemoryGroupCell.identifier)
+        view.register(PreviewTextMessageCell.self, forCellReuseIdentifier: PreviewTextMessageCell.identifier)
+        view.register(PreviewPhotoMessageCell.self, forCellReuseIdentifier: PreviewPhotoMessageCell.identifier)
         view.dataSource = self
         return view
     }()
@@ -117,17 +116,28 @@ public final class MyMessagesPreviewViewController: UIViewController {
         view.backgroundColor = .white
         navigationController?.isNavigationBarHidden = true
 
+        setInitialValues()
         addSubviews()
         setLayout()
         bindViewModel()
 
         rxViewDidLoad.accept(())
     }
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        sizeTableHeaderView()
+    }
 }
 
 // MARK: - Setup
 
 extension MyMessagesPreviewViewController {
+    private func setInitialValues() {
+        guideBannerView.configure(message: Self.guideMessage)
+        tableView.tableHeaderView = bannerContainerView
+    }
+
     private func addSubviews() {
         view.addSubview(tableView)
         view.addSubview(emptyStateLabel)
@@ -136,29 +146,25 @@ extension MyMessagesPreviewViewController {
         errorStackView.addArrangedSubview(retryButton)
         view.addSubview(headerContainerView)
         headerContainerView.addSubview(navigationView)
-        headerContainerView.addSubview(profileBarView)
-        headerContainerView.addSubview(headerSeparatorView)
+        bannerContainerView.addSubview(guideBannerView)
     }
 
     private func setLayout() {
         headerContainerView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(navigationView)
         }
         navigationView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide)
             $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(MemoryMessageMetrics.navigationBarHeight)
+            $0.height.equalTo(MyMessagesPreviewMetrics.navigationBarHeight)
         }
-        profileBarView.snp.makeConstraints {
-            $0.top.equalTo(navigationView.snp.bottom).offset(MemoryMessageMetrics.headerStackSpacing)
-            $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(MemoryMessageMetrics.focusedRingSize + MemoryMessageMetrics.profileItemSpacing + 16)
-        }
-        headerSeparatorView.snp.makeConstraints {
-            $0.top.equalTo(profileBarView.snp.bottom).offset(MemoryMessageMetrics.headerBottomPadding)
-            $0.leading.trailing.equalToSuperview()
-            $0.height.equalTo(1)
-            $0.bottom.equalToSuperview()
+        guideBannerView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(MyMessagesPreviewMetrics.bannerVerticalPadding)
+            $0.leading.trailing.equalToSuperview().inset(MyMessagesPreviewMetrics.bannerHorizontalInset)
+            $0.bottom.equalToSuperview().inset(
+                MyMessagesPreviewMetrics.bannerVerticalPadding + MyMessagesPreviewMetrics.feedTopInset
+            )
         }
         tableView.snp.makeConstraints {
             $0.top.equalTo(headerContainerView.snp.bottom)
@@ -188,13 +194,6 @@ extension MyMessagesPreviewViewController {
         )
         let output = viewModel.transform(input)
 
-        output.participant
-            .drive(with: self) { (self, participant) in
-                guard let participant else { return }
-                self.profileBarView.configure(participants: [participant], focusedIndex: 0)
-            }
-            .disposed(by: disposeBag)
-
         output.contents
             .drive(with: self) { (self, contents) in
                 self.apply(contents: contents)
@@ -215,16 +214,37 @@ extension MyMessagesPreviewViewController {
     }
 }
 
+// MARK: - Table Header
+
+extension MyMessagesPreviewViewController {
+    private func sizeTableHeaderView() {
+        guard let headerView = tableView.tableHeaderView else { return }
+
+        let targetWidth = tableView.bounds.width
+        guard targetWidth > 0 else { return }
+
+        headerView.frame.size.width = targetWidth
+        headerView.layoutIfNeeded()
+
+        let fittingHeight = headerView.systemLayoutSizeFitting(
+            CGSize(width: targetWidth, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height
+
+        guard headerView.frame.height != fittingHeight else { return }
+
+        headerView.frame.size.height = fittingHeight
+        tableView.tableHeaderView = headerView
+    }
+}
+
 // MARK: - Data
 
 extension MyMessagesPreviewViewController {
-    private func apply(contents: [MemoryMessageContent]) {
+    private func apply(contents: [PreviewMessageContent]) {
         errorStackView.isHidden = true
-        group = contents.isEmpty ? nil : MemoryGroup(
-            participant: MemoryParticipant(id: 0, name: ""),
-            isMine: true,
-            contents: contents
-        )
+        self.contents = contents
         tableView.reloadData()
         updateEmptyState()
     }
@@ -251,7 +271,7 @@ extension MyMessagesPreviewViewController {
     }
 
     private func updateEmptyState() {
-        emptyStateLabel.isHidden = !(didLoadOnce && group == nil && errorStackView.isHidden)
+        emptyStateLabel.isHidden = !(didLoadOnce && contents.isEmpty && errorStackView.isHidden)
     }
 }
 
@@ -259,19 +279,29 @@ extension MyMessagesPreviewViewController {
 
 extension MyMessagesPreviewViewController: UITableViewDataSource {
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return group == nil ? 0 : 1
+        return contents.count
     }
 
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let group,
-              let cell = tableView.dequeueReusableCell(
-                withIdentifier: MemoryGroupCell.identifier,
+        switch contents[indexPath.row] {
+        case .text(let text):
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: PreviewTextMessageCell.identifier,
                 for: indexPath
-              ) as? MemoryGroupCell
-        else {
-            return UITableViewCell()
+            ) as? PreviewTextMessageCell else {
+                return UITableViewCell()
+            }
+            cell.configure(text: text)
+            return cell
+        case .photo(let imageUrls):
+            guard let cell = tableView.dequeueReusableCell(
+                withIdentifier: PreviewPhotoMessageCell.identifier,
+                for: indexPath
+            ) as? PreviewPhotoMessageCell else {
+                return UITableViewCell()
+            }
+            cell.configure(imageUrls: imageUrls)
+            return cell
         }
-        cell.configure(group: group)
-        return cell
     }
 }

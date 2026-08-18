@@ -16,28 +16,22 @@ public final class MyMessagesPreviewViewModel {
         }
     }
 
-    private static let selfDisplayName: String = "나"
-
     private let action: Action
     private let capsuleId: Int
     private let capsuleContentUseCase: CapsuleContentUseCase
-    private let userUseCase: UserUseCase
 
-    private let participantRelay: BehaviorRelay<MemoryParticipant?> = .init(value: nil)
-    private let contentsRelay: BehaviorRelay<[MemoryMessageContent]> = .init(value: [])
+    private let contentsRelay: BehaviorRelay<[PreviewMessageContent]> = .init(value: [])
     private let isLoadingRelay: BehaviorRelay<Bool> = .init(value: false)
     private let errorRelay: PublishRelay<Void> = .init()
 
     public init(
         action: Action,
         capsuleId: Int,
-        capsuleContentUseCase: CapsuleContentUseCase,
-        userUseCase: UserUseCase
+        capsuleContentUseCase: CapsuleContentUseCase
     ) {
         self.action = action
         self.capsuleId = capsuleId
         self.capsuleContentUseCase = capsuleContentUseCase
-        self.userUseCase = userUseCase
     }
 
     struct Input {
@@ -47,8 +41,7 @@ public final class MyMessagesPreviewViewModel {
     }
 
     struct Output {
-        let participant: Driver<MemoryParticipant?>
-        let contents: Driver<[MemoryMessageContent]>
+        let contents: Driver<[PreviewMessageContent]>
         let isLoading: Driver<Bool>
         let showError: Signal<Void>
     }
@@ -72,7 +65,6 @@ public final class MyMessagesPreviewViewModel {
             .disposed(by: disposeBag)
 
         return Output(
-            participant: participantRelay.asDriver(),
             contents: contentsRelay.asDriver(),
             isLoading: isLoadingRelay.asDriver(),
             showError: errorRelay.asSignal()
@@ -86,19 +78,10 @@ extension MyMessagesPreviewViewModel {
         Task { [weak self] in
             guard let self else { return }
             do {
-                async let myContents = self.capsuleContentUseCase.fetchMyContents(capsuleId: self.capsuleId)
-                async let userInfo = self.userUseCase.fetchUserInfo()
-                let (contents, me) = try await (myContents, userInfo)
+                let contents = try await self.capsuleContentUseCase.fetchMyContents(capsuleId: self.capsuleId)
 
                 await MainActor.run {
                     self.isLoadingRelay.accept(false)
-                    self.participantRelay.accept(
-                        MemoryParticipant(
-                            id: me.id,
-                            name: Self.selfDisplayName,
-                            profileImageUrl: me.profileImageUrl
-                        )
-                    )
                     self.contentsRelay.accept(contents.map { Self.makeContent(from: $0) })
                 }
             } catch {
@@ -110,7 +93,7 @@ extension MyMessagesPreviewViewModel {
         }
     }
 
-    private static func makeContent(from content: CapsuleContent) -> MemoryMessageContent {
+    private static func makeContent(from content: CapsuleContent) -> PreviewMessageContent {
         switch content {
         case .text(_, let text):
             return .text(text)

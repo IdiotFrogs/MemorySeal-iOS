@@ -7,25 +7,14 @@
 ## 빌드 시스템
 
 - **Tuist** 로 프로젝트 생성 (`tuist generate` 실행 후 작업)
-- 메인 타겟: `MemorySeal` (Bundle ID: `io.tuist.MemorySeal`)
+- 메인 타겟: `MemorySeal`
 - 배포 대상: iOS 16+
 
 ## 아키텍처: Clean Architecture + MVVM-C + Feature Modules
 
-### 레이어 구조
+레이어 의존 방향: `Feature` → `Presentation` → `Domain` ← `Data`
 
-```
-Feature/{Name}       → Coordinator + DIContainer (네비게이션 + 의존성 조립)
-Presentation/{Name}  → ViewController + ViewModel (UI + 상태 관리)
-Domain/{Name}        → UseCase + Entity + Repository Protocol (비즈니스 로직)
-Data/{Name}          → Repository 구현체 + TargetType + DTO (네트워크/저장소)
-Shared/DesignSystem  → 공통 UI 컴포넌트
-ThirdPartyLib        → 외부 라이브러리 래핑
-```
-
-### 피처 모듈 목록
-
-App, Splash, Login, SignUp, Auth, Home, Profile, Memory, CreateTicket, MessageList
+상세 코드 컨벤션 (네이밍, import 순서, 파일 구조, 레이어별 패턴) 은 `CONVENTIONS.md` 참고.
 
 ## 핵심 패턴
 
@@ -35,31 +24,9 @@ App, Splash, Login, SignUp, Auth, Home, Profile, Memory, CreateTicket, MessageLi
 - 각 Feature Coordinator는 내부 화면 전환 담당
 - 부모 Coordinator로 이벤트 전달 시 delegate 사용
 
-```swift
-// ProfileCoordinator 예시
-public func moveToEditProfile(nickname: String, profileImageUrl: String) {
-    let vm = profileDIContainer.makeEditProfileViewModel(nickname: nickname, profileImageUrl: profileImageUrl)
-    vm.delegate = self
-    let vc = profileDIContainer.makeEditProfileViewController(with: vm)
-    navigationController.pushViewController(vc, animated: true)
-}
-```
-
 ### 2. ViewModel Input/Output 패턴
 
-```swift
-struct Input {
-    let backButtonDidTap: ControlEvent<Void>
-    let saveButtonDidTap: ControlEvent<Void>
-    // ...
-}
-struct Output {
-    let userInfo: Driver<UserInfoEntity?>
-}
-
-func translation(_ input: Input) -> Output { ... }
-```
-
+- `translation(_ input: Input) -> Output` 로 바인딩 (`transform` 아님)
 - 상태 관리: `BehaviorRelay`
 - 비동기: `Task { try await ... }` + `await MainActor.run { ... }`
 - RxSwift + async/await 혼용
@@ -80,17 +47,6 @@ Provider<TargetType> → Repository → UseCase → ViewModel → ViewController
 - `isNeededAccessToken: Bool` 로 인증 토큰 자동 주입 제어
 - 이미지 업로드: `.uploadCompositeMultipart`
 - 일반 요청: `.requestParameters(encoding: URLEncoding.queryString)` 또는 `.requestJSONEncodable`
-
-## 주요 프레임워크
-
-| 프레임워크 | 용도 |
-|---|---|
-| RxSwift / RxCocoa | 반응형 프로그래밍 |
-| Moya | 네트워크 추상화 |
-| SnapKit | AutoLayout DSL |
-| Kingfisher | 이미지 로딩/캐싱 |
-| Lottie | 애니메이션 |
-| GoogleSignIn | OAuth 로그인 |
 
 ## 새 기능 추가 시 체크리스트
 
