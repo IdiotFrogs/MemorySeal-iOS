@@ -163,9 +163,9 @@ extension TicketCollectionViewCell {
         ticketTitleLabel.text = entity.title
 
         switch entity.timeCapsuleStatus {
-        case .buried:
+        case .buried, .opened:
             applyBuriedState(createdAt: entity.createdAt)
-        case .opened, .beforeBuried:
+        case .beforeBuried:
             applyActiveState(createdAt: entity.createdAt)
         }
 
