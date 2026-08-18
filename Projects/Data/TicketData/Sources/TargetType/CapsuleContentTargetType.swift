@@ -4,7 +4,7 @@ import Moya
 import BaseData
 
 public enum CapsuleContentTargetType {
-    case fetchCapsuleContents(capsuleId: Int)
+    case fetchCapsuleContents(capsuleId: Int, page: Int, size: Int)
     case fetchMyCapsuleContents(capsuleId: Int)
     case createTextContent(capsuleId: Int, content: String)
     case createPhotoContent(capsuleId: Int, images: [Data])
@@ -14,7 +14,7 @@ public enum CapsuleContentTargetType {
 extension CapsuleContentTargetType: BaseTargetType {
     public var path: String {
         switch self {
-        case .fetchCapsuleContents(let capsuleId):
+        case .fetchCapsuleContents(let capsuleId, _, _):
             return "/api/time-capsule-content/\(capsuleId)/contents"
         case .fetchMyCapsuleContents(let capsuleId):
             return "/api/time-capsule-content/\(capsuleId)/my-contents"
@@ -39,7 +39,13 @@ extension CapsuleContentTargetType: BaseTargetType {
 
     public var task: Moya.Task {
         switch self {
-        case .fetchCapsuleContents, .fetchMyCapsuleContents:
+        case .fetchCapsuleContents(_, let page, let size):
+            return .requestParameters(
+                parameters: ["page": page, "size": size],
+                encoding: URLEncoding.queryString
+            )
+
+        case .fetchMyCapsuleContents:
             return .requestPlain
 
         case .createTextContent(_, let content):

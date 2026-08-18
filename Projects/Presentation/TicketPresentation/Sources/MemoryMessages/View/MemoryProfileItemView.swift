@@ -38,7 +38,7 @@ final class MemoryProfileItemView: UIView {
         view.strokeAlignment = .outside
         view.isUserInteractionEnabled = false
         view.backgroundColor = .clear
-        view.isHidden = true
+        view.alpha = 0
         return view
     }()
 
@@ -112,7 +112,8 @@ extension MemoryProfileItemView {
             self.avatarSizeConstraint = $0.width.height.equalTo(MemoryMessageMetrics.unfocusedAvatarSize).constraint
         }
         ringView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.center.equalToSuperview()
+            $0.width.height.equalTo(MemoryMessageMetrics.focusedRingSize)
         }
         nameLabel.snp.makeConstraints {
             $0.top.equalTo(avatarContainer.snp.bottom).offset(MemoryMessageMetrics.profileItemSpacing)
@@ -134,31 +135,52 @@ extension MemoryProfileItemView {
         let avatarSize = isItemFocused
             ? MemoryMessageMetrics.focusedAvatarSize
             : MemoryMessageMetrics.unfocusedAvatarSize
+        let ringScale = avatarSize / MemoryMessageMetrics.focusedRingSize
+        let duration = MemoryMessageMetrics.selectionAnimationDuration
 
         containerSizeConstraint?.update(offset: containerSize)
         avatarSizeConstraint?.update(offset: avatarSize)
-        avatarImageView.layer.cornerRadius = avatarSize / 2
         nameLabel.font = isItemFocused
             ? MemoryMessageMetrics.focusedNameFont
             : MemoryMessageMetrics.unfocusedNameFont
-        ringView.isHidden = !isItemFocused
 
         let nameWidth = nameLabel.intrinsicContentSize.width
         widthConstraint?.update(offset: max(containerSize, nameWidth))
 
+        animateCornerRadius(to: avatarSize / 2, duration: animated ? duration : 0)
+
         let updates: () -> Void = { [weak self] in
             guard let self else { return }
+            self.ringView.transform = CGAffineTransform(scaleX: ringScale, y: ringScale)
+            self.ringView.alpha = self.isItemFocused ? 1 : 0
             self.superview?.layoutIfNeeded()
         }
         if animated {
             UIView.animate(
-                withDuration: 0.25,
+                withDuration: duration,
                 delay: 0,
-                options: [.curveEaseInOut],
+                options: [.curveEaseInOut, .beginFromCurrentState],
                 animations: updates
             )
         } else {
             updates()
         }
+    }
+
+    private func animateCornerRadius(to radius: CGFloat, duration: TimeInterval) {
+        guard duration > 0 else {
+            avatarImageView.layer.removeAnimation(forKey: "cornerRadius")
+            avatarImageView.layer.cornerRadius = radius
+            return
+        }
+
+        let animation = CABasicAnimation(keyPath: "cornerRadius")
+        animation.fromValue = avatarImageView.layer.presentation()?.cornerRadius
+            ?? avatarImageView.layer.cornerRadius
+        animation.toValue = radius
+        animation.duration = duration
+        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        avatarImageView.layer.add(animation, forKey: "cornerRadius")
+        avatarImageView.layer.cornerRadius = radius
     }
 }

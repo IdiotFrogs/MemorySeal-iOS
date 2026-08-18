@@ -8,6 +8,15 @@ struct CapsuleContentListResponseDTO: Decodable {
     let number: Int?
     let totalElements: Int?
     let totalPages: Int?
+
+    var toDomain: CapsuleContentGroupPageEntity {
+        return .init(
+            groups: content.map { $0.toDomain },
+            currentPage: number ?? 0,
+            isLast: last ?? true,
+            totalElements: totalElements ?? content.count
+        )
+    }
 }
 
 struct CapsuleContentGroupResponseDTO: Decodable {

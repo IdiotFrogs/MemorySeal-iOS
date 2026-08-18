@@ -16,8 +16,14 @@ public final class DefaultCapsuleContentRepository: CapsuleContentRepository {
         self.userDefaultStorage = userDefaultStorage
     }
 
-    public func fetchCapsuleContents(capsuleId: Int) async throws -> [CapsuleContentGroupEntity] {
-        let result = await provider.request(.fetchCapsuleContents(capsuleId: capsuleId))
+    public func fetchCapsuleContents(
+        capsuleId: Int,
+        page: Int,
+        size: Int
+    ) async throws -> CapsuleContentGroupPageEntity {
+        let result = await provider.request(
+            .fetchCapsuleContents(capsuleId: capsuleId, page: page, size: size)
+        )
 
         let responseDTO = try ResultHandler.handleResult(
             result: result,
@@ -25,7 +31,7 @@ public final class DefaultCapsuleContentRepository: CapsuleContentRepository {
             errorType: CapsuleContentError.self
         )
 
-        return responseDTO.content.map { $0.toDomain }
+        return responseDTO.toDomain
     }
 
     public func fetchMyContents(capsuleId: Int) async throws -> [CapsuleContent] {

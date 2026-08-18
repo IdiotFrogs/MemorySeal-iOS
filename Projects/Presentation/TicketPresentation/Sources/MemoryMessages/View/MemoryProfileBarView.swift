@@ -7,17 +7,22 @@ final class MemoryProfileBarView: UIView {
 
     // MARK: - Properties
 
+    private static let reachEndThreshold: CGFloat = 80
+
     var onSelect: ((Int) -> Void)?
+    var onReachEnd: (() -> Void)?
+
     private var itemViews: [MemoryProfileItemView] = []
-    private(set) var focusedIndex: Int = 0
+    private(set) var selectedIndex: Int?
 
     // MARK: - UI
 
-    private let scrollView: UIScrollView = {
+    private lazy var scrollView: UIScrollView = {
         let view = UIScrollView()
         view.showsHorizontalScrollIndicator = false
         view.alwaysBounceHorizontal = true
         view.clipsToBounds = false
+        view.delegate = self
         return view
     }()
 
@@ -43,36 +48,70 @@ final class MemoryProfileBarView: UIView {
 
     // MARK: - Configure
 
-    func configure(participants: [MemoryParticipant], focusedIndex: Int = 0) {
-        itemViews.forEach { $0.removeFromSuperview() }
-        itemViews.removeAll()
-        contentStackView.arrangedSubviews.forEach { contentStackView.removeArrangedSubview($0); $0.removeFromSuperview() }
-
-        for (index, participant) in participants.enumerated() {
-            let itemView = MemoryProfileItemView()
-            itemView.configure(participant: participant)
-            itemView.tag = index
-            itemView.isUserInteractionEnabled = true
-            let tap = UITapGestureRecognizer(target: self, action: #selector(handleItemTap(_:)))
-            itemView.addGestureRecognizer(tap)
-            contentStackView.addArrangedSubview(itemView)
-            itemViews.append(itemView)
+    func configure(participants: [MemoryParticipant]) {
+        if participants.count < itemViews.count {
+            resetItems()
         }
 
-        self.focusedIndex = focusedIndex
+        for (index, participant) in participants.enumerated() {
+            if index < itemViews.count {
+                itemViews[index].configure(participant: participant)
+            } else {
+                appendItem(participant: participant, index: index)
+            }
+        }
+
+        applySelection(animated: false)
+    }
+
+    func setSelectedIndex(_ index: Int?, animated: Bool) {
+        guard selectedIndex != index else { return }
+        selectedIndex = index
+        applySelection(animated: animated)
+
+        if let index {
+            scrollItemToVisible(index: index, animated: animated)
+        }
+    }
+}
+
+// MARK: - Items
+
+extension MemoryProfileBarView {
+    private func resetItems() {
+        itemViews.forEach {
+            contentStackView.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        itemViews.removeAll()
+    }
+
+    private func appendItem(participant: MemoryParticipant, index: Int) {
+        let itemView = MemoryProfileItemView()
+        itemView.configure(participant: participant)
+        itemView.tag = index
+        itemView.isUserInteractionEnabled = true
+        itemView.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(handleItemTap(_:)))
+        )
+        contentStackView.addArrangedSubview(itemView)
+        itemViews.append(itemView)
+    }
+
+    private func applySelection(animated: Bool) {
         for (index, itemView) in itemViews.enumerated() {
-            itemView.setFocused(index == focusedIndex, animated: false)
+            itemView.setFocused(index == selectedIndex, animated: animated)
         }
     }
 
-    func setFocusedIndex(_ index: Int, animated: Bool) {
-        guard index != focusedIndex, itemViews.indices.contains(index) else { return }
-        if itemViews.indices.contains(focusedIndex) {
-            itemViews[focusedIndex].setFocused(false, animated: animated)
-        }
-        itemViews[index].setFocused(true, animated: animated)
-        focusedIndex = index
-        scrollItemToVisible(index: index, animated: animated)
+    private func scrollItemToVisible(index: Int, animated: Bool) {
+        guard itemViews.indices.contains(index) else { return }
+        let target = itemViews[index]
+        let rect = target.convert(target.bounds, to: scrollView)
+        scrollView.scrollRectToVisible(
+            rect.insetBy(dx: -MemoryMessageMetrics.profileBarHorizontalInset, dy: 0),
+            animated: animated
+        )
     }
 }
 
@@ -83,12 +122,23 @@ extension MemoryProfileBarView {
         guard let index = sender.view?.tag else { return }
         onSelect?(index)
     }
+}
 
-    private func scrollItemToVisible(index: Int, animated: Bool) {
-        guard itemViews.indices.contains(index) else { return }
-        let target = itemViews[index]
-        let rect = target.convert(target.bounds, to: scrollView)
-        scrollView.scrollRectToVisible(rect.insetBy(dx: -MemoryMessageMetrics.profileBarHorizontalInset, dy: 0), animated: animated)
+// MARK: - UIScrollViewDelegate
+
+extension MemoryProfileBarView: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let distanceToEnd = scrollView.contentSize.width
+            - scrollView.contentOffset.x
+            - scrollView.bounds.width
+
+        guard scrollView.contentSize.width > 0,
+              distanceToEnd < Self.reachEndThreshold
+        else {
+            return
+        }
+
+        onReachEnd?()
     }
 }
 
