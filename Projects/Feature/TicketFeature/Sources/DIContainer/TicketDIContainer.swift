@@ -211,16 +211,6 @@ public final class TicketDIContainer {
 
     // MARK: - MyMessagesPreview
 
-    private func makeUserUseCase() -> UserUseCase {
-        let provider = DefaultProvider<UserTargetType>()
-        let repository = DefaultUserRepository(
-            provider: provider,
-            userDefaultStorage: DefaultUserDefaultStorage(),
-            keyChainStorage: DefaultKeyChainStorage()
-        )
-        return DefaultUserUseCase(userRepository: repository)
-    }
-
     private func makeMyMessagesPreviewViewModel(
         action: MyMessagesPreviewViewModel.Action,
         capsuleId: Int
@@ -235,8 +225,7 @@ public final class TicketDIContainer {
         return MyMessagesPreviewViewModel(
             action: action,
             capsuleId: capsuleId,
-            capsuleContentUseCase: useCase,
-            userUseCase: makeUserUseCase()
+            capsuleContentUseCase: useCase
         )
     }
 
