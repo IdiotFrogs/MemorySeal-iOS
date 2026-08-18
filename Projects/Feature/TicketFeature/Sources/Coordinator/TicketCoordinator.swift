@@ -9,19 +9,15 @@ public final class TicketCoordinator {
     private let capsuleId: Int
     private let ticketDIContainer: TicketDIContainer = .init()
     private let store: OpenedCapsuleStore
-    private let didBuryTicket: () -> Void
-    private var externalOnOpened: (() -> Void)?
     private var ticketImageUrl: String?
     private var ticketDetailViewModel: TicketDetailViewModel?
 
     public init(
         with navigationController: UINavigationController,
-        capsuleId: Int,
-        didBuryTicket: @escaping () -> Void
+        capsuleId: Int
     ) {
         self.navigationController = navigationController
         self.capsuleId = capsuleId
-        self.didBuryTicket = didBuryTicket
         self.store = ticketDIContainer.makeOpenedCapsuleStore()
     }
 
@@ -60,8 +56,7 @@ public final class TicketCoordinator {
 
     // MARK: - OpenFlow
 
-    public func startOpenFlow(ticketImageUrl: String? = nil, onOpened: (() -> Void)?) {
-        self.externalOnOpened = onOpened
+    public func startOpenFlow(ticketImageUrl: String? = nil) {
         self.ticketImageUrl = ticketImageUrl
         if store.isOpened(capsuleId: capsuleId) {
             startMemoryMessages()
@@ -113,7 +108,6 @@ public final class TicketCoordinator {
         let onOpened: () -> Void = { [weak self] in
             guard let self else { return }
             self.store.markOpened(capsuleId: self.capsuleId)
-            self.externalOnOpened?()
         }
         let viewController = ticketDIContainer.makeMemoryMessagesViewController(
             action: action,
@@ -138,7 +132,6 @@ public final class TicketCoordinator {
                 guard let self else { return }
                 self.navigationController.presentedViewController?.dismiss(animated: true)
                 self.ticketDetailViewModel?.refresh()
-                self.didBuryTicket()
             }
         )
         let viewController = ticketDIContainer.makeBuryTicketViewController(
