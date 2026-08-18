@@ -27,6 +27,7 @@ public struct TimeCapsuleEntity {
     public let timeCapsuleStatus: TimeCapsuleStatus
     public let role: TimeCapsuleRole
     public let imageUrl: String?
+    public let stage: Int
 
     public init(
         timeCapsuleId: Int,
@@ -35,7 +36,8 @@ public struct TimeCapsuleEntity {
         createdAt: Date? = nil,
         timeCapsuleStatus: TimeCapsuleStatus,
         role: TimeCapsuleRole,
-        imageUrl: String? = nil
+        imageUrl: String? = nil,
+        stage: Int = 0
     ) {
         self.timeCapsuleId = timeCapsuleId
         self.title = title
@@ -44,5 +46,6 @@ public struct TimeCapsuleEntity {
         self.timeCapsuleStatus = timeCapsuleStatus
         self.role = role
         self.imageUrl = imageUrl
+        self.stage = stage
     }
 }

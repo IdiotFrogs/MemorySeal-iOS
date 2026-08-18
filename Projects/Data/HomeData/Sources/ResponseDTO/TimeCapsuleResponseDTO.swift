@@ -11,6 +11,7 @@ struct TimeCapsuleResponseDTO: Decodable {
     let role: String
     let mainImageUrl: String?
     let imageUrl: String?
+    let stage: Int?
 
     var toDomain: TimeCapsuleEntity {
         let openedAtDate = openedAt.flatMap { DateFormatter.serverDate.date(from: $0) }
@@ -23,7 +24,8 @@ struct TimeCapsuleResponseDTO: Decodable {
             createdAt: createdAtDate,
             timeCapsuleStatus: TimeCapsuleStatus(rawValue: timeCapsuleStatus) ?? .beforeBuried,
             role: TimeCapsuleRole(rawValue: role) ?? .host,
-            imageUrl: mainImageUrl ?? imageUrl
+            imageUrl: mainImageUrl ?? imageUrl,
+            stage: stage ?? 0
         )
     }
 }
