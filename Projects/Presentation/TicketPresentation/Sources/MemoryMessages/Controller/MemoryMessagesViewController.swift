@@ -9,15 +9,18 @@ public final class MemoryMessagesViewController: UIViewController {
 
     // MARK: - Properties
 
+    private static let feedPagingThreshold: CGFloat = 200
+    private static let userListPagingThreshold: CGFloat = 80
+
     private let viewModel: MemoryMessagesViewModel
     private let disposeBag: DisposeBag = DisposeBag()
     private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let retryDidTap: PublishRelay<Void> = .init()
+    private let feedDidReachBottom: PublishRelay<Void> = .init()
+    private let userListDidReachEnd: PublishRelay<Void> = .init()
+    private let userDidSelect: PublishRelay<Int> = .init()
 
-    private var participants: [MemoryParticipant] = []
     private var groups: [MemoryGroup] = []
-    private var isProgrammaticScrolling: Bool = false
-    private var didSetInitialOffset: Bool = false
     private var didLoadOnce: Bool = false
     private var loadingView: BasicLoadingView?
 
@@ -49,10 +52,15 @@ public final class MemoryMessagesViewController: UIViewController {
         view.backgroundColor = .white
         view.separatorStyle = .none
         view.showsVerticalScrollIndicator = false
-        view.decelerationRate = .fast
         view.estimatedRowHeight = 200
         view.rowHeight = UITableView.automaticDimension
         view.contentInsetAdjustmentBehavior = .never
+        view.contentInset = UIEdgeInsets(
+            top: MemoryMessageMetrics.feedTopInset,
+            left: 0,
+            bottom: MemoryMessageMetrics.feedBottomInset,
+            right: 0
+        )
         view.register(MemoryGroupCell.self, forCellReuseIdentifier: MemoryGroupCell.identifier)
         view.dataSource = self
         view.delegate = self
@@ -121,16 +129,6 @@ public final class MemoryMessagesViewController: UIViewController {
         bindViewModel()
         rxViewDidLoad.accept(())
     }
-
-    public override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        updateBottomInsetForCentering()
-        if !didSetInitialOffset, !groups.isEmpty, tableView.bounds.height > 0 {
-            didSetInitialOffset = true
-            tableView.setContentOffset(.zero, animated: false)
-            profileBarView.setFocusedIndex(0, animated: false)
-        }
-    }
 }
 
 // MARK: - Setup
@@ -138,7 +136,10 @@ public final class MemoryMessagesViewController: UIViewController {
 extension MemoryMessagesViewController {
     private func setInitialValues() {
         profileBarView.onSelect = { [weak self] index in
-            self?.scrollToSection(index, animated: true)
+            self?.userDidSelect.accept(index)
+        }
+        profileBarView.onReachEnd = { [weak self] in
+            self?.userListDidReachEnd.accept(())
         }
     }
 
@@ -198,26 +199,41 @@ extension MemoryMessagesViewController {
         let input = MemoryMessagesViewModel.Input(
             rxViewDidLoad: rxViewDidLoad,
             retryDidTap: retryDidTap,
-            backButtonDidTap: navigationView.backButtonDidTap
+            backButtonDidTap: navigationView.backButtonDidTap,
+            feedDidReachBottom: feedDidReachBottom,
+            userListDidReachEnd: userListDidReachEnd,
+            userDidSelect: userDidSelect
         )
         let output = viewModel.transform(input)
 
+        output.participants
+            .drive(with: self) { (self, participants) in
+                self.profileBarView.configure(participants: participants)
+            }
+            .disposed(by: disposeBag)
+
+        output.selectedIndex
+            .drive(with: self) { (self, index) in
+                self.profileBarView.setSelectedIndex(index, animated: true)
+            }
+            .disposed(by: disposeBag)
+
         output.conversations
-            .drive(onNext: { [weak self] conversations in
-                self?.apply(conversations: conversations)
-            })
+            .drive(with: self) { (self, conversations) in
+                self.apply(conversations: conversations)
+            }
             .disposed(by: disposeBag)
 
         output.isLoading
-            .drive(onNext: { [weak self] isLoading in
-                self?.setLoading(isLoading)
-            })
+            .drive(with: self) { (self, isLoading) in
+                self.setLoading(isLoading)
+            }
             .disposed(by: disposeBag)
 
         output.showError
-            .emit(onNext: { [weak self] in
-                self?.showErrorState()
-            })
+            .emit(with: self) { (self, _) in
+                self.showErrorState()
+            }
             .disposed(by: disposeBag)
     }
 }
@@ -227,9 +243,7 @@ extension MemoryMessagesViewController {
 extension MemoryMessagesViewController {
     private func apply(conversations: [MemoryConversation]) {
         errorStackView.isHidden = true
-        participants = conversations.map { $0.participant }
         groups = conversations.map { Self.makeGroup(from: $0) }
-        profileBarView.configure(participants: participants, focusedIndex: 0)
         tableView.reloadData()
         updateEmptyState()
     }
@@ -289,101 +303,22 @@ extension MemoryMessagesViewController: UITableViewDataSource {
     }
 }
 
-// MARK: - UITableViewDelegate / Snapping
+// MARK: - UITableViewDelegate
 
 extension MemoryMessagesViewController: UITableViewDelegate {
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        guard !isProgrammaticScrolling else { return }
-        updateFocusedProfile()
-    }
+        guard scrollView === tableView else { return }
 
-    public func scrollViewWillEndDragging(
-        _ scrollView: UIScrollView,
-        withVelocity velocity: CGPoint,
-        targetContentOffset: UnsafeMutablePointer<CGPoint>
-    ) {
-        let tops = sectionTops()
-        guard !tops.isEmpty else { return }
+        let distanceToBottom = scrollView.contentSize.height
+            - scrollView.contentOffset.y
+            - scrollView.bounds.height
 
-        let viewportHeight = scrollView.bounds.height
-        let contentHeight = scrollView.contentSize.height
-        let maxOffset = max(contentHeight + scrollView.contentInset.bottom - viewportHeight, 0)
-        let minOffset = -scrollView.contentInset.top
-
-        let current = scrollView.contentOffset.y
-        let proposed = targetContentOffset.pointee.y
-        let epsilon: CGFloat = 1
-
-        let section = sectionIndex(forOffset: current, tops: tops)
-        let sectionTop = tops[section]
-        let sectionBottom = section + 1 < tops.count ? tops[section + 1] : contentHeight
-        let maxWithinSection = max(sectionTop, sectionBottom - viewportHeight)
-
-        let target: CGFloat
-        if velocity.y > 0.2 {
-            if current >= maxWithinSection - epsilon {
-                target = section + 1 < tops.count ? tops[section + 1] : maxOffset
-            } else {
-                target = min(proposed, maxWithinSection)
-            }
-        } else if velocity.y < -0.2 {
-            if current <= sectionTop + epsilon {
-                target = section - 1 >= 0 ? tops[section - 1] : minOffset
-            } else {
-                target = max(proposed, sectionTop)
-            }
-        } else {
-            target = min(max(proposed, sectionTop), maxWithinSection)
+        guard scrollView.contentSize.height > 0,
+              distanceToBottom < Self.feedPagingThreshold
+        else {
+            return
         }
 
-        targetContentOffset.pointee.y = min(max(target, minOffset), maxOffset)
-    }
-
-    public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        isProgrammaticScrolling = false
-        updateFocusedProfile()
-    }
-}
-
-// MARK: - Focus / Section Helpers
-
-extension MemoryMessagesViewController {
-    private func sectionTops() -> [CGFloat] {
-        (0..<tableView.numberOfSections).map { tableView.rect(forSection: $0).minY }
-    }
-
-    private func sectionIndex(forOffset offset: CGFloat, tops: [CGFloat]) -> Int {
-        var index = 0
-        for (i, top) in tops.enumerated() where top <= offset + 1 {
-            index = i
-        }
-        return index
-    }
-
-    private func updateFocusedProfile() {
-        let tops = sectionTops()
-        guard !tops.isEmpty else { return }
-        let index = sectionIndex(forOffset: tableView.contentOffset.y, tops: tops)
-        profileBarView.setFocusedIndex(index, animated: true)
-    }
-
-    private func scrollToSection(_ section: Int, animated: Bool) {
-        guard section < tableView.numberOfSections else { return }
-        profileBarView.setFocusedIndex(section, animated: animated)
-        let top = tableView.rect(forSection: section).minY
-        let maxOffset = tableView.contentSize.height + tableView.contentInset.bottom - tableView.bounds.height
-        let target = min(max(top, -tableView.contentInset.top), max(maxOffset, 0))
-        isProgrammaticScrolling = true
-        tableView.setContentOffset(CGPoint(x: 0, y: target), animated: animated)
-    }
-
-    private func updateBottomInsetForCentering() {
-        guard tableView.numberOfSections > 0, tableView.bounds.height > 0 else { return }
-        let lastSection = tableView.numberOfSections - 1
-        let lastRect = tableView.rect(forSection: lastSection)
-        let needed = max(MemoryMessageMetrics.feedBottomInset, tableView.bounds.height - lastRect.height)
-        if abs(tableView.contentInset.bottom - needed) > 0.5 {
-            tableView.contentInset.bottom = needed
-        }
+        feedDidReachBottom.accept(())
     }
 }

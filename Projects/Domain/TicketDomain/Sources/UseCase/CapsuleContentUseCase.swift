@@ -1,8 +1,7 @@
 import Foundation
 
 public protocol CapsuleContentUseCase {
-    func execute(capsuleId: Int) async throws -> [CapsuleContent]
-    func fetchAllGroups(capsuleId: Int) async throws -> [CapsuleContentGroupEntity]
+    func fetchGroupPage(capsuleId: Int, page: Int, size: Int) async throws -> CapsuleContentGroupPageEntity
     func fetchMyContents(capsuleId: Int) async throws -> [CapsuleContent]
     func createText(capsuleId: Int, content: String) async throws -> CapsuleContent
     func createPhotos(capsuleId: Int, images: [Data]) async throws -> CapsuleContent
@@ -17,18 +16,16 @@ public final class DefaultCapsuleContentUseCase: CapsuleContentUseCase {
         self.capsuleContentRepository = capsuleContentRepository
     }
 
-    public func execute(capsuleId: Int) async throws -> [CapsuleContent] {
-        let groups = try await capsuleContentRepository.fetchCapsuleContents(capsuleId: capsuleId)
-
-        guard let currentUserId = capsuleContentRepository.fetchCurrentUserId() else {
-            throw CapsuleContentError.defaultError
-        }
-
-        return groups.first { $0.userId == currentUserId }?.contents ?? []
-    }
-
-    public func fetchAllGroups(capsuleId: Int) async throws -> [CapsuleContentGroupEntity] {
-        return try await capsuleContentRepository.fetchCapsuleContents(capsuleId: capsuleId)
+    public func fetchGroupPage(
+        capsuleId: Int,
+        page: Int,
+        size: Int
+    ) async throws -> CapsuleContentGroupPageEntity {
+        return try await capsuleContentRepository.fetchCapsuleContents(
+            capsuleId: capsuleId,
+            page: page,
+            size: size
+        )
     }
 
     public func fetchMyContents(capsuleId: Int) async throws -> [CapsuleContent] {

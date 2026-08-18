@@ -161,10 +161,16 @@ public final class TicketDIContainer {
         )
         let useCase = DefaultCapsuleContentUseCase(capsuleContentRepository: repository)
         let currentUserId = repository.fetchCurrentUserId()
+
+        let addMemberProvider = DefaultProvider<AddMemberTargetType>()
+        let addMemberRepository = DefaultAddMemberRepository(provider: addMemberProvider)
+        let addMemberUseCase = DefaultAddMemberUseCase(addMemberRepository: addMemberRepository)
+
         let viewModel = MemoryMessagesViewModel(
             action: action,
             capsuleId: capsuleId,
             capsuleContentUseCase: useCase,
+            addMemberUseCase: addMemberUseCase,
             currentUserId: currentUserId,
             onOpened: onOpened
         )
