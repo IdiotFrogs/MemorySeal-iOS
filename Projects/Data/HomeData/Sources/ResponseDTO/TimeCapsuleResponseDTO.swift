@@ -13,7 +13,7 @@ struct TimeCapsuleResponseDTO: Decodable {
     let imageUrl: String?
 
     var toDomain: TimeCapsuleEntity {
-        let openedAtDate = openedAt.flatMap { DateFormatter.serverDateTime.date(from: $0) }
+        let openedAtDate = openedAt.flatMap { DateFormatter.serverDate.date(from: $0) }
         let createdAtDate = createdAt.flatMap { DateFormatter.serverDateTime.date(from: $0) }
 
         return .init(

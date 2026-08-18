@@ -14,7 +14,7 @@ public final class DefaultBuryTicketUseCase: BuryTicketUseCase {
     }
 
     public func buryTimeCapsule(capsuleId: Int, openedAt: Date) async throws {
-        let openedAtString = DateFormatter.serverDateTime.string(from: openedAt)
+        let openedAtString = DateFormatter.serverDateUTC.string(from: openedAt)
         try await buryTicketRepository.buryTimeCapsule(capsuleId: capsuleId, openedAt: openedAtString)
     }
 }

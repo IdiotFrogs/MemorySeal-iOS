@@ -9,8 +9,8 @@ public final class TicketCoordinator {
     private let capsuleId: Int
     private let ticketDIContainer: TicketDIContainer = .init()
     private let store: OpenedCapsuleStore
-    private var externalOnOpened: (() -> Void)?
     private var ticketImageUrl: String?
+    private var ticketDetailViewModel: TicketDetailViewModel?
 
     public init(
         with navigationController: UINavigationController,
@@ -46,13 +46,17 @@ public final class TicketCoordinator {
             moveToBuryTicket: moveToBuryTicket,
             moveToWatering: moveToWatering
         )
-        return ticketDIContainer.makeTicketDetailViewController(action: ticketDetailAction, capsuleId: capsuleId)
+        let viewModel = ticketDIContainer.makeTicketDetailViewModel(
+            action: ticketDetailAction,
+            capsuleId: capsuleId
+        )
+        self.ticketDetailViewModel = viewModel
+        return ticketDIContainer.makeTicketDetailViewController(with: viewModel)
     }
 
     // MARK: - OpenFlow
 
-    public func startOpenFlow(ticketImageUrl: String? = nil, onOpened: (() -> Void)?) {
-        self.externalOnOpened = onOpened
+    public func startOpenFlow(ticketImageUrl: String? = nil) {
         self.ticketImageUrl = ticketImageUrl
         if store.isOpened(capsuleId: capsuleId) {
             startMemoryMessages()
@@ -104,7 +108,6 @@ public final class TicketCoordinator {
         let onOpened: () -> Void = { [weak self] in
             guard let self else { return }
             self.store.markOpened(capsuleId: self.capsuleId)
-            self.externalOnOpened?()
         }
         let viewController = ticketDIContainer.makeMemoryMessagesViewController(
             action: action,
@@ -124,6 +127,11 @@ public final class TicketCoordinator {
         let buryAction = BuryTicketViewModel.Action(
             dismiss: { [weak self] in
                 self?.navigationController.presentedViewController?.dismiss(animated: true)
+            },
+            didBuryTicket: { [weak self] in
+                guard let self else { return }
+                self.navigationController.presentedViewController?.dismiss(animated: true)
+                self.ticketDetailViewModel?.refresh()
             }
         )
         let viewController = ticketDIContainer.makeBuryTicketViewController(
@@ -193,7 +201,27 @@ public final class TicketCoordinator {
     // MARK: - MyTicketMessages
 
     public func moveToMyTicketMessages() {
-        let vc = ticketDIContainer.makeMyTicketMessagesViewController(capsuleId: capsuleId)
+        let action = MyTicketMessagesViewModel.Action(
+            moveToPreview: { [weak self] in
+                self?.moveToMyMessagesPreview()
+            }
+        )
+        let vc = ticketDIContainer.makeMyTicketMessagesViewController(action: action, capsuleId: capsuleId)
         navigationController.pushViewController(vc, animated: true)
+    }
+
+    // MARK: - MyMessagesPreview
+
+    public func moveToMyMessagesPreview() {
+        let action = MyMessagesPreviewViewModel.Action(
+            moveToBack: { [weak self] in
+                self?.navigationController.popViewController(animated: true)
+            }
+        )
+        let viewController = ticketDIContainer.makeMyMessagesPreviewViewController(
+            action: action,
+            capsuleId: capsuleId
+        )
+        navigationController.pushViewController(viewController, animated: true)
     }
 }

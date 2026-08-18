@@ -7,7 +7,7 @@ import TicketData
 import TicketDomain
 
 public final class TicketDIContainer {
-    private func makeTicketDetailViewModel(action: TicketDetailViewModel.Action, capsuleId: Int) -> TicketDetailViewModel {
+    func makeTicketDetailViewModel(action: TicketDetailViewModel.Action, capsuleId: Int) -> TicketDetailViewModel {
         let detailProvider = DefaultProvider<TicketDetailTargetType>()
         let detailRepository = DefaultTicketDetailRepository(provider: detailProvider)
         let ticketDetailUseCase = DefaultTicketDetailUseCase(ticketDetailRepository: detailRepository)
@@ -24,8 +24,8 @@ public final class TicketDIContainer {
         )
     }
 
-    func makeTicketDetailViewController(action: TicketDetailViewModel.Action, capsuleId: Int) -> TicketDetailViewController {
-        return TicketDetailViewController(with: makeTicketDetailViewModel(action: action, capsuleId: capsuleId))
+    func makeTicketDetailViewController(with viewModel: TicketDetailViewModel) -> TicketDetailViewController {
+        return TicketDetailViewController(with: viewModel)
     }
 
     func makeAddMemberViewController(capsuleId: Int) -> AddMemberViewController {
@@ -127,8 +127,11 @@ public final class TicketDIContainer {
 
     // MARK: - MyTicketMessages
 
-    public func makeMyTicketMessagesViewController(capsuleId: Int) -> MyTicketMessagesViewController {
-        let viewModel = makeMyTicketMessagesViewModel(capsuleId: capsuleId)
+    public func makeMyTicketMessagesViewController(
+        action: MyTicketMessagesViewModel.Action,
+        capsuleId: Int
+    ) -> MyTicketMessagesViewController {
+        let viewModel = makeMyTicketMessagesViewModel(action: action, capsuleId: capsuleId)
         let textListVC = MyTicketMessageListViewController(type: .text, viewModel: viewModel)
         let photoListVC = MyTicketMessageListViewController(type: .photo, viewModel: viewModel)
         return MyTicketMessagesViewController(
@@ -188,7 +191,10 @@ public final class TicketDIContainer {
         )
     }
 
-    private func makeMyTicketMessagesViewModel(capsuleId: Int) -> MyTicketMessagesViewModel {
+    private func makeMyTicketMessagesViewModel(
+        action: MyTicketMessagesViewModel.Action,
+        capsuleId: Int
+    ) -> MyTicketMessagesViewModel {
         let provider = DefaultProvider<CapsuleContentTargetType>()
         let userDefaultStorage = DefaultUserDefaultStorage()
         let repository = DefaultCapsuleContentRepository(
@@ -197,8 +203,49 @@ public final class TicketDIContainer {
         )
         let useCase = DefaultCapsuleContentUseCase(capsuleContentRepository: repository)
         return MyTicketMessagesViewModel(
+            action: action,
             capsuleId: capsuleId,
             capsuleContentUseCase: useCase
+        )
+    }
+
+    // MARK: - MyMessagesPreview
+
+    private func makeUserUseCase() -> UserUseCase {
+        let provider = DefaultProvider<UserTargetType>()
+        let repository = DefaultUserRepository(
+            provider: provider,
+            userDefaultStorage: DefaultUserDefaultStorage(),
+            keyChainStorage: DefaultKeyChainStorage()
+        )
+        return DefaultUserUseCase(userRepository: repository)
+    }
+
+    private func makeMyMessagesPreviewViewModel(
+        action: MyMessagesPreviewViewModel.Action,
+        capsuleId: Int
+    ) -> MyMessagesPreviewViewModel {
+        let provider = DefaultProvider<CapsuleContentTargetType>()
+        let userDefaultStorage = DefaultUserDefaultStorage()
+        let repository = DefaultCapsuleContentRepository(
+            provider: provider,
+            userDefaultStorage: userDefaultStorage
+        )
+        let useCase = DefaultCapsuleContentUseCase(capsuleContentRepository: repository)
+        return MyMessagesPreviewViewModel(
+            action: action,
+            capsuleId: capsuleId,
+            capsuleContentUseCase: useCase,
+            userUseCase: makeUserUseCase()
+        )
+    }
+
+    public func makeMyMessagesPreviewViewController(
+        action: MyMessagesPreviewViewModel.Action,
+        capsuleId: Int
+    ) -> MyMessagesPreviewViewController {
+        return MyMessagesPreviewViewController(
+            with: makeMyMessagesPreviewViewModel(action: action, capsuleId: capsuleId)
         )
     }
 }

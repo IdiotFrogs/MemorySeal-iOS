@@ -76,34 +76,31 @@ public final class MainCoordinator {
     }
 
     private func moveToCreateTicketCoordinator() {
-        let coordinator = CreateTicketCoordinator(
-            with: navigationController,
-            didCreateTicket: { [weak self] in
-                self?.homeCoordinator?.refreshHome()
-            }
-        )
+        let coordinator = CreateTicketCoordinator(with: navigationController)
         createTicketCoordinator = coordinator
         coordinator.start()
     }
 
     private func moveToTicketCoordinator(capsuleId: Int) {
-        let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
+        let coordinator = makeTicketCoordinator(capsuleId: capsuleId)
         ticketCoordinator = coordinator
         coordinator.start()
     }
 
     private func moveToOpenCapsuleCoordinator(capsuleId: Int, ticketImageUrl: String? = nil) {
-        let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
+        let coordinator = makeTicketCoordinator(capsuleId: capsuleId)
         ticketCoordinator = coordinator
-        coordinator.startOpenFlow(ticketImageUrl: ticketImageUrl, onOpened: { [weak self] in
-            self?.homeCoordinator?.refreshHome()
-        })
+        coordinator.startOpenFlow(ticketImageUrl: ticketImageUrl)
     }
 
     private func moveToMemberListCoordinator(capsuleId: Int) {
-        let coordinator = TicketCoordinator(with: navigationController, capsuleId: capsuleId)
+        let coordinator = makeTicketCoordinator(capsuleId: capsuleId)
         ticketCoordinator = coordinator
         coordinator.startMemberList()
+    }
+
+    private func makeTicketCoordinator(capsuleId: Int) -> TicketCoordinator {
+        TicketCoordinator(with: navigationController, capsuleId: capsuleId)
     }
 
     // MARK: - Landing
@@ -113,12 +110,12 @@ public final class MainCoordinator {
             guard let self else { return }
             let resolution = await self.landingUseCase.resolve(destination)
             await MainActor.run {
-                self.route(resolution, from: destination)
+                self.route(resolution)
             }
         }
     }
 
-    private func route(_ resolution: LandingResolution, from destination: LandingDestination) {
+    private func route(_ resolution: LandingResolution) {
         if case .none = resolution { return }
 
         navigationController.popToRootViewController(animated: false)
@@ -129,9 +126,6 @@ public final class MainCoordinator {
         case .openCapsule(let capsuleId):
             moveToOpenCapsuleCoordinator(capsuleId: capsuleId)
         case .ticketDetail(let capsuleId):
-            if case .invite = destination {
-                homeCoordinator?.refreshHome()
-            }
             moveToTicketCoordinator(capsuleId: capsuleId)
         case .none:
             break

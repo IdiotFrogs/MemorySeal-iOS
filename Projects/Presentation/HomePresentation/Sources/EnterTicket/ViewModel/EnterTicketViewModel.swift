@@ -13,6 +13,17 @@ import HomeDomain
 
 public final class EnterTicketViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
+
+    public struct Action {
+        public let didJoinTicket: () -> Void
+
+        public init(didJoinTicket: @escaping () -> Void) {
+            self.didJoinTicket = didJoinTicket
+        }
+    }
+
+    public let action: Action
+
     private let enterTicketUseCase: EnterTicketUseCase
 
     struct Input {
@@ -37,6 +48,7 @@ public final class EnterTicketViewModel {
                         try await self.enterTicketUseCase.joinRequest(code: code)
                         await MainActor.run {
                             joinSuccess.accept(())
+                            self.action.didJoinTicket()
                         }
                     } catch let error {
                         await MainActor.run {
@@ -53,7 +65,8 @@ public final class EnterTicketViewModel {
         )
     }
 
-    public init(enterTicketUseCase: EnterTicketUseCase) {
+    public init(action: Action, enterTicketUseCase: EnterTicketUseCase) {
+        self.action = action
         self.enterTicketUseCase = enterTicketUseCase
     }
 }

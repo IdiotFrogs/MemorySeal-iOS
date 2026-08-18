@@ -110,9 +110,14 @@ public final class TicketDescriptionCollectionViewCell: UICollectionViewCell {
         ticketDateLabel.text = "\(start) ~ \(end)"
 
         if isBuried, let openedAt {
+            let calendar = Calendar.current
             let daysRemaining = max(
                 0,
-                Calendar.current.dateComponents([.day], from: Date(), to: openedAt).day ?? 0
+                calendar.dateComponents(
+                    [.day],
+                    from: calendar.startOfDay(for: Date()),
+                    to: calendar.startOfDay(for: openedAt)
+                ).day ?? 0
             )
             pillLabel.text = "오픈까지 \(daysRemaining)일 남음"
             pillContainer.isHidden = false

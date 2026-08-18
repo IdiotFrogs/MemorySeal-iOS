@@ -72,14 +72,14 @@ public final class HomeDIContainer {
         return HomeViewController(with: viewModel)
     }
 
-    private func makeEnterTicketViewModel() -> EnterTicketViewModel {
+    private func makeEnterTicketViewModel(action: EnterTicketViewModel.Action) -> EnterTicketViewModel {
         let provider = DefaultProvider<EnterTicketTargetType>()
         let repository = DefaultEnterTicketRepository(provider: provider)
         let useCase = DefaultEnterTicketUseCase(enterTicketRepository: repository)
-        return EnterTicketViewModel(enterTicketUseCase: useCase)
+        return EnterTicketViewModel(action: action, enterTicketUseCase: useCase)
     }
 
-    func makeEnterTicketViewController() -> EnterTicketViewController {
-        return EnterTicketViewController(with: makeEnterTicketViewModel())
+    func makeEnterTicketViewController(action: EnterTicketViewModel.Action) -> EnterTicketViewController {
+        return EnterTicketViewController(with: makeEnterTicketViewModel(action: action))
     }
 }

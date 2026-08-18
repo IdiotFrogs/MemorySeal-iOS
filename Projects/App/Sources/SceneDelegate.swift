@@ -11,6 +11,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
+
+        #if DEBUG
+        UITestLaunchSupport.prepareIfNeeded()
+        #endif
+
         window = UIWindow(frame: windowScene.coordinateSpace.bounds)
         window?.windowScene = windowScene
 
@@ -34,6 +39,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     // MARK: - Landing
 
     private func landingDestination(from connectionOptions: UIScene.ConnectionOptions) -> LandingDestination? {
+        #if DEBUG
+        if let destination = UITestLaunchSupport.landingDestination() {
+            return destination
+        }
+        #endif
+
         if let response = connectionOptions.notificationResponse,
            let destination = LandingLinkParser.parse(userInfo: response.notification.request.content.userInfo) {
             return destination
