@@ -26,6 +26,7 @@ enum MemoryMessageMetrics {
     static let focusedRingSize: CGFloat = 80
     static let focusedRingLineWidth: CGFloat = 2
     static let unfocusedAvatarSize: CGFloat = 60.25
+    static let selectionAnimationDuration: TimeInterval = 0.25
 
     // MARK: Feed
 
