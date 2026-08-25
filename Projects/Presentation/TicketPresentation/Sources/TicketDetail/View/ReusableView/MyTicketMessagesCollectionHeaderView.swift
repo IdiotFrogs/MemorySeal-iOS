@@ -79,11 +79,11 @@ final class MyTicketMessagesCollectionHeaderView: UICollectionReusableView {
 }
 
 extension MyTicketMessagesCollectionHeaderView {
-    func setStatus(_ status: Status) {
+    func setStatus(_ status: Status, showsDashedSeparator: Bool? = nil) {
         titleLabel.text = status.title
         memberCountLabel.removeFromSuperview()
 
-        let showsDashed = (status == .message)
+        let showsDashed = showsDashedSeparator ?? (status == .message)
         dashedSeparator.isHidden = !showsDashed
 
         if showsDashed {

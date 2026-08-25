@@ -44,7 +44,8 @@ public final class TicketCoordinator {
             moveToManageTicket: moveToManageTicket,
             moveToMyTicketMessages: moveToMyTicketMessages,
             moveToBuryTicket: moveToBuryTicket,
-            moveToWatering: moveToWatering
+            moveToWatering: moveToWatering,
+            moveToMemoryMessages: startMemoryMessages
         )
         let viewModel = ticketDIContainer.makeTicketDetailViewModel(
             action: ticketDetailAction,

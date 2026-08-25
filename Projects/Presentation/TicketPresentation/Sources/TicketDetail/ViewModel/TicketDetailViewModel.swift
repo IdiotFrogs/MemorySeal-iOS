@@ -22,19 +22,22 @@ public final class TicketDetailViewModel {
         public let moveToMyTicketMessages: () -> Void
         public let moveToBuryTicket: () -> Void
         public let moveToWatering: () -> Void
+        public let moveToMemoryMessages: () -> Void
 
         public init(
             moveToAddMember: @escaping () -> Void,
             moveToManageTicket: @escaping () -> Void,
             moveToMyTicketMessages: @escaping () -> Void,
             moveToBuryTicket: @escaping () -> Void,
-            moveToWatering: @escaping () -> Void
+            moveToWatering: @escaping () -> Void,
+            moveToMemoryMessages: @escaping () -> Void
         ) {
             self.moveToAddMember = moveToAddMember
             self.moveToManageTicket = moveToManageTicket
             self.moveToMyTicketMessages = moveToMyTicketMessages
             self.moveToBuryTicket = moveToBuryTicket
             self.moveToWatering = moveToWatering
+            self.moveToMemoryMessages = moveToMemoryMessages
         }
     }
 
@@ -72,12 +75,24 @@ public final class TicketDetailViewModel {
         let didTapSeeMessagesButton: PublishRelay<Void>
         let didTapBuryTicketButton: PublishRelay<Void>
         let didTapWaterButton: PublishRelay<Void>
+        let didTapSeeMemoriesButton: PublishRelay<Void>
     }
 
     struct Output {
         let ticketDetail: Driver<TicketDetailEntity?>
         let collaborators: Driver<[CollaboratorEntity]>
         let errorToast: Signal<String>
+        let viewState: Driver<TicketDetailViewState>
+    }
+
+    private static func makeViewState(from detail: TicketDetailEntity?) -> TicketDetailViewState {
+        guard detail?.timeCapsuleStatus == .opened else {
+            return .initial
+        }
+        return TicketDetailViewState(
+            sections: [.ticketImage, .ticketDescription, .members],
+            isOpened: true
+        )
     }
 
     func transform(_ input: Input) -> Output {
@@ -128,10 +143,20 @@ public final class TicketDetailViewModel {
             })
             .disposed(by: disposeBag)
 
+        input.didTapSeeMemoriesButton
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.action.moveToMemoryMessages()
+            })
+            .disposed(by: disposeBag)
+
         return Output(
             ticketDetail: ticketDetail.asDriver(),
             collaborators: collaborators.asDriver(),
-            errorToast: errorToast.asSignal()
+            errorToast: errorToast.asSignal(),
+            viewState: ticketDetail
+                .map(Self.makeViewState(from:))
+                .asDriver(onErrorJustReturn: .initial)
         )
     }
 }

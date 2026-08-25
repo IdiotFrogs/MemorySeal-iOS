@@ -22,15 +22,10 @@ public final class TicketDetailViewController: UIViewController {
     private let didTapBuryTicketButton: PublishRelay<Void> = .init()
     private let didTapWaterButton: PublishRelay<Void> = .init()
     private let didTapSeeMessagesButton: PublishRelay<Void> = .init()
+    private let didTapSeeMemoriesButton: PublishRelay<Void> = .init()
     private let disposeBag: DisposeBag = DisposeBag()
 
-    enum TicketDetailSection: Int, CaseIterable {
-        case ticketImage
-        case ticketDescription
-        case buryTicket
-        case myMessages
-        case members
-    }
+    private var viewState: TicketDetailViewState = .initial
 
     private let viewModel: TicketDetailViewModel
     private var ticketDetail: TicketDetailEntity?
@@ -169,7 +164,8 @@ public final class TicketDetailViewController: UIViewController {
 extension TicketDetailViewController {
     func createCollectionViewLayout() -> UICollectionViewLayout {
         let sectionProvider = { (sectionIndex: Int, _: NSCollectionLayoutEnvironment) -> NSCollectionLayoutSection? in
-            switch TicketDetailViewController.TicketDetailSection(rawValue: sectionIndex) {
+            guard sectionIndex < self.viewState.sections.count else { return nil }
+            switch self.viewState.sections[sectionIndex] {
             case .ticketImage:
                 return self.getTicketImageSectionLayout()
             case .ticketDescription:
@@ -265,7 +261,7 @@ extension TicketDetailViewController {
         let header = NSCollectionLayoutBoundarySupplementaryItem(
             layoutSize: NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
-                heightDimension: .absolute(24)
+                heightDimension: .absolute(viewState.isOpened ? 54 : 24)
             ),
             elementKind: UICollectionView.elementKindSectionHeader,
             alignment: .top
@@ -286,26 +282,29 @@ extension TicketDetailViewController {
             didTapManageButton: didTapManageButton,
             didTapSeeMessagesButton: didTapSeeMessagesButton,
             didTapBuryTicketButton: didTapBuryTicketButton,
-            didTapWaterButton: didTapWaterButton
+            didTapWaterButton: didTapWaterButton,
+            didTapSeeMemoriesButton: didTapSeeMemoriesButton
         )
         let output = viewModel.transform(input)
 
         output.ticketDetail
             .drive(with: self, onNext: { (self, detail) in
                 self.ticketDetail = detail
-                self.collectionView.reloadSections(IndexSet([
-                    TicketDetailSection.ticketImage.rawValue,
-                    TicketDetailSection.ticketDescription.rawValue,
-                    TicketDetailSection.buryTicket.rawValue,
-                    TicketDetailSection.myMessages.rawValue
-                ]))
+                self.collectionView.reloadData()
+            })
+            .disposed(by: disposeBag)
+
+        output.viewState
+            .drive(with: self, onNext: { (self, state) in
+                self.viewState = state
+                self.collectionView.reloadData()
             })
             .disposed(by: disposeBag)
 
         output.collaborators
             .drive(with: self, onNext: { (self, list) in
                 self.collaborators = list
-                self.collectionView.reloadSections(IndexSet(integer: TicketDetailSection.members.rawValue))
+                self.collectionView.reloadData()
             })
             .disposed(by: disposeBag)
 
@@ -365,20 +364,19 @@ extension TicketDetailViewController {
 // MARK: - DataSource
 extension TicketDetailViewController: UICollectionViewDataSource {
     public func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return TicketDetailSection.allCases.count
+        return viewState.sections.count
     }
 
     public func collectionView(
         _ collectionView: UICollectionView,
         numberOfItemsInSection section: Int
     ) -> Int {
-        switch TicketDetailSection(rawValue: section) {
+        guard section < viewState.sections.count else { return 0 }
+        switch viewState.sections[section] {
         case .ticketImage, .ticketDescription, .buryTicket, .myMessages:
             return 1
         case .members:
             return collaborators.count
-        default:
-            return 0
         }
     }
 
@@ -386,7 +384,8 @@ extension TicketDetailViewController: UICollectionViewDataSource {
         _ collectionView: UICollectionView,
         cellForItemAt indexPath: IndexPath
     ) -> UICollectionViewCell {
-        switch TicketDetailSection(rawValue: indexPath.section) {
+        guard indexPath.section < viewState.sections.count else { return .init() }
+        switch viewState.sections[indexPath.section] {
         case .ticketImage:
             guard let cell = collectionView.dequeueReusableCell(
                 withReuseIdentifier: TicketImageCollectionViewCell.reuseIdentifier,
@@ -405,9 +404,13 @@ extension TicketDetailViewController: UICollectionViewDataSource {
                     description: detail.description,
                     createdAt: detail.createdAt,
                     openedAt: detail.openedAt,
-                    isBuried: detail.timeCapsuleStatus == .buried
+                    isBuried: detail.timeCapsuleStatus == .buried,
+                    isOpened: viewState.isOpened
                 )
             }
+            cell.didTapSeeMemoriesButton
+                .bind(to: didTapSeeMemoriesButton)
+                .disposed(by: cell.disposeBag)
             return cell
         case .buryTicket:
             if ticketDetail?.timeCapsuleStatus == .buried {
@@ -447,8 +450,6 @@ extension TicketDetailViewController: UICollectionViewDataSource {
             guard indexPath.item < collaborators.count else { return cell }
             cell.configure(collaborator: collaborators[indexPath.item])
             return cell
-        default:
-            return .init()
         }
     }
 }
@@ -460,7 +461,8 @@ extension TicketDetailViewController: UICollectionViewDelegate {
         viewForSupplementaryElementOfKind kind: String,
         at indexPath: IndexPath
     ) -> UICollectionReusableView {
-        switch TicketDetailSection(rawValue: indexPath.section) {
+        guard indexPath.section < viewState.sections.count else { return .init() }
+        switch viewState.sections[indexPath.section] {
         case .myMessages:
             guard let header = collectionView.dequeueReusableSupplementaryView(
                 ofKind: UICollectionView.elementKindSectionHeader,
@@ -481,7 +483,7 @@ extension TicketDetailViewController: UICollectionViewDelegate {
                 withReuseIdentifier: myTicketMessagesHeaderViewReuseIdentifier,
                 for: indexPath
             ) as? MyTicketMessagesCollectionHeaderView else { return .init() }
-            header.setStatus(.member)
+            header.setStatus(.member, showsDashedSeparator: viewState.isOpened)
             header.setMemberCount(collaborators.count)
             header.didTapSeeOtherButton
                 .withUnretained(self)

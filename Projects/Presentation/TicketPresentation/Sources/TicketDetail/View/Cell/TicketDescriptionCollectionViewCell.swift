@@ -8,10 +8,14 @@
 
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 import DesignSystem
 
 public final class TicketDescriptionCollectionViewCell: UICollectionViewCell {
+
+    var disposeBag = DisposeBag()
 
     private let pillContainer: UIView = UIView()
 
@@ -36,6 +40,53 @@ public final class TicketDescriptionCollectionViewCell: UICollectionViewCell {
         label.textColor = UIColor(hex: "#454545") ?? .darkGray
         return label
     }()
+
+    // MARK: - Opened Banner
+
+    let openedBannerButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = DesignSystemAsset.ColorAssests.grey5.color
+        button.layer.cornerRadius = 12
+        button.clipsToBounds = true
+        button.isHidden = true
+        return button
+    }()
+
+    private let openedBannerIcon: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.shovelFill16.image.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = .white
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+
+    private let openedBannerTitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "티켓이 오픈되었어요!"
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
+        label.textColor = .white
+        return label
+    }()
+
+    private let openedBannerActionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "보러가기"
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 12)
+        label.textColor = .white
+        return label
+    }()
+
+    private let openedBannerChevron: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.rightArrowImage.image.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = .white
+        imageView.contentMode = .scaleAspectFit
+        return imageView
+    }()
+
+    var didTapSeeMemoriesButton: ControlEvent<Void> {
+        return openedBannerButton.rx.tap
+    }
 
     private let ticketTitleLabel: UILabel = {
         let label = UILabel()
@@ -96,18 +147,31 @@ public final class TicketDescriptionCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
+    public override func prepareForReuse() {
+        super.prepareForReuse()
+        self.disposeBag = DisposeBag()
+    }
+
     func configure(
         title: String,
         description: String,
         createdAt: Date,
         openedAt: Date?,
-        isBuried: Bool
+        isBuried: Bool,
+        isOpened: Bool
     ) {
         ticketTitleLabel.text = title
         ticketDescriptionLabel.text = description
         let start = dateFormatter.string(from: createdAt)
         let end = openedAt.map { dateFormatter.string(from: $0) } ?? "오픈일"
         ticketDateLabel.text = "\(start) ~ \(end)"
+
+        openedBannerButton.isHidden = !isOpened
+
+        if isOpened {
+            pillContainer.isHidden = true
+            return
+        }
 
         if isBuried, let openedAt {
             let calendar = Calendar.current
@@ -130,12 +194,18 @@ public final class TicketDescriptionCollectionViewCell: UICollectionViewCell {
 extension TicketDescriptionCollectionViewCell {
     private func addSubViews() {
         contentView.addSubview(outerStack)
+        outerStack.addArrangedSubview(openedBannerButton)
         outerStack.addArrangedSubview(pillContainer)
         outerStack.addArrangedSubview(detailStack)
 
         pillContainer.addSubview(pill)
         pill.addSubview(pillIcon)
         pill.addSubview(pillLabel)
+
+        openedBannerButton.addSubview(openedBannerIcon)
+        openedBannerButton.addSubview(openedBannerTitleLabel)
+        openedBannerButton.addSubview(openedBannerChevron)
+        openedBannerButton.addSubview(openedBannerActionLabel)
 
         detailStack.addArrangedSubview(ticketTitleLabel)
         detailStack.addArrangedSubview(ticketDescriptionLabel)
@@ -163,6 +233,34 @@ extension TicketDescriptionCollectionViewCell {
         pillLabel.snp.makeConstraints {
             $0.leading.equalTo(pillIcon.snp.trailing).offset(4)
             $0.trailing.equalToSuperview().inset(12)
+            $0.centerY.equalToSuperview()
+        }
+
+        openedBannerButton.snp.makeConstraints {
+            $0.width.equalTo(outerStack.snp.width)
+            $0.height.equalTo(41)
+        }
+
+        openedBannerIcon.snp.makeConstraints {
+            $0.leading.equalToSuperview().offset(12)
+            $0.centerY.equalToSuperview()
+            $0.width.height.equalTo(16)
+        }
+
+        openedBannerTitleLabel.snp.makeConstraints {
+            $0.leading.equalTo(openedBannerIcon.snp.trailing).offset(8)
+            $0.centerY.equalToSuperview()
+        }
+
+        openedBannerChevron.snp.makeConstraints {
+            $0.trailing.equalToSuperview().inset(12)
+            $0.centerY.equalToSuperview()
+            $0.width.height.equalTo(16)
+        }
+
+        openedBannerActionLabel.snp.makeConstraints {
+            $0.trailing.equalTo(openedBannerChevron.snp.leading).offset(-4)
+            $0.leading.greaterThanOrEqualTo(openedBannerTitleLabel.snp.trailing).offset(8)
             $0.centerY.equalToSuperview()
         }
     }
