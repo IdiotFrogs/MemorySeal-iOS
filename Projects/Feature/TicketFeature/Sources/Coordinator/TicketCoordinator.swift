@@ -59,7 +59,7 @@ public final class TicketCoordinator {
     public func startOpenFlow(ticketImageUrl: String? = nil) {
         self.ticketImageUrl = ticketImageUrl
         if store.isOpened(capsuleId: capsuleId) {
-            startMemoryMessages()
+            start()
         } else {
             startOpenIntro()
         }
@@ -114,8 +114,11 @@ public final class TicketCoordinator {
             capsuleId: capsuleId,
             onOpened: onOpened
         )
-        let baseViewControllers = navigationController.viewControllers.filter {
+        var baseViewControllers = navigationController.viewControllers.filter {
             !($0 is OpenIntroViewController) && !($0 is OpenConfirmViewController)
+        }
+        if !baseViewControllers.contains(where: { $0 is TicketDetailViewController }) {
+            baseViewControllers.append(makeTicketDetailViewController())
         }
         self.navigationController.setViewControllers(
             baseViewControllers + [viewController],
