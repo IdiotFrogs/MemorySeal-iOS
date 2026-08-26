@@ -196,18 +196,6 @@ extension EnterTicketViewController {
             })
             .disposed(by: disposeBag)
 
-        output.joinSuccess
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.dismiss(animated: true) {
-                    guard let window = UIApplication.shared.connectedScenes
-                        .compactMap({ $0 as? UIWindowScene })
-                        .first?.windows.first else { return }
-                    ToastView.show(on: window, message: "타임 캡슐 참여 요청이 완료되었어요.")
-                }
-            })
-            .disposed(by: disposeBag)
-
         output.joinError
             .withUnretained(self)
             .subscribe(onNext: { (self, message) in

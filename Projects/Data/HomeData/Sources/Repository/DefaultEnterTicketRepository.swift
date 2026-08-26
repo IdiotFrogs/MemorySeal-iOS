@@ -11,8 +11,18 @@ public final class DefaultEnterTicketRepository: EnterTicketRepository {
         self.provider = provider
     }
 
-    public func joinRequest(code: String) async throws {
+    public func joinRequest(code: String) async throws -> Int {
         let result = await provider.request(.joinRequest(code: code))
-        try ResultHandler.handleResult(result: result, errorType: EnterTicketError.self)
+
+        let responseDTO = try ResultHandler.handleResult(
+            result: result,
+            responseType: JoinTicketResponseDTO.self,
+            errorType: EnterTicketError.self
+        )
+
+        guard let capsuleId = responseDTO.toDomain else {
+            throw EnterTicketError.defaultError
+        }
+        return capsuleId
     }
 }
