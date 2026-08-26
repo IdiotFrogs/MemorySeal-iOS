@@ -27,6 +27,13 @@ public final class AddMemberViewModel {
     private var isLoading: Bool = false
     private var isSearching: Bool = false
 
+    private var totalMemberCount: Int = 0
+    private var searchResults: [CollaboratorEntity] = []
+    private var searchKeyword: String = ""
+    private var searchPage: Int = 0
+    private var isSearchLast: Bool = false
+    private var isSearchLoading: Bool = false
+
     public init(
         capsuleId: Int,
         addMemberUseCase: AddMemberUseCase,
@@ -49,6 +56,7 @@ public final class AddMemberViewModel {
 
     struct Output {
         let memberList: PublishRelay<[CollaboratorEntity]>
+        let memberCount: BehaviorRelay<Int>
         let isCurrentUserHost: BehaviorRelay<Bool>
         let inviteCode: PublishRelay<String>
         let inviteShare: PublishRelay<InviteShareContent>
@@ -59,6 +67,7 @@ public final class AddMemberViewModel {
 
     func transform(_ input: Input) -> Output {
         let memberList: PublishRelay<[CollaboratorEntity]> = .init()
+        let memberCount: BehaviorRelay<Int> = .init(value: 0)
         let isCurrentUserHost: BehaviorRelay<Bool> = .init(value: false)
         let inviteCode: PublishRelay<String> = .init()
         let inviteShare: PublishRelay<InviteShareContent> = .init()
@@ -92,13 +101,57 @@ public final class AddMemberViewModel {
                         self.isLast = page.isLast
                         self.currentPage += 1
                         self.isLoading = false
+                        self.totalMemberCount = page.totalElements
+                        memberCount.accept(page.totalElements)
                         isCurrentUserHost.accept(self.cachedMemberList.first(where: { $0.isMe })?.role == .host)
+                        guard !self.isSearching else { return }
                         memberList.accept(self.cachedMemberList)
                     }
                 } catch {
                     await MainActor.run {
                         self.isLoading = false
                         errorToast.accept("멤버 목록을 불러올 수 없습니다")
+                    }
+                }
+            }
+        }
+
+        let loadSearchResults: (Bool) -> Void = { [weak self] reset in
+            guard let self else { return }
+            guard !self.isSearchLoading else { return }
+            if reset {
+                self.searchPage = 0
+                self.isSearchLast = false
+            }
+            guard !self.isSearchLast else { return }
+            self.isSearchLoading = true
+
+            let keyword = self.searchKeyword
+            Task { [weak self] in
+                guard let self else { return }
+                do {
+                    let page = try await self.addMemberUseCase.searchCollaborators(
+                        capsuleId: self.capsuleId,
+                        nickname: keyword,
+                        page: self.searchPage,
+                        size: self.pageSize
+                    )
+                    await MainActor.run {
+                        self.isSearchLoading = false
+                        guard self.isSearching, self.searchKeyword == keyword else { return }
+                        if reset {
+                            self.searchResults = page.collaborators
+                        } else {
+                            self.searchResults.append(contentsOf: page.collaborators)
+                        }
+                        self.isSearchLast = page.isLast
+                        self.searchPage += 1
+                        memberList.accept(self.searchResults)
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.isSearchLoading = false
+                        errorToast.accept("멤버 검색에 실패했습니다")
                     }
                 }
             }
@@ -114,7 +167,16 @@ public final class AddMemberViewModel {
         input.prefetchRows
             .withUnretained(self)
             .subscribe(onNext: { (self, indexPaths) in
-                guard !self.isSearching, !self.isLoading, !self.isLast else { return }
+                if self.isSearching {
+                    guard !self.isSearchLoading, !self.isSearchLast else { return }
+                    let threshold = self.searchResults.count - 2
+                    if indexPaths.contains(where: { $0.item >= threshold }) {
+                        loadSearchResults(false)
+                    }
+                    return
+                }
+
+                guard !self.isLoading, !self.isLast else { return }
                 let threshold = self.cachedMemberList.count - 2
                 if indexPaths.contains(where: { $0.item >= threshold }) {
                     loadMembers(false)
@@ -131,26 +193,14 @@ public final class AddMemberViewModel {
                 let keyword = text.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !keyword.isEmpty else {
                     self.isSearching = false
+                    self.searchKeyword = ""
+                    self.searchResults = []
                     memberList.accept(self.cachedMemberList)
                     return
                 }
                 self.isSearching = true
-                Task { [weak self] in
-                    guard let self else { return }
-                    do {
-                        let results = try await self.addMemberUseCase.searchCollaborators(
-                            capsuleId: self.capsuleId,
-                            nickname: keyword
-                        )
-                        await MainActor.run {
-                            memberList.accept(results)
-                        }
-                    } catch {
-                        await MainActor.run {
-                            errorToast.accept("멤버 검색에 실패했습니다")
-                        }
-                    }
-                }
+                self.searchKeyword = keyword
+                loadSearchResults(true)
             })
             .disposed(by: disposeBag)
 
@@ -267,6 +317,7 @@ public final class AddMemberViewModel {
 
         return .init(
             memberList: memberList,
+            memberCount: memberCount,
             isCurrentUserHost: isCurrentUserHost,
             inviteCode: inviteCode,
             inviteShare: inviteShare,

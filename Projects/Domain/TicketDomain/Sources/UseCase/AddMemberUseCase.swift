@@ -3,7 +3,7 @@ import Foundation
 public protocol AddMemberUseCase {
     func inviteToTimeCapsule(capsuleId: Int) async throws -> String
     func fetchCollaborators(capsuleId: Int, page: Int, size: Int) async throws -> CollaboratorPageEntity
-    func searchCollaborators(capsuleId: Int, nickname: String) async throws -> [CollaboratorEntity]
+    func searchCollaborators(capsuleId: Int, nickname: String, page: Int, size: Int) async throws -> CollaboratorPageEntity
     func delegateHost(capsuleId: Int, targetUserId: Int) async throws
     func kickContributor(capsuleId: Int, targetUserId: Int) async throws
 }
@@ -31,8 +31,18 @@ public final class DefaultAddMemberUseCase: AddMemberUseCase {
         )
     }
 
-    public func searchCollaborators(capsuleId: Int, nickname: String) async throws -> [CollaboratorEntity] {
-        return try await addMemberRepository.searchCollaborators(capsuleId: capsuleId, nickname: nickname)
+    public func searchCollaborators(
+        capsuleId: Int,
+        nickname: String,
+        page: Int,
+        size: Int
+    ) async throws -> CollaboratorPageEntity {
+        return try await addMemberRepository.searchCollaborators(
+            capsuleId: capsuleId,
+            nickname: nickname,
+            page: page,
+            size: size
+        )
     }
 
     public func delegateHost(capsuleId: Int, targetUserId: Int) async throws {

@@ -49,6 +49,7 @@ public final class TicketDetailViewModel {
 
     private let ticketDetail: BehaviorRelay<TicketDetailEntity?> = .init(value: nil)
     private let collaborators: BehaviorRelay<[CollaboratorEntity]> = .init(value: [])
+    private let memberCount: BehaviorRelay<Int> = .init(value: 0)
     private let errorToast: PublishRelay<String> = .init()
     private let refreshRelay: PublishRelay<Void> = .init()
 
@@ -81,6 +82,7 @@ public final class TicketDetailViewModel {
     struct Output {
         let ticketDetail: Driver<TicketDetailEntity?>
         let collaborators: Driver<[CollaboratorEntity]>
+        let memberCount: Driver<Int>
         let errorToast: Signal<String>
         let viewState: Driver<TicketDetailViewState>
     }
@@ -153,6 +155,7 @@ public final class TicketDetailViewModel {
         return Output(
             ticketDetail: ticketDetail.asDriver(),
             collaborators: collaborators.asDriver(),
+            memberCount: memberCount.asDriver(),
             errorToast: errorToast.asSignal(),
             viewState: ticketDetail
                 .map(Self.makeViewState(from:))
@@ -185,6 +188,7 @@ extension TicketDetailViewModel {
                 let page = try await self.addMemberUseCase.fetchCollaborators(capsuleId: self.capsuleId, page: 0, size: 10)
                 await MainActor.run {
                     self.collaborators.accept(page.collaborators)
+                    self.memberCount.accept(page.totalElements)
                 }
             } catch {
                 await MainActor.run {

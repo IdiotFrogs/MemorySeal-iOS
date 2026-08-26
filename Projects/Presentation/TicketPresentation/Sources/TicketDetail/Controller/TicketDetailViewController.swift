@@ -30,6 +30,7 @@ public final class TicketDetailViewController: UIViewController {
     private let viewModel: TicketDetailViewModel
     private var ticketDetail: TicketDetailEntity?
     private var collaborators: [CollaboratorEntity] = []
+    private var memberCount: Int = 0
     private let myTicketMessagesHeaderViewReuseIdentifier: String = "MyTicketMessagesCollectionHeaderView"
     private let sectionSpacingReusableViewReuseIdentifier: String = "SectionSpacingReusableView"
 
@@ -308,6 +309,13 @@ extension TicketDetailViewController {
             })
             .disposed(by: disposeBag)
 
+        output.memberCount
+            .drive(with: self, onNext: { (self, count) in
+                self.memberCount = count
+                self.collectionView.reloadData()
+            })
+            .disposed(by: disposeBag)
+
         output.errorToast
             .emit(with: self, onNext: { (self, message) in
                 ToastView.show(on: self.view, message: message)
@@ -484,7 +492,7 @@ extension TicketDetailViewController: UICollectionViewDelegate {
                 for: indexPath
             ) as? MyTicketMessagesCollectionHeaderView else { return .init() }
             header.setStatus(.member, showsDashedSeparator: viewState.isOpened)
-            header.setMemberCount(collaborators.count)
+            header.setMemberCount(memberCount)
             header.didTapSeeOtherButton
                 .withUnretained(self)
                 .subscribe(onNext: { (self, _) in

@@ -6,7 +6,7 @@ import BaseData
 public enum AddMemberTargetType {
     case inviteToTimeCapsule(capsuleId: Int)
     case fetchCollaborators(capsuleId: Int, page: Int, size: Int)
-    case searchCollaborators(capsuleId: Int, nickname: String)
+    case searchCollaborators(capsuleId: Int, nickname: String, page: Int, size: Int)
     case delegateHost(capsuleId: Int, targetUserId: Int)
     case kickContributor(capsuleId: Int, targetUserId: Int)
 }
@@ -18,7 +18,7 @@ extension AddMemberTargetType: BaseTargetType {
             return "/time-capsules/\(capsuleId)/invite"
         case .fetchCollaborators(let capsuleId, _, _):
             return "/time-capsules/\(capsuleId)/collaborators"
-        case .searchCollaborators(let capsuleId, _):
+        case .searchCollaborators(let capsuleId, _, _, _):
             return "/time-capsules/\(capsuleId)/collaborators/search"
         case .delegateHost(let capsuleId, let targetUserId):
             return "/time-capsules/\(capsuleId)/delegation/\(targetUserId)"
@@ -47,9 +47,9 @@ extension AddMemberTargetType: BaseTargetType {
                 parameters: ["page": page, "size": size],
                 encoding: URLEncoding.queryString
             )
-        case .searchCollaborators(_, let nickname):
+        case .searchCollaborators(_, let nickname, let page, let size):
             return .requestParameters(
-                parameters: ["nickname": nickname],
+                parameters: ["nickname": nickname, "page": page, "size": size],
                 encoding: URLEncoding.queryString
             )
         case .inviteToTimeCapsule, .delegateHost, .kickContributor:
