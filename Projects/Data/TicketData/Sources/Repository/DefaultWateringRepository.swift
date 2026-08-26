@@ -14,9 +14,12 @@ public final class DefaultWateringRepository: WateringRepository {
     public func fetchWaterings(
         capsuleId: Int,
         page: Int,
-        size: Int
+        size: Int,
+        sort: WateringSort
     ) async throws -> WateringEntity {
-        let result = await provider.request(.fetchWaterings(capsuleId: capsuleId, page: page, size: size))
+        let result = await provider.request(
+            .fetchWaterings(capsuleId: capsuleId, page: page, size: size, sort: sort.rawValue)
+        )
 
         let responseDTO = try ResultHandler.handleResult(
             result: result,

@@ -33,7 +33,8 @@ public final class WateringAllDaysViewModel {
         self.store = WateringStore(
             capsuleId: capsuleId,
             wateringUseCase: wateringUseCase,
-            pageSize: Page.size
+            pageSize: Page.size,
+            sort: .asc
         )
     }
 
@@ -86,7 +87,7 @@ public final class WateringAllDaysViewModel {
             .disposed(by: disposeBag)
 
         let state = Observable
-            .combineLatest(store.summary, store.days)
+            .combineLatest(store.summary, store.daysByDate, store.startDate)
             .share(replay: 1)
 
         let wateredDays = state
@@ -105,8 +106,12 @@ public final class WateringAllDaysViewModel {
             }
 
         let dayItems = state
-            .map { summary, days in
-                WateringDayItemBuilder.makeItems(days: days, totalDays: summary?.totalDays ?? 0)
+            .map { summary, daysByDate, startDate in
+                WateringDayItemBuilder.makeItems(
+                    daysByDate: daysByDate,
+                    startDate: startDate,
+                    totalDays: summary?.totalDays ?? 0
+                )
             }
             .asDriver(onErrorJustReturn: [])
 

@@ -4,14 +4,14 @@ import Moya
 import BaseData
 
 public enum WateringTargetType {
-    case fetchWaterings(capsuleId: Int, page: Int, size: Int)
+    case fetchWaterings(capsuleId: Int, page: Int, size: Int, sort: String)
     case water(capsuleId: Int)
 }
 
 extension WateringTargetType: BaseTargetType {
     public var path: String {
         switch self {
-        case .fetchWaterings(let capsuleId, _, _):
+        case .fetchWaterings(let capsuleId, _, _, _):
             return "/time-capsules/\(capsuleId)/water"
         case .water(let capsuleId):
             return "/time-capsules/\(capsuleId)/water"
@@ -29,9 +29,9 @@ extension WateringTargetType: BaseTargetType {
 
     public var task: Moya.Task {
         switch self {
-        case .fetchWaterings(_, let page, let size):
+        case .fetchWaterings(_, let page, let size, let sort):
             return .requestParameters(
-                parameters: ["page": page, "size": size],
+                parameters: ["page": page, "size": size, "sort": sort],
                 encoding: URLEncoding.queryString
             )
         case .water:
