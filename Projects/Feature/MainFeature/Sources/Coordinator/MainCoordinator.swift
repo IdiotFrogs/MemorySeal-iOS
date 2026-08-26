@@ -76,7 +76,15 @@ public final class MainCoordinator {
     }
 
     private func moveToCreateTicketCoordinator() {
-        let coordinator = CreateTicketCoordinator(with: navigationController)
+        let createTicketDependency = CreateTicketCoordinator.Dependency(
+            moveToTicket: { [weak self] capsuleId in
+                self?.moveToTicketCoordinator(capsuleId: capsuleId)
+            }
+        )
+        let coordinator = CreateTicketCoordinator(
+            with: navigationController,
+            dependency: createTicketDependency
+        )
         createTicketCoordinator = coordinator
         coordinator.start()
     }

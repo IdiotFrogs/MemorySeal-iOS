@@ -23,7 +23,7 @@ public final class DefaultCreateTicketRepository: CreateTicketRepository {
         title: String,
         description: String?,
         mainImage: Data
-    ) async throws {
+    ) async throws -> Int {
 
         let requestDTO = CreateTicketRequestDTO(
             title: title,
@@ -32,9 +32,12 @@ public final class DefaultCreateTicketRepository: CreateTicketRepository {
         
         let result = await provider.request(.createTicket(requestDTO, mainImage: mainImage))
 
-        try ResultHandler.handleResult(
+        let responseDTO = try ResultHandler.handleResult(
             result: result,
+            responseType: CreateTicketResponseDTO.self,
             errorType: CreateTicketError.self
         )
+
+        return responseDTO.id
     }
 }
