@@ -19,7 +19,7 @@ public final class DefaultSignUpRepository: SignUpRepository {
         self.provider = provider
     }
 
-    public func signUp(nickname: String, profileImage: Data) async throws {
+    public func signUp(nickname: String, profileImage: Data?) async throws {
         let result = await provider.request(.signUp(nickname: nickname, profileImage: profileImage))
 
         try ResultHandler.handleResult(

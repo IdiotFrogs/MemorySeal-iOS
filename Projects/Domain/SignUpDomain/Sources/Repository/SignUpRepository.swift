@@ -9,5 +9,5 @@
 import Foundation
 
 public protocol SignUpRepository {
-    func signUp(nickname: String, profileImage: Data) async throws
+    func signUp(nickname: String, profileImage: Data?) async throws
 }
