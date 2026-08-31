@@ -18,7 +18,7 @@ public final class TicketDetailViewModel {
 
     public struct Action {
         public let moveToAddMember: () -> Void
-        public let moveToManageTicket: () -> Void
+        public let moveToManageTicket: (_ ticketName: String) -> Void
         public let moveToMyTicketMessages: () -> Void
         public let moveToBuryTicket: () -> Void
         public let moveToWatering: () -> Void
@@ -26,7 +26,7 @@ public final class TicketDetailViewModel {
 
         public init(
             moveToAddMember: @escaping () -> Void,
-            moveToManageTicket: @escaping () -> Void,
+            moveToManageTicket: @escaping (_ ticketName: String) -> Void,
             moveToMyTicketMessages: @escaping () -> Void,
             moveToBuryTicket: @escaping () -> Void,
             moveToWatering: @escaping () -> Void,
@@ -118,9 +118,11 @@ public final class TicketDetailViewModel {
             .disposed(by: disposeBag)
 
         input.didTapManageButton
+            .withLatestFrom(ticketDetail.asObservable())
+            .compactMap { $0 }
             .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.action.moveToManageTicket()
+            .subscribe(onNext: { (self, detail) in
+                self.action.moveToManageTicket(detail.title)
             })
             .disposed(by: disposeBag)
 

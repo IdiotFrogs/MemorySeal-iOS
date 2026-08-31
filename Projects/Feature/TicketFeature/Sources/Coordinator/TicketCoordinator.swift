@@ -182,12 +182,16 @@ public final class TicketCoordinator {
         )
     }
 
-    public func moveToManageTicket() {
+    public func moveToManageTicket(ticketName: String) {
         let manageAction = ManageTicketViewModel.Action(
             didDeleteTimeCapsule: didDeleteTimeCapsule,
             didLeaveTimeCapsule: didLeaveTimeCapsule
         )
-        let viewController = ticketDIContainer.makeManageTicketViewController(action: manageAction, capsuleId: capsuleId, ticketName: "티켓 이름")
+        let viewController = ticketDIContainer.makeManageTicketViewController(
+            action: manageAction,
+            capsuleId: capsuleId,
+            ticketName: ticketName
+        )
         self.navigationController.pushViewController(
             viewController,
             animated: true
