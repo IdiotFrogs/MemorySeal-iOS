@@ -66,6 +66,7 @@ public final class ManageTicketViewController: UIViewController {
 
         addSubviews()
         setLayout()
+        applyRole()
         bindViewModel()
         bindButtons()
     }
@@ -153,6 +154,10 @@ extension ManageTicketViewController {
 
 // MARK: - Layout
 extension ManageTicketViewController {
+    private func applyRole() {
+        deleteTicketRow.isHidden = !viewModel.isHost
+    }
+
     private func addSubviews() {
         view.addSubview(navigationView)
         view.addSubview(menuStackView)

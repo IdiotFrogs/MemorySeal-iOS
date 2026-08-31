@@ -182,7 +182,7 @@ public final class TicketCoordinator {
         )
     }
 
-    public func moveToManageTicket(ticketName: String) {
+    public func moveToManageTicket(ticketName: String, isHost: Bool) {
         let manageAction = ManageTicketViewModel.Action(
             didDeleteTimeCapsule: didDeleteTimeCapsule,
             didLeaveTimeCapsule: didLeaveTimeCapsule
@@ -190,7 +190,8 @@ public final class TicketCoordinator {
         let viewController = ticketDIContainer.makeManageTicketViewController(
             action: manageAction,
             capsuleId: capsuleId,
-            ticketName: ticketName
+            ticketName: ticketName,
+            isHost: isHost
         )
         self.navigationController.pushViewController(
             viewController,

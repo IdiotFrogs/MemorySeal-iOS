@@ -32,16 +32,19 @@ public final class ManageTicketViewModel {
     private let capsuleId: Int
     private let manageTicketUseCase: ManageTicketUseCase
     let ticketName: String
+    let isHost: Bool
 
     public init(
         action: Action,
         capsuleId: Int,
         ticketName: String,
+        isHost: Bool,
         manageTicketUseCase: ManageTicketUseCase
     ) {
         self.action = action
         self.capsuleId = capsuleId
         self.ticketName = ticketName
+        self.isHost = isHost
         self.manageTicketUseCase = manageTicketUseCase
     }
 
