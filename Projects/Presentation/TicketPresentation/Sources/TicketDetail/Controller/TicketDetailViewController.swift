@@ -25,7 +25,23 @@ public final class TicketDetailViewController: UIViewController {
     private let didTapSeeMemoriesButton: PublishRelay<Void> = .init()
     private let disposeBag: DisposeBag = DisposeBag()
 
+    private enum Member {
+        static let maximumDisplayCount: Int = 12
+    }
+
     private var viewState: TicketDetailViewState = .initial
+
+    private var showsMemberOverflow: Bool {
+        return memberCount > Member.maximumDisplayCount
+    }
+
+    private var memberDisplayCount: Int {
+        return min(collaborators.count, Member.maximumDisplayCount)
+    }
+
+    private var overflowMemberCount: Int {
+        return max(memberCount - (Member.maximumDisplayCount - 1), 0)
+    }
 
     private let viewModel: TicketDetailViewModel
     private var ticketDetail: TicketDetailEntity?
@@ -384,7 +400,7 @@ extension TicketDetailViewController: UICollectionViewDataSource {
         case .ticketImage, .ticketDescription, .buryTicket, .myMessages:
             return 1
         case .members:
-            return collaborators.count
+            return memberDisplayCount
         }
     }
 
@@ -455,6 +471,10 @@ extension TicketDetailViewController: UICollectionViewDataSource {
                 withReuseIdentifier: TicketUserCollectionViewCell.reuseIdentifier,
                 for: indexPath
             ) as? TicketUserCollectionViewCell else { return .init() }
+            if showsMemberOverflow, indexPath.item == Member.maximumDisplayCount - 1 {
+                cell.configure(overflowCount: overflowMemberCount)
+                return cell
+            }
             guard indexPath.item < collaborators.count else { return cell }
             cell.configure(collaborator: collaborators[indexPath.item])
             return cell

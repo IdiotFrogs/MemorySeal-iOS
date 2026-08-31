@@ -187,7 +187,7 @@ extension TicketDetailViewModel {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let page = try await self.addMemberUseCase.fetchCollaborators(capsuleId: self.capsuleId, page: 0, size: 10)
+                let page = try await self.addMemberUseCase.fetchCollaborators(capsuleId: self.capsuleId, page: 0, size: 12)
                 await MainActor.run {
                     self.collaborators.accept(page.collaborators)
                     self.memberCount.accept(page.totalElements)

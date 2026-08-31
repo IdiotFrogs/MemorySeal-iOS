@@ -23,6 +23,15 @@ final class TicketUserCollectionViewCell: UICollectionViewCell {
         return imageView
     }()
 
+    private let overflowLabel: UILabel = {
+        let label = UILabel()
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 14)
+        label.textColor = UIColor(hex: "#0B0B0B") ?? .black
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+
     private let profileWavyBorder: WavyStrokeView = {
         let view = WavyStrokeView(strokeColor: .black, lineWidth: 2)
         view.waveCornerRadius = 24
@@ -49,9 +58,21 @@ final class TicketUserCollectionViewCell: UICollectionViewCell {
         super.prepareForReuse()
         userImageView.kf.cancelDownloadTask()
         userImageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
+        userImageView.isHidden = false
+        overflowLabel.isHidden = true
+    }
+
+    func configure(overflowCount: Int) {
+        userImageView.kf.cancelDownloadTask()
+        userImageView.isHidden = true
+        overflowLabel.isHidden = false
+        overflowLabel.text = "+\(overflowCount)"
     }
 
     func configure(collaborator: CollaboratorEntity) {
+        userImageView.isHidden = false
+        overflowLabel.isHidden = true
+
         let placeholder = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
         guard let urlString = collaborator.profileImageUrl,
               let url = URL(string: urlString) else {
@@ -65,12 +86,17 @@ final class TicketUserCollectionViewCell: UICollectionViewCell {
 extension TicketUserCollectionViewCell {
     private func addSubviews() {
         contentView.addSubview(userImageView)
+        contentView.addSubview(overflowLabel)
         contentView.addSubview(profileWavyBorder)
     }
 
     private func setLayout() {
         userImageView.snp.makeConstraints {
             $0.edges.equalToSuperview()
+        }
+
+        overflowLabel.snp.makeConstraints {
+            $0.center.equalToSuperview()
         }
 
         profileWavyBorder.snp.makeConstraints {
