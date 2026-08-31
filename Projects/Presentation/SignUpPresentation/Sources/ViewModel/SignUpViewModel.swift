@@ -91,8 +91,8 @@ extension SignUpViewModel {
         }
 
         guard text.trimmingCharacters(in: .whitespaces).isEmpty == false,
-              text.count > 1,
-              text.count < 17,
+              text.count >= 1,
+              text.count <= 16,
               text.last != " " else {
             return (false, "최소 1글자에서 16글자까지 입력할 수 있습니다.")
         }
