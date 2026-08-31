@@ -95,6 +95,7 @@ public final class HomeCoordinator {
                 guard let self else { return }
                 self.refreshHome()
                 self.navigationController.dismiss(animated: true) { [weak self] in
+                    guard let capsuleId else { return }
                     self?.dependency.moveToTicket(capsuleId)
                 }
             }

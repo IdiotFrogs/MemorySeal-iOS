@@ -1,5 +1,5 @@
 import Foundation
 
 public protocol EnterTicketRepository {
-    func joinRequest(code: String) async throws -> Int
+    func joinRequest(code: String) async throws -> Int?
 }

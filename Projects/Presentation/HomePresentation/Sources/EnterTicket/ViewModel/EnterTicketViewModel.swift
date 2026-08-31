@@ -15,9 +15,9 @@ public final class EnterTicketViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
 
     public struct Action {
-        public let didJoinTicket: (_ capsuleId: Int) -> Void
+        public let didJoinTicket: (_ capsuleId: Int?) -> Void
 
-        public init(didJoinTicket: @escaping (_ capsuleId: Int) -> Void) {
+        public init(didJoinTicket: @escaping (_ capsuleId: Int?) -> Void) {
             self.didJoinTicket = didJoinTicket
         }
     }
