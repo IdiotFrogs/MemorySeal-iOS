@@ -12,32 +12,37 @@ import RxSwift
 import RxCocoa
 
 import BaseDomain
-import HomeDomain
+import SignInDomain
 
 public final class ProfileViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
     private let userUseCase: UserUseCase
-    private let homeUseCase: HomeUseCase
+    private let authUseCase: AuthUseCase
 
     public struct Action {
         public let moveToBack: () -> Void
         public let moveToEditProfile: (_ nickname: String, _ profileImageUrl: String) -> Void
-        public let moveToSettings: () -> Void
-        public let moveToTicket: (_ capsuleId: Int) -> Void
-        public let moveToOpenCapsule: (_ capsuleId: Int, _ imageUrl: String?) -> Void
+        public let moveToTermsOfService: () -> Void
+        public let didLogout: () -> Void
+        public let didWithdraw: () -> Void
 
-        public init(moveToBack: @escaping () -> Void, moveToEditProfile: @escaping (_ nickname: String, _ profileImageUrl: String) -> Void, moveToSettings: @escaping () -> Void, moveToTicket: @escaping (_ capsuleId: Int) -> Void, moveToOpenCapsule: @escaping (_ capsuleId: Int, _ imageUrl: String?) -> Void) {
+        public init(
+            moveToBack: @escaping () -> Void,
+            moveToEditProfile: @escaping (_ nickname: String, _ profileImageUrl: String) -> Void,
+            moveToTermsOfService: @escaping () -> Void,
+            didLogout: @escaping () -> Void,
+            didWithdraw: @escaping () -> Void
+        ) {
             self.moveToBack = moveToBack
             self.moveToEditProfile = moveToEditProfile
-            self.moveToSettings = moveToSettings
-            self.moveToTicket = moveToTicket
-            self.moveToOpenCapsule = moveToOpenCapsule
+            self.moveToTermsOfService = moveToTermsOfService
+            self.didLogout = didLogout
+            self.didWithdraw = didWithdraw
         }
     }
     public let action: Action
 
     private let userInfo: BehaviorRelay<UserInfoEntity?> = .init(value: nil)
-    private let openedTickets: BehaviorRelay<[TimeCapsuleEntity]> = .init(value: [])
     private let refreshRelay: PublishRelay<Void> = .init()
 
     public func refresh() {
@@ -48,18 +53,18 @@ public final class ProfileViewModel {
         let viewDidLoad: PublishRelay<Void>
         let backButtonDidTap: ControlEvent<Void>
         let editProfileButtonDidTap: ControlEvent<Void>
-        let settingButtonDidTap: ControlEvent<Void>
-        let ticketDidTap: Observable<IndexPath>
+        let termsOfServiceDidTap: ControlEvent<Void>
+        let logoutConfirmDidTap: Observable<Void>
+        let withdrawalConfirmDidTap: Observable<Void>
     }
 
     struct Output {
         let userInfo: Driver<UserInfoEntity?>
-        let openedTickets: Driver<[TimeCapsuleEntity]>
     }
 
-    public init(userUseCase: UserUseCase, homeUseCase: HomeUseCase, action: Action) {
+    public init(userUseCase: UserUseCase, authUseCase: AuthUseCase, action: Action) {
         self.userUseCase = userUseCase
-        self.homeUseCase = homeUseCase
+        self.authUseCase = authUseCase
         self.action = action
     }
 
@@ -70,27 +75,7 @@ public final class ProfileViewModel {
         )
         .withUnretained(self)
         .subscribe(onNext: { (self, _) in
-            Task {
-                do {
-                    let user = try await self.userUseCase.fetchUserInfo()
-                    await MainActor.run {
-                        self.userInfo.accept(user)
-                    }
-                } catch {}
-            }
-
-            Task {
-                do {
-                    let tickets = try await self.homeUseCase.fetchOpenedTimeCapsules()
-                    await MainActor.run {
-                        self.openedTickets.accept(tickets)
-                    }
-                } catch {
-                    await MainActor.run {
-                        self.openedTickets.accept([])
-                    }
-                }
-            }
+            self.fetchUserInfo()
         })
         .disposed(by: disposeBag)
 
@@ -110,25 +95,61 @@ public final class ProfileViewModel {
             })
             .disposed(by: disposeBag)
 
-        input.settingButtonDidTap
+        input.termsOfServiceDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.action.moveToSettings()
+                self.action.moveToTermsOfService()
             })
             .disposed(by: disposeBag)
 
-        input.ticketDidTap
+        input.logoutConfirmDidTap
             .withUnretained(self)
-            .subscribe(onNext: { (self, indexPath) in
-                guard indexPath.item < self.openedTickets.value.count else { return }
-                let entity = self.openedTickets.value[indexPath.item]
-                self.action.moveToOpenCapsule(entity.timeCapsuleId, entity.imageUrl)
+            .subscribe(onNext: { (self, _) in
+                self.requestSignOut()
             })
             .disposed(by: disposeBag)
 
-        return Output(
-            userInfo: userInfo.asDriver(),
-            openedTickets: openedTickets.asDriver()
-        )
+        input.withdrawalConfirmDidTap
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.requestDeleteAccount()
+            })
+            .disposed(by: disposeBag)
+
+        return Output(userInfo: userInfo.asDriver())
+    }
+}
+
+extension ProfileViewModel {
+    private func fetchUserInfo() {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let user = try await self.userUseCase.fetchUserInfo()
+                await MainActor.run {
+                    self.userInfo.accept(user)
+                }
+            } catch {}
+        }
+    }
+
+    private func requestSignOut() {
+        Task { [weak self] in
+            guard let self else { return }
+            try? await self.authUseCase.executeLogout()
+            await MainActor.run { [weak self] in
+                self?.action.didLogout()
+            }
+        }
+    }
+
+    private func requestDeleteAccount() {
+        Task { [weak self] in
+            guard let self else { return }
+            try? await self.userUseCase.deleteAccount()
+            await MainActor.run { [weak self] in
+                self?.action.didWithdraw()
+            }
+        }
     }
 }

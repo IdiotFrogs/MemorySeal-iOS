@@ -15,21 +15,15 @@ public final class ProfileCoordinator {
         public let moveToBack: () -> Void
         public let didLogout: () -> Void
         public let didEditProfile: () -> Void
-        public let moveToTicket: (_ capsuleId: Int) -> Void
-        public let moveToOpenCapsule: (_ capsuleId: Int, _ imageUrl: String?) -> Void
 
         public init(
             moveToBack: @escaping () -> Void,
             didLogout: @escaping () -> Void,
-            didEditProfile: @escaping () -> Void,
-            moveToTicket: @escaping (_ capsuleId: Int) -> Void,
-            moveToOpenCapsule: @escaping (_ capsuleId: Int, _ imageUrl: String?) -> Void
+            didEditProfile: @escaping () -> Void
         ) {
             self.moveToBack = moveToBack
             self.didLogout = didLogout
             self.didEditProfile = didEditProfile
-            self.moveToTicket = moveToTicket
-            self.moveToOpenCapsule = moveToOpenCapsule
         }
     }
 
@@ -48,9 +42,9 @@ public final class ProfileCoordinator {
         let profileAction = ProfileViewModel.Action(
             moveToBack: dependency.moveToBack,
             moveToEditProfile: moveToEditProfile,
-            moveToSettings: moveToSettings,
-            moveToTicket: dependency.moveToTicket,
-            moveToOpenCapsule: dependency.moveToOpenCapsule
+            moveToTermsOfService: moveToTermsOfService,
+            didLogout: dependency.didLogout,
+            didWithdraw: dependency.didLogout
         )
         let profileViewModel = profileDIContainer.makeProfileViewModel(action: profileAction)
         self.profileViewModel = profileViewModel
@@ -76,20 +70,6 @@ public final class ProfileCoordinator {
         )
         self.navigationController.pushViewController(
             editProfileViewController,
-            animated: true
-        )
-    }
-
-    private func moveToSettings() {
-        let settingsAction = SettingsViewModel.Action(
-            moveToBack: popViewController,
-            moveToTermsOfService: moveToTermsOfService,
-            moveToLogout: dependency.didLogout,
-            moveToWithdrawal: dependency.didLogout
-        )
-        let settingsViewController = profileDIContainer.makeSettingsViewController(action: settingsAction)
-        self.navigationController.pushViewController(
-            settingsViewController,
             animated: true
         )
     }
