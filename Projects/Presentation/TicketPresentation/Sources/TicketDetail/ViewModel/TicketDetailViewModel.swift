@@ -88,13 +88,22 @@ public final class TicketDetailViewModel {
     }
 
     private static func makeViewState(from detail: TicketDetailEntity?) -> TicketDetailViewState {
-        guard detail?.timeCapsuleStatus == .opened else {
-            return .initial
+        guard let detail else { return .initial }
+
+        if detail.timeCapsuleStatus == .opened {
+            return TicketDetailViewState(
+                sections: [.ticketImage, .ticketDescription, .members],
+                isOpened: true
+            )
         }
-        return TicketDetailViewState(
-            sections: [.ticketImage, .ticketDescription, .members],
-            isOpened: true
-        )
+
+        var sections: [TicketDetailSection] = [.ticketImage, .ticketDescription]
+        if detail.userRole == .host || detail.timeCapsuleStatus == .buried {
+            sections.append(.buryTicket)
+        }
+        sections.append(contentsOf: [.myMessages, .members])
+
+        return TicketDetailViewState(sections: sections, isOpened: false)
     }
 
     func transform(_ input: Input) -> Output {
