@@ -185,7 +185,8 @@ public final class TicketCoordinator {
     public func moveToManageTicket(ticketName: String, isHost: Bool) {
         let manageAction = ManageTicketViewModel.Action(
             didDeleteTimeCapsule: didDeleteTimeCapsule,
-            didLeaveTimeCapsule: didLeaveTimeCapsule
+            didLeaveTimeCapsule: didLeaveTimeCapsule,
+            moveToMemberList: moveToAddMember
         )
         let viewController = ticketDIContainer.makeManageTicketViewController(
             action: manageAction,
