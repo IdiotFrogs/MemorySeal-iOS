@@ -62,12 +62,6 @@ public final class MainCoordinator {
             },
             didEditProfile: { [weak self] in
                 self?.homeCoordinator?.refreshProfile()
-            },
-            moveToTicket: { [weak self] capsuleId in
-                self?.moveToTicketCoordinator(capsuleId: capsuleId)
-            },
-            moveToOpenCapsule: { [weak self] capsuleId, imageUrl in
-                self?.moveToOpenCapsuleCoordinator(capsuleId: capsuleId, ticketImageUrl: imageUrl)
             }
         )
         let coordinator = ProfileCoordinator(with: navigationController, dependency: profileDependency)
@@ -76,7 +70,15 @@ public final class MainCoordinator {
     }
 
     private func moveToCreateTicketCoordinator() {
-        let coordinator = CreateTicketCoordinator(with: navigationController)
+        let createTicketDependency = CreateTicketCoordinator.Dependency(
+            moveToTicket: { [weak self] capsuleId in
+                self?.moveToTicketCoordinator(capsuleId: capsuleId)
+            }
+        )
+        let coordinator = CreateTicketCoordinator(
+            with: navigationController,
+            dependency: createTicketDependency
+        )
         createTicketCoordinator = coordinator
         coordinator.start()
     }

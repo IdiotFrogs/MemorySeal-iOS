@@ -53,35 +53,45 @@ struct WateringDayItem {
 
 enum WateringDayItemBuilder {
     static func makeItems(
-        days: [WateringDayEntity],
+        daysByDate: [Date: WateringDayEntity],
+        startDate: Date?,
         totalDays: Int
     ) -> [WateringDayItem] {
         guard totalDays > 0 else { return [] }
 
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+
         return (0..<totalDays).map { index in
-            guard index < days.count else {
+            guard let startDate,
+                  let date = calendar.date(byAdding: .day, value: index, to: startDate) else {
                 return WateringDayItem(isToday: false, state: .upcoming(day: index + 1))
             }
 
-            let day = days[index]
-            let isToday = isToday(day)
+            let isToday = date == today
+            let day = daysByDate[date]
 
-            if day.isWatered {
+            if let day, day.isWatered {
                 return WateringDayItem(
                     isToday: isToday,
                     state: .watered(profileImageUrl: day.profileImageUrl)
                 )
             }
-            return WateringDayItem(isToday: isToday, state: isToday ? .today : .missed)
+
+            if isToday {
+                return WateringDayItem(isToday: true, state: .today)
+            }
+
+            if date > today || day == nil {
+                return WateringDayItem(isToday: false, state: .upcoming(day: index + 1))
+            }
+
+            return WateringDayItem(isToday: false, state: .missed)
         }
     }
 
-    static func isWateredToday(_ days: [WateringDayEntity]) -> Bool {
-        return days.first(where: isToday)?.isWatered ?? false
-    }
-
-    private static func isToday(_ day: WateringDayEntity) -> Bool {
-        guard let wateredDate = day.wateredDate else { return false }
-        return Calendar.current.isDateInToday(wateredDate)
+    static func isWateredToday(_ daysByDate: [Date: WateringDayEntity]) -> Bool {
+        let today = Calendar.current.startOfDay(for: Date())
+        return daysByDate[today]?.isWatered ?? false
     }
 }

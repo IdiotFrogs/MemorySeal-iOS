@@ -15,9 +15,9 @@ public final class EnterTicketViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
 
     public struct Action {
-        public let didJoinTicket: () -> Void
+        public let didJoinTicket: (_ capsuleId: Int?) -> Void
 
-        public init(didJoinTicket: @escaping () -> Void) {
+        public init(didJoinTicket: @escaping (_ capsuleId: Int?) -> Void) {
             self.didJoinTicket = didJoinTicket
         }
     }
@@ -31,12 +31,10 @@ public final class EnterTicketViewModel {
     }
 
     struct Output {
-        let joinSuccess: PublishRelay<Void>
         let joinError: PublishRelay<String>
     }
 
     func transform(_ input: Input) -> Output {
-        let joinSuccess: PublishRelay<Void> = .init()
         let joinError: PublishRelay<String> = .init()
 
         input.didTapEnterButton
@@ -45,10 +43,9 @@ public final class EnterTicketViewModel {
                 Task { [weak self] in
                     guard let self else { return }
                     do {
-                        try await self.enterTicketUseCase.joinRequest(code: code)
+                        let capsuleId = try await self.enterTicketUseCase.joinRequest(code: code)
                         await MainActor.run {
-                            joinSuccess.accept(())
-                            self.action.didJoinTicket()
+                            self.action.didJoinTicket(capsuleId)
                         }
                     } catch let error {
                         await MainActor.run {
@@ -60,7 +57,6 @@ public final class EnterTicketViewModel {
             .disposed(by: disposeBag)
 
         return Output(
-            joinSuccess: joinSuccess,
             joinError: joinError
         )
     }

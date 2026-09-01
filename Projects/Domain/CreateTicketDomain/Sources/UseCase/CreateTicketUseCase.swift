@@ -15,7 +15,7 @@ public protocol CreateTicketUseCase {
         title: String,
         description: String?,
         mainImage: Data
-    ) async throws
+    ) async throws -> Int
 }
 
 public final class DefaultCreateTicketUseCase: CreateTicketUseCase {
@@ -30,8 +30,8 @@ public final class DefaultCreateTicketUseCase: CreateTicketUseCase {
         title: String,
         description: String?, 
         mainImage: Data
-    ) async throws {
-        try await createTicketRepository.createTicket(
+    ) async throws -> Int {
+        return try await createTicketRepository.createTicket(
             title: title,
             description: description,
             mainImage: mainImage

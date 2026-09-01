@@ -13,8 +13,6 @@ import BaseData
 import BaseDomain
 import SignInData
 import SignInDomain
-import HomeData
-import HomeDomain
 
 public final class ProfileDIContainer {
     public init() {}
@@ -43,15 +41,6 @@ public final class ProfileDIContainer {
         return DefaultUserUseCase(userRepository: makeUserRepository())
     }
 
-    private func makeHomeUseCase() -> HomeUseCase {
-        let provider = DefaultProvider<HomeTargetType>()
-        let repository = DefaultHomeRepository(provider: provider)
-        return DefaultHomeUseCase(
-            homeRepository: repository,
-            openedCapsuleStore: DefaultOpenedCapsuleStore()
-        )
-    }
-
     private func makeAuthProvider() -> DefaultProvider<AuthTargetType> {
         return DefaultProvider<AuthTargetType>()
     }
@@ -74,7 +63,7 @@ public final class ProfileDIContainer {
     func makeProfileViewModel(action: ProfileViewModel.Action) -> ProfileViewModel {
         return ProfileViewModel(
             userUseCase: makeUserUseCase(),
-            homeUseCase: makeHomeUseCase(),
+            authUseCase: makeAuthUseCase(),
             action: action
         )
     }
@@ -106,17 +95,5 @@ public final class ProfileDIContainer {
         profileImageUrl: String
     ) -> EditProfileViewController {
         return EditProfileViewController(with: makeEditProfileViewModel(action: action, nickname: nickname, profileImageUrl: profileImageUrl))
-    }
-
-    private func makeSettingsViewModel(action: SettingsViewModel.Action) -> SettingsViewModel {
-        return SettingsViewModel(
-            authUseCase: makeAuthUseCase(),
-            userUseCase: makeUserUseCase(),
-            action: action
-        )
-    }
-
-    public func makeSettingsViewController(action: SettingsViewModel.Action) -> SettingsViewController {
-        return SettingsViewController(with: makeSettingsViewModel(action: action))
     }
 }

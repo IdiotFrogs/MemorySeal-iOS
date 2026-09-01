@@ -17,13 +17,16 @@ public final class ManageTicketViewModel {
     public struct Action {
         public let didDeleteTimeCapsule: () -> Void
         public let didLeaveTimeCapsule: () -> Void
+        public let moveToMemberList: () -> Void
 
         public init(
             didDeleteTimeCapsule: @escaping () -> Void,
-            didLeaveTimeCapsule: @escaping () -> Void
+            didLeaveTimeCapsule: @escaping () -> Void,
+            moveToMemberList: @escaping () -> Void
         ) {
             self.didDeleteTimeCapsule = didDeleteTimeCapsule
             self.didLeaveTimeCapsule = didLeaveTimeCapsule
+            self.moveToMemberList = moveToMemberList
         }
     }
 
@@ -32,22 +35,26 @@ public final class ManageTicketViewModel {
     private let capsuleId: Int
     private let manageTicketUseCase: ManageTicketUseCase
     let ticketName: String
+    let isHost: Bool
 
     public init(
         action: Action,
         capsuleId: Int,
         ticketName: String,
+        isHost: Bool,
         manageTicketUseCase: ManageTicketUseCase
     ) {
         self.action = action
         self.capsuleId = capsuleId
         self.ticketName = ticketName
+        self.isHost = isHost
         self.manageTicketUseCase = manageTicketUseCase
     }
 
     struct Input {
         let didConfirmDelete: PublishRelay<Void>
         let didConfirmLeave: PublishRelay<Void>
+        let didTapMember: PublishRelay<Void>
     }
 
     struct Output {
@@ -60,6 +67,13 @@ public final class ManageTicketViewModel {
         let deleteResult = PublishRelay<Bool>()
         let leaveResult = PublishRelay<Bool>()
         let hostCannotLeave = PublishRelay<Void>()
+
+        input.didTapMember
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.action.moveToMemberList()
+            })
+            .disposed(by: disposeBag)
 
         input.didConfirmDelete
             .withUnretained(self)

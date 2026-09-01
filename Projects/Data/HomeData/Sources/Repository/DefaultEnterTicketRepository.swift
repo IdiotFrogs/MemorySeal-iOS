@@ -11,8 +11,13 @@ public final class DefaultEnterTicketRepository: EnterTicketRepository {
         self.provider = provider
     }
 
-    public func joinRequest(code: String) async throws {
+    public func joinRequest(code: String) async throws -> Int? {
         let result = await provider.request(.joinRequest(code: code))
+
         try ResultHandler.handleResult(result: result, errorType: EnterTicketError.self)
+
+        guard case .success(let response) = result else { return nil }
+        let responseDTO = try? JSONDecoder().decode(JoinTicketResponseDTO.self, from: response.data)
+        return responseDTO?.capsuleId
     }
 }

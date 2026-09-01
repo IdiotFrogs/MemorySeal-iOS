@@ -50,7 +50,7 @@ public final class TicketDIContainer {
         )
     }
 
-    private func makeManageTicketViewModel(action: ManageTicketViewModel.Action, capsuleId: Int, ticketName: String) -> ManageTicketViewModel {
+    private func makeManageTicketViewModel(action: ManageTicketViewModel.Action, capsuleId: Int, ticketName: String, isHost: Bool) -> ManageTicketViewModel {
         let provider = DefaultProvider<ManageTicketTargetType>()
         let repository = DefaultManageTicketRepository(provider: provider)
         let useCase = DefaultManageTicketUseCase(manageTicketRepository: repository)
@@ -58,12 +58,13 @@ public final class TicketDIContainer {
             action: action,
             capsuleId: capsuleId,
             ticketName: ticketName,
+            isHost: isHost,
             manageTicketUseCase: useCase
         )
     }
 
-    func makeManageTicketViewController(action: ManageTicketViewModel.Action, capsuleId: Int, ticketName: String) -> ManageTicketViewController {
-        return ManageTicketViewController(with: makeManageTicketViewModel(action: action, capsuleId: capsuleId, ticketName: ticketName))
+    func makeManageTicketViewController(action: ManageTicketViewModel.Action, capsuleId: Int, ticketName: String, isHost: Bool) -> ManageTicketViewController {
+        return ManageTicketViewController(with: makeManageTicketViewModel(action: action, capsuleId: capsuleId, ticketName: ticketName, isHost: isHost))
     }
 
     // MARK: - BuryTicket

@@ -1,5 +1,10 @@
 import Foundation
 
+public enum WateringSort: String {
+    case asc
+    case desc
+}
+
 public struct WateringEntity {
     public let totalDays: Int
     public let wateringCount: Int

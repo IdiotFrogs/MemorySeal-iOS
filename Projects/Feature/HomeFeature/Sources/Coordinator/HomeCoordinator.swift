@@ -91,8 +91,13 @@ public final class HomeCoordinator {
 
     private func moveToEnterTicket() {
         let action = EnterTicketViewModel.Action(
-            didJoinTicket: { [weak self] in
-                self?.refreshHome()
+            didJoinTicket: { [weak self] capsuleId in
+                guard let self else { return }
+                self.refreshHome()
+                self.navigationController.dismiss(animated: true) { [weak self] in
+                    guard let capsuleId else { return }
+                    self?.dependency.moveToTicket(capsuleId)
+                }
             }
         )
         let enterTicketViewController = homeDIContainer.makeEnterTicketViewController(action: action)

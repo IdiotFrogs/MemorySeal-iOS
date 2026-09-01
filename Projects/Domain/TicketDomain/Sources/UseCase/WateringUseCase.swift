@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol WateringUseCase {
-    func fetchWaterings(capsuleId: Int, page: Int, size: Int) async throws -> WateringEntity
+    func fetchWaterings(capsuleId: Int, page: Int, size: Int, sort: WateringSort) async throws -> WateringEntity
     func water(capsuleId: Int) async throws
 }
 
@@ -15,12 +15,14 @@ public final class DefaultWateringUseCase: WateringUseCase {
     public func fetchWaterings(
         capsuleId: Int,
         page: Int,
-        size: Int
+        size: Int,
+        sort: WateringSort
     ) async throws -> WateringEntity {
         return try await wateringRepository.fetchWaterings(
             capsuleId: capsuleId,
             page: page,
-            size: size
+            size: size,
+            sort: sort
         )
     }
 

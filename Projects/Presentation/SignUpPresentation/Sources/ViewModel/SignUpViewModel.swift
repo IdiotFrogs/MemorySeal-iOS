@@ -66,11 +66,9 @@ public final class SignUpViewModel {
 
                 guard result.isPassed, let nickname else { return }
 
-                guard let profileImageData = self.selectedImage?.jpegData(compressionQuality: 0.8) else { return }
-
                 self.requestSignUp(
                     nickname: nickname,
-                    profileImage: profileImageData,
+                    profileImage: self.selectedImage?.jpegData(compressionQuality: 0.8),
                     isLoading: isLoading
                 )
             })
@@ -91,8 +89,8 @@ extension SignUpViewModel {
         }
 
         guard text.trimmingCharacters(in: .whitespaces).isEmpty == false,
-              text.count > 1,
-              text.count < 17,
+              text.count >= 1,
+              text.count <= 16,
               text.last != " " else {
             return (false, "최소 1글자에서 16글자까지 입력할 수 있습니다.")
         }
@@ -102,7 +100,7 @@ extension SignUpViewModel {
 
     private func requestSignUp(
         nickname: String,
-        profileImage: Data,
+        profileImage: Data?,
         isLoading: BehaviorRelay<Bool>
     ) {
         isLoading.accept(true)

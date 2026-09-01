@@ -44,7 +44,8 @@ public final class TicketCoordinator {
             moveToManageTicket: moveToManageTicket,
             moveToMyTicketMessages: moveToMyTicketMessages,
             moveToBuryTicket: moveToBuryTicket,
-            moveToWatering: moveToWatering
+            moveToWatering: moveToWatering,
+            moveToMemoryMessages: startMemoryMessages
         )
         let viewModel = ticketDIContainer.makeTicketDetailViewModel(
             action: ticketDetailAction,
@@ -59,7 +60,7 @@ public final class TicketCoordinator {
     public func startOpenFlow(ticketImageUrl: String? = nil) {
         self.ticketImageUrl = ticketImageUrl
         if store.isOpened(capsuleId: capsuleId) {
-            startMemoryMessages()
+            start()
         } else {
             startOpenIntro()
         }
@@ -114,8 +115,11 @@ public final class TicketCoordinator {
             capsuleId: capsuleId,
             onOpened: onOpened
         )
-        let baseViewControllers = navigationController.viewControllers.filter {
+        var baseViewControllers = navigationController.viewControllers.filter {
             !($0 is OpenIntroViewController) && !($0 is OpenConfirmViewController)
+        }
+        if !baseViewControllers.contains(where: { $0 is TicketDetailViewController }) {
+            baseViewControllers.append(makeTicketDetailViewController())
         }
         self.navigationController.setViewControllers(
             baseViewControllers + [viewController],
@@ -178,12 +182,18 @@ public final class TicketCoordinator {
         )
     }
 
-    public func moveToManageTicket() {
+    public func moveToManageTicket(ticketName: String, isHost: Bool) {
         let manageAction = ManageTicketViewModel.Action(
             didDeleteTimeCapsule: didDeleteTimeCapsule,
-            didLeaveTimeCapsule: didLeaveTimeCapsule
+            didLeaveTimeCapsule: didLeaveTimeCapsule,
+            moveToMemberList: moveToAddMember
         )
-        let viewController = ticketDIContainer.makeManageTicketViewController(action: manageAction, capsuleId: capsuleId, ticketName: "티켓 이름")
+        let viewController = ticketDIContainer.makeManageTicketViewController(
+            action: manageAction,
+            capsuleId: capsuleId,
+            ticketName: ticketName,
+            isHost: isHost
+        )
         self.navigationController.pushViewController(
             viewController,
             animated: true

@@ -39,8 +39,15 @@ public final class DefaultAddMemberRepository: AddMemberRepository {
         return responseDTO.toDomain
     }
 
-    public func searchCollaborators(capsuleId: Int, nickname: String) async throws -> [CollaboratorEntity] {
-        let result = await provider.request(.searchCollaborators(capsuleId: capsuleId, nickname: nickname))
+    public func searchCollaborators(
+        capsuleId: Int,
+        nickname: String,
+        page: Int,
+        size: Int
+    ) async throws -> CollaboratorPageEntity {
+        let result = await provider.request(
+            .searchCollaborators(capsuleId: capsuleId, nickname: nickname, page: page, size: size)
+        )
 
         let responseDTO = try ResultHandler.handleResult(
             result: result,
@@ -48,7 +55,7 @@ public final class DefaultAddMemberRepository: AddMemberRepository {
             errorType: AddMemberError.self
         )
 
-        return responseDTO.content.map { $0.toDomain }
+        return responseDTO.toDomain
     }
 
     public func delegateHost(capsuleId: Int, targetUserId: Int) async throws {

@@ -13,10 +13,13 @@ final class WateringStore {
     private let capsuleId: Int
     private let wateringUseCase: WateringUseCase
     private let pageSize: Int
+    private let sort: WateringSort
     private let prefetchThreshold: Int
+    private let calendar: Calendar = Calendar.current
 
     let summary: BehaviorRelay<WateringEntity?> = .init(value: nil)
-    let days: BehaviorRelay<[WateringDayEntity]> = .init(value: [])
+    let daysByDate: BehaviorRelay<[Date: WateringDayEntity]> = .init(value: [:])
+    let startDate: BehaviorRelay<Date?> = .init(value: nil)
     let errorToast: PublishRelay<String> = .init()
 
     private var nextPage: Int = Page.first
@@ -28,16 +31,19 @@ final class WateringStore {
     init(
         capsuleId: Int,
         wateringUseCase: WateringUseCase,
-        pageSize: Int
+        pageSize: Int,
+        sort: WateringSort
     ) {
         self.capsuleId = capsuleId
         self.wateringUseCase = wateringUseCase
         self.pageSize = pageSize
+        self.sort = sort
         self.prefetchThreshold = max(pageSize / 5, Page.minimumPrefetchThreshold)
     }
 
     var isWateredToday: Bool {
-        return WateringDayItemBuilder.isWateredToday(days.value)
+        let today = calendar.startOfDay(for: Date())
+        return daysByDate.value[today]?.isWatered ?? false
     }
 
     func loadNextPageIfNeeded() {
@@ -52,12 +58,13 @@ final class WateringStore {
                 let entity = try await self.wateringUseCase.fetchWaterings(
                     capsuleId: self.capsuleId,
                     page: page,
-                    size: self.pageSize
+                    size: self.pageSize,
+                    sort: self.sort
                 )
                 await MainActor.run {
                     guard generation == self.loadGeneration else { return }
                     self.summary.accept(entity)
-                    self.days.accept(page == Page.first ? entity.days : self.days.value + entity.days)
+                    self.merge(entity, page: page)
                     self.nextPage = page + 1
                     self.isLastPage = entity.isLast || entity.days.isEmpty
                     self.isLoading = false
@@ -73,9 +80,7 @@ final class WateringStore {
     }
 
     func loadNextPageIfNeeded(prefetching indexPaths: [IndexPath]) {
-        let loadedCount = days.value.count
-        let isNearEnd = indexPaths.contains { $0.item >= loadedCount - prefetchThreshold }
-        guard isNearEnd else { return }
+        guard isNearUnloadedEdge(prefetching: indexPaths) else { return }
         loadNextPageIfNeeded()
     }
 
@@ -97,6 +102,53 @@ final class WateringStore {
                     self.errorToast.accept("물주기에 실패했습니다")
                 }
             }
+        }
+    }
+
+    // MARK: - Merge
+
+    private func merge(_ entity: WateringEntity, page: Int) {
+        if page == Page.first {
+            startDate.accept(resolveStartDate(entity))
+        }
+
+        var merged = page == Page.first ? [:] : daysByDate.value
+        for day in entity.days {
+            guard let wateredDate = day.wateredDate else { continue }
+            merged[calendar.startOfDay(for: wateredDate)] = day
+        }
+        daysByDate.accept(merged)
+    }
+
+    private func resolveStartDate(_ entity: WateringEntity) -> Date? {
+        guard let anchor = entity.days.first?.wateredDate else { return nil }
+        let anchorDay = calendar.startOfDay(for: anchor)
+
+        switch sort {
+        case .asc:
+            return anchorDay
+        case .desc:
+            let elapsed = max(entity.totalElements, 1) - 1
+            return calendar.date(byAdding: .day, value: -elapsed, to: anchorDay)
+        }
+    }
+
+    // MARK: - Prefetch
+
+    private func isNearUnloadedEdge(prefetching indexPaths: [IndexPath]) -> Bool {
+        guard let startDate = startDate.value else { return true }
+
+        let loadedIndexes = daysByDate.value.keys.compactMap {
+            calendar.dateComponents([.day], from: startDate, to: $0).day
+        }
+
+        switch sort {
+        case .asc:
+            guard let highest = loadedIndexes.max() else { return true }
+            return indexPaths.contains { $0.item >= highest - prefetchThreshold }
+        case .desc:
+            guard let lowest = loadedIndexes.min() else { return true }
+            return indexPaths.contains { $0.item <= lowest + prefetchThreshold }
         }
     }
 

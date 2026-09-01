@@ -165,12 +165,14 @@ extension AddMemberViewController {
             })
             .disposed(by: disposeBag)
 
-        output.memberList
+        output.memberCount
             .withUnretained(self)
-            .do(onNext: { (self, list) in
-                self.memberCountLabel.text = "\(list.count)"
+            .subscribe(onNext: { (self, count) in
+                self.memberCountLabel.text = "\(count)"
             })
-            .map { $0.1 }
+            .disposed(by: disposeBag)
+
+        output.memberList
             .bind(to: collectionView.rx.items(
                 cellIdentifier: AddMemberCollectionViewCell.reuseIdentifier,
                 cellType: AddMemberCollectionViewCell.self

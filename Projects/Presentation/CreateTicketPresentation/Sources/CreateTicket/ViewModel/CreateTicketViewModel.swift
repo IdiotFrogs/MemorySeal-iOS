@@ -16,9 +16,14 @@ import DesignSystem
 public final class CreateTicketViewModel {
     public struct Action {
         public let popViewController: () -> Void
+        public let didCreateTicket: (_ capsuleId: Int) -> Void
 
-        public init(popViewController: @escaping () -> Void) {
+        public init(
+            popViewController: @escaping () -> Void,
+            didCreateTicket: @escaping (_ capsuleId: Int) -> Void
+        ) {
             self.popViewController = popViewController
+            self.didCreateTicket = didCreateTicket
         }
     }
 
@@ -123,7 +128,7 @@ extension CreateTicketViewModel {
                 try? await Task.sleep(nanoseconds: 1_500_000_000)
             }
             do {
-                try await createTicketUseCase.execute(
+                let capsuleId = try await createTicketUseCase.execute(
                     title: title,
                     description: description,
                     mainImage: mainImage
@@ -131,7 +136,7 @@ extension CreateTicketViewModel {
                 await minimumDisplay.value
                 await MainActor.run {
                     isLoading.accept(false)
-                    self.action.popViewController()
+                    self.action.didCreateTicket(capsuleId)
                 }
             } catch {
                 await minimumDisplay.value

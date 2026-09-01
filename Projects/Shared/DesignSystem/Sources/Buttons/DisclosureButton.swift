@@ -12,13 +12,14 @@ import SnapKit
 public final class DisclosureButton: UIButton {
     private let titleTextLabel: UILabel = {
         let label = UILabel()
-        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
+        label.font = DesignSystemFontFamily.Pretendard.medium.font(size: 16)
         return label
     }()
     
     private let rightArrowImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = DesignSystemAsset.ImageAssets.greyRightArrowImage.image
+        imageView.image = DesignSystemAsset.ImageAssets.iconChevronRight24.image
+        imageView.contentMode = .scaleAspectFit
         return imageView
     }()
     

@@ -18,23 +18,26 @@ public final class TicketDetailViewModel {
 
     public struct Action {
         public let moveToAddMember: () -> Void
-        public let moveToManageTicket: () -> Void
+        public let moveToManageTicket: (_ ticketName: String, _ isHost: Bool) -> Void
         public let moveToMyTicketMessages: () -> Void
         public let moveToBuryTicket: () -> Void
         public let moveToWatering: () -> Void
+        public let moveToMemoryMessages: () -> Void
 
         public init(
             moveToAddMember: @escaping () -> Void,
-            moveToManageTicket: @escaping () -> Void,
+            moveToManageTicket: @escaping (_ ticketName: String, _ isHost: Bool) -> Void,
             moveToMyTicketMessages: @escaping () -> Void,
             moveToBuryTicket: @escaping () -> Void,
-            moveToWatering: @escaping () -> Void
+            moveToWatering: @escaping () -> Void,
+            moveToMemoryMessages: @escaping () -> Void
         ) {
             self.moveToAddMember = moveToAddMember
             self.moveToManageTicket = moveToManageTicket
             self.moveToMyTicketMessages = moveToMyTicketMessages
             self.moveToBuryTicket = moveToBuryTicket
             self.moveToWatering = moveToWatering
+            self.moveToMemoryMessages = moveToMemoryMessages
         }
     }
 
@@ -46,6 +49,7 @@ public final class TicketDetailViewModel {
 
     private let ticketDetail: BehaviorRelay<TicketDetailEntity?> = .init(value: nil)
     private let collaborators: BehaviorRelay<[CollaboratorEntity]> = .init(value: [])
+    private let memberCount: BehaviorRelay<Int> = .init(value: 0)
     private let errorToast: PublishRelay<String> = .init()
     private let refreshRelay: PublishRelay<Void> = .init()
 
@@ -72,12 +76,34 @@ public final class TicketDetailViewModel {
         let didTapSeeMessagesButton: PublishRelay<Void>
         let didTapBuryTicketButton: PublishRelay<Void>
         let didTapWaterButton: PublishRelay<Void>
+        let didTapSeeMemoriesButton: PublishRelay<Void>
     }
 
     struct Output {
         let ticketDetail: Driver<TicketDetailEntity?>
         let collaborators: Driver<[CollaboratorEntity]>
+        let memberCount: Driver<Int>
         let errorToast: Signal<String>
+        let viewState: Driver<TicketDetailViewState>
+    }
+
+    private static func makeViewState(from detail: TicketDetailEntity?) -> TicketDetailViewState {
+        guard let detail else { return .initial }
+
+        if detail.timeCapsuleStatus == .opened {
+            return TicketDetailViewState(
+                sections: [.ticketImage, .ticketDescription, .members],
+                isOpened: true
+            )
+        }
+
+        var sections: [TicketDetailSection] = [.ticketImage, .ticketDescription]
+        if detail.userRole == .host || detail.timeCapsuleStatus == .buried {
+            sections.append(.buryTicket)
+        }
+        sections.append(contentsOf: [.myMessages, .members])
+
+        return TicketDetailViewState(sections: sections, isOpened: false)
     }
 
     func transform(_ input: Input) -> Output {
@@ -101,9 +127,11 @@ public final class TicketDetailViewModel {
             .disposed(by: disposeBag)
 
         input.didTapManageButton
+            .withLatestFrom(ticketDetail.asObservable())
+            .compactMap { $0 }
             .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.action.moveToManageTicket()
+            .subscribe(onNext: { (self, detail) in
+                self.action.moveToManageTicket(detail.title, detail.userRole == .host)
             })
             .disposed(by: disposeBag)
 
@@ -128,10 +156,21 @@ public final class TicketDetailViewModel {
             })
             .disposed(by: disposeBag)
 
+        input.didTapSeeMemoriesButton
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.action.moveToMemoryMessages()
+            })
+            .disposed(by: disposeBag)
+
         return Output(
             ticketDetail: ticketDetail.asDriver(),
             collaborators: collaborators.asDriver(),
-            errorToast: errorToast.asSignal()
+            memberCount: memberCount.asDriver(),
+            errorToast: errorToast.asSignal(),
+            viewState: ticketDetail
+                .map(Self.makeViewState(from:))
+                .asDriver(onErrorJustReturn: .initial)
         )
     }
 }
@@ -157,9 +196,10 @@ extension TicketDetailViewModel {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let page = try await self.addMemberUseCase.fetchCollaborators(capsuleId: self.capsuleId, page: 0, size: 10)
+                let page = try await self.addMemberUseCase.fetchCollaborators(capsuleId: self.capsuleId, page: 0, size: 12)
                 await MainActor.run {
                     self.collaborators.accept(page.collaborators)
+                    self.memberCount.accept(page.totalElements)
                 }
             } catch {
                 await MainActor.run {

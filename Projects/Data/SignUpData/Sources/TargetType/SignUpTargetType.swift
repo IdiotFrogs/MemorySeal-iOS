@@ -12,7 +12,7 @@ import Moya
 import BaseData
 
 public enum SignUpTargetType {
-    case signUp(nickname: String, profileImage: Data)
+    case signUp(nickname: String, profileImage: Data?)
 }
 
 extension SignUpTargetType: BaseTargetType {
@@ -33,13 +33,21 @@ extension SignUpTargetType: BaseTargetType {
     public var task: Moya.Task {
         switch self {
         case .signUp(let nickname, let profileImage):
-            let imagePart = MultipartFormData(
-                provider: .data(profileImage),
-                name: "profileImage",
-                fileName: "profile.jpg",
-                mimeType: "image/jpeg"
-            )
-            return .uploadCompositeMultipart([imagePart], urlParameters: ["nickname": nickname])
+            if let profileImage {
+                let imagePart = MultipartFormData(
+                    provider: .data(profileImage),
+                    name: "profileImage",
+                    fileName: "profile.jpg",
+                    mimeType: "image/jpeg"
+                )
+                return .uploadCompositeMultipart([imagePart], urlParameters: ["nickname": nickname])
+            } else {
+                let emptyImagePart = MultipartFormData(
+                    provider: .data(Data()),
+                    name: "profileImage"
+                )
+                return .uploadCompositeMultipart([emptyImagePart], urlParameters: ["nickname": nickname])
+            }
         }
     }
 

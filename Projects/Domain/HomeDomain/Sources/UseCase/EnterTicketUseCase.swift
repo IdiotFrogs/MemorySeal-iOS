@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol EnterTicketUseCase {
-    func joinRequest(code: String) async throws
+    func joinRequest(code: String) async throws -> Int?
 }
 
 public final class DefaultEnterTicketUseCase: EnterTicketUseCase {
@@ -11,7 +11,7 @@ public final class DefaultEnterTicketUseCase: EnterTicketUseCase {
         self.enterTicketRepository = enterTicketRepository
     }
 
-    public func joinRequest(code: String) async throws {
-        try await enterTicketRepository.joinRequest(code: code)
+    public func joinRequest(code: String) async throws -> Int? {
+        return try await enterTicketRepository.joinRequest(code: code)
     }
 }
