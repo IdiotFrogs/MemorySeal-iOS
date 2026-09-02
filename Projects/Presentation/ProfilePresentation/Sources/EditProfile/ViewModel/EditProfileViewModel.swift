@@ -13,14 +13,6 @@ import BaseDomain
 import Foundation
 
 public final class EditProfileViewModel {
-    private let disposeBag: DisposeBag = DisposeBag()
-    private let userUseCase: UserUseCase
-
-    let nickname: String
-    let profileImageUrl: String
-
-    private let maximumNicknameLength: Int = 16
-
     public struct Action {
         public let moveToBack: () -> Void
         public let didEditProfile: () -> Void
@@ -33,11 +25,24 @@ public final class EditProfileViewModel {
             self.didEditProfile = didEditProfile
         }
     }
+    
+    private let disposeBag: DisposeBag = DisposeBag()
+    private let userUseCase: UserUseCase
+
+    let nickname: String
+    let profileImageUrl: String
+
+    private let maximumNicknameLength: Int = 16
     public let action: Action
 
     private let saveErrorRelay: PublishRelay<String> = .init()
 
-    public init(userUseCase: UserUseCase, action: Action, nickname: String, profileImageUrl: String) {
+    public init(
+        userUseCase: UserUseCase,
+        action: Action,
+        nickname: String,
+        profileImageUrl: String
+    ) {
         self.userUseCase = userUseCase
         self.action = action
         self.nickname = nickname
