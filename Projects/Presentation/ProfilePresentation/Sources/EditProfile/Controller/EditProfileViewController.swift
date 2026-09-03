@@ -22,6 +22,7 @@ public final class EditProfileViewController: UIViewController {
     private let resetProfileImage: BehaviorRelay<Bool> = .init(value: false)
 
     private var nicknameWavyLayer: WavyStrokeLayer?
+    private let maximumNicknameLength: Int = 16
 
     // MARK: - Navigation
 
@@ -35,9 +36,10 @@ public final class EditProfileViewController: UIViewController {
         let button = UIButton()
         button.setTitle("저장", for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 14)
-        button.setTitleColor(UIColor(hex: "#84B591"), for: .disabled)
+        button.setTitleColor(UIColor(hex: "#ADB2AF"), for: .disabled)
         button.setTitleColor(DesignSystemAsset.ColorAssests.primaryDark.color, for: .normal)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryLight.color
+        button.setBackgroundColor(color: UIColor(hex: "#E8F4EB") ?? UIColor.gray, forState: .disabled)
+        button.setBackgroundColor(color: DesignSystemAsset.ColorAssests.primaryLight.color, forState: .normal)
         button.layer.cornerRadius = 8
         button.clipsToBounds = true
         button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 12, bottom: 6, right: 12)
@@ -114,47 +116,9 @@ public final class EditProfileViewController: UIViewController {
         return label
     }()
 
-    private let maximumNicknameLength: Int = 16
-
     // MARK: - Bottom Sheet
 
-    private let dimmingView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.4)
-        view.alpha = 0
-        view.isUserInteractionEnabled = true
-        return view
-    }()
-
-    private let bottomSheetView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 16
-        view.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        return view
-    }()
-
-    private let selectFromAlbumButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("앨범에서 이미지 선택", for: .normal)
-        button.setTitleColor(DesignSystemAsset.ColorAssests.grey5.color, for: .normal)
-        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.medium.font(size: 16)
-        button.contentHorizontalAlignment = .left
-        return button
-    }()
-
-    private let dashedSeparator = DashedLineView()
-
-    private let applyDefaultImageButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("기본 이미지 적용", for: .normal)
-        button.setTitleColor(DesignSystemAsset.ColorAssests.grey5.color, for: .normal)
-        button.titleLabel?.font = DesignSystemFontFamily.Pretendard.medium.font(size: 16)
-        button.contentHorizontalAlignment = .left
-        return button
-    }()
-
-    private let bottomSheetHeight: CGFloat = 152
+    private let imageBottomSheetView = EditProfileImageBottomSheetView()
 
     public init(with viewModel: EditProfileViewModel) {
         self.viewModel = viewModel
@@ -174,8 +138,6 @@ public final class EditProfileViewController: UIViewController {
         setLayout()
         setupWavyStroke()
         bindViewModel()
-
-        bottomSheetView.transform = CGAffineTransform(translationX: 0, y: bottomSheetHeight)
     }
 
     public override func viewDidLayoutSubviews() {
@@ -227,37 +189,25 @@ extension EditProfileViewController {
         editImageButton.rx.tap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.showBottomSheet()
+                self.imageBottomSheetView.show()
             })
             .disposed(by: disposeBag)
 
-        selectFromAlbumButton.rx.tap
+        imageBottomSheetView.selectFromAlbumDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.hideBottomSheet {
+                self.imageBottomSheetView.hide {
                     self.presentImagePicker()
                 }
             })
             .disposed(by: disposeBag)
 
-        applyDefaultImageButton.rx.tap
+        imageBottomSheetView.applyDefaultImageDidTap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
-                self.hideBottomSheet {
-                    self.userProfileImageView.image = nil
-                    self.photoPlaceholderImageView.isHidden = false
-                    self.selectedProfileImage.accept(nil)
-                    self.resetProfileImage.accept(true)
+                self.imageBottomSheetView.hide {
+                    self.applyDefaultProfileImage()
                 }
-            })
-            .disposed(by: disposeBag)
-
-        let tapDimming = UITapGestureRecognizer()
-        dimmingView.addGestureRecognizer(tapDimming)
-        tapDimming.rx.event
-            .withUnretained(self)
-            .subscribe(onNext: { (self, _) in
-                self.hideBottomSheet(completion: nil)
             })
             .disposed(by: disposeBag)
 
@@ -314,21 +264,11 @@ extension EditProfileViewController {
         return result
     }
 
-    private func showBottomSheet() {
-        bottomSheetView.transform = CGAffineTransform(translationX: 0, y: bottomSheetHeight)
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
-            self.dimmingView.alpha = 1
-            self.bottomSheetView.transform = .identity
-        }
-    }
-
-    private func hideBottomSheet(completion: (() -> Void)?) {
-        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseIn, animations: {
-            self.dimmingView.alpha = 0
-            self.bottomSheetView.transform = CGAffineTransform(translationX: 0, y: self.bottomSheetHeight)
-        }, completion: { _ in
-            completion?()
-        })
+    private func applyDefaultProfileImage() {
+        userProfileImageView.image = nil
+        photoPlaceholderImageView.isHidden = false
+        selectedProfileImage.accept(nil)
+        resetProfileImage.accept(true)
     }
 
     private func presentImagePicker() {
@@ -337,30 +277,6 @@ extension EditProfileViewController {
         picker.allowsEditing = true
         picker.delegate = self
         present(picker, animated: true)
-    }
-}
-
-// MARK: - UIImagePickerControllerDelegate
-
-extension EditProfileViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    public func imagePickerController(
-        _ picker: UIImagePickerController,
-        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
-    ) {
-        picker.dismiss(animated: true)
-
-        let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage
-        guard let image,
-              let imageData = image.jpegData(compressionQuality: 0.8) else { return }
-
-        userProfileImageView.image = image
-        photoPlaceholderImageView.isHidden = true
-        selectedProfileImage.accept(imageData)
-        resetProfileImage.accept(false)
-    }
-
-    public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true)
     }
 }
 
@@ -382,11 +298,7 @@ extension EditProfileViewController {
         view.addSubview(nicknameTextField)
         view.addSubview(nicknameHelperLabel)
 
-        view.addSubview(dimmingView)
-        view.addSubview(bottomSheetView)
-        bottomSheetView.addSubview(selectFromAlbumButton)
-        bottomSheetView.addSubview(dashedSeparator)
-        bottomSheetView.addSubview(applyDefaultImageButton)
+        view.addSubview(imageBottomSheetView)
     }
 
     private func setLayout() {
@@ -448,31 +360,32 @@ extension EditProfileViewController {
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
-        dimmingView.snp.makeConstraints {
+        imageBottomSheetView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
+    }
+}
 
-        bottomSheetView.snp.makeConstraints {
-            $0.leading.trailing.bottom.equalToSuperview()
-            $0.height.equalTo(bottomSheetHeight)
-        }
+// MARK: - UIImagePickerControllerDelegate
 
-        selectFromAlbumButton.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(20)
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(52)
-        }
+extension EditProfileViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    public func imagePickerController(
+        _ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
+    ) {
+        picker.dismiss(animated: true)
 
-        dashedSeparator.snp.makeConstraints {
-            $0.top.equalTo(selectFromAlbumButton.snp.bottom)
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(1)
-        }
+        let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage
+        guard let image,
+              let imageData = image.jpegData(compressionQuality: 0.8) else { return }
 
-        applyDefaultImageButton.snp.makeConstraints {
-            $0.top.equalTo(dashedSeparator.snp.bottom)
-            $0.leading.trailing.equalToSuperview().inset(20)
-            $0.height.equalTo(52)
-        }
+        userProfileImageView.image = image
+        photoPlaceholderImageView.isHidden = true
+        selectedProfileImage.accept(imageData)
+        resetProfileImage.accept(false)
+    }
+
+    public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
     }
 }
