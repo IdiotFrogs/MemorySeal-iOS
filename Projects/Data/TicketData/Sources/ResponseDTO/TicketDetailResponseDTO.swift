@@ -14,6 +14,7 @@ struct TicketDetailResponseDTO: Decodable {
     let userRole: String
     let myContentCount: Int
     let myImageCount: Int
+    let animationShown: Bool?
 
     var toDomain: TicketDetailEntity {
         return .init(
@@ -26,7 +27,8 @@ struct TicketDetailResponseDTO: Decodable {
             timeCapsuleStatus: TimeCapsuleStatus(rawValue: timeCapsuleStatus) ?? .beforeBuried,
             userRole: TimeCapsuleRole(rawValue: userRole) ?? .contributor,
             myContentCount: myContentCount,
-            myImageCount: myImageCount
+            myImageCount: myImageCount,
+            animationShown: animationShown ?? false
         )
     }
 }

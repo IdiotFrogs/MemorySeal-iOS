@@ -3,12 +3,13 @@ import UIKit
 import TicketPresentation
 import BaseData
 import BaseDomain
+import TicketDomain
 
 public final class TicketCoordinator {
     private let navigationController: UINavigationController
     private let capsuleId: Int
     private let ticketDIContainer: TicketDIContainer = .init()
-    private let store: OpenedCapsuleStore
+    private let ticketDetailUseCase: TicketDetailUseCase
     private var ticketImageUrl: String?
     private var ticketDetailViewModel: TicketDetailViewModel?
 
@@ -18,7 +19,7 @@ public final class TicketCoordinator {
     ) {
         self.navigationController = navigationController
         self.capsuleId = capsuleId
-        self.store = ticketDIContainer.makeOpenedCapsuleStore()
+        self.ticketDetailUseCase = ticketDIContainer.makeTicketDetailUseCase()
     }
 
     public func start() {
@@ -59,10 +60,19 @@ public final class TicketCoordinator {
 
     public func startOpenFlow(ticketImageUrl: String? = nil) {
         self.ticketImageUrl = ticketImageUrl
-        if store.isOpened(capsuleId: capsuleId) {
-            start()
-        } else {
-            startOpenIntro()
+
+        Task { [weak self] in
+            guard let self else { return }
+            let detail = try? await self.ticketDetailUseCase.fetchDetail(capsuleId: self.capsuleId)
+            let animationShown = detail?.animationShown ?? false
+
+            await MainActor.run {
+                if animationShown {
+                    self.start()
+                } else {
+                    self.startOpenIntro()
+                }
+            }
         }
     }
 
@@ -106,14 +116,10 @@ public final class TicketCoordinator {
                 self?.navigationController.popViewController(animated: true)
             }
         )
-        let onOpened: () -> Void = { [weak self] in
-            guard let self else { return }
-            self.store.markOpened(capsuleId: self.capsuleId)
-        }
         let viewController = ticketDIContainer.makeMemoryMessagesViewController(
             action: action,
             capsuleId: capsuleId,
-            onOpened: onOpened
+            onOpened: nil
         )
         var baseViewControllers = navigationController.viewControllers.filter {
             !($0 is OpenIntroViewController) && !($0 is OpenConfirmViewController)

@@ -11,8 +11,15 @@ public final class DefaultJoinCapsuleRepository: JoinCapsuleRepository {
         self.provider = provider
     }
 
-    public func join(capsuleId: Int) async throws {
+    public func join(capsuleId: Int) async throws -> Bool {
         let result = await provider.request(.join(capsuleId: capsuleId))
-        try ResultHandler.handleResult(result: result, errorType: JoinCapsuleError.self)
+
+        let responseDTO = try ResultHandler.handleResult(
+            result: result,
+            responseType: JoinCapsuleResponseDTO.self,
+            errorType: JoinCapsuleError.self
+        )
+
+        return responseDTO.animationShown ?? false
     }
 }
