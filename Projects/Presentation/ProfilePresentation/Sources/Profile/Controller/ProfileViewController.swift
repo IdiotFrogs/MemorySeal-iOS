@@ -17,6 +17,16 @@ import BaseDomain
 
 public final class ProfileViewController: UIViewController {
 
+    private enum Text {
+        static let withdrawalTitle: String = "회원탈퇴"
+        static let withdrawalMessage: String = "메실 회원을 탈퇴를 위해 “회원탈퇴”를 입력해주세요."
+        static let withdrawalCaption: String = "티켓에 저장된 내용은 삭제되지 않습니다."
+        static let withdrawalConfirmText: String = "회원탈퇴"
+        static let withdrawal: String = "탈퇴"
+        static let cancel: String = "취소"
+    }
+
+
     private enum Layout {
         static let profileImageSize: CGFloat = 80
         static let cardHorizontalInset: CGFloat = 20
@@ -220,22 +230,27 @@ extension ProfileViewController {
     }
 
     private func showWithdrawalDialogView() {
-        let dialog = DialogView.show(
+        let dialog = DeleteConfirmDialogView.show(
             on: view,
-            title: "회원탈퇴",
-            message: "메실 회원을 탈퇴하시겠습니까?\n티켓에 저장된 내용은 삭제되지 않습니다.",
-            cancelTitle: "취소",
-            confirmTitle: "탈퇴"
+            title: Text.withdrawalTitle,
+            message: Text.withdrawalMessage,
+            caption: Text.withdrawalCaption,
+            placeholder: Text.withdrawalConfirmText,
+            confirmText: Text.withdrawalConfirmText,
+            cancelTitle: Text.cancel,
+            confirmTitle: Text.withdrawal
         )
 
         dialog.confirmButtonDidTap
-            .subscribe(with: self, onNext: { (self, _) in
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                dialog.dismiss()
                 self.withdrawalConfirmDidTap.accept(())
             })
             .disposed(by: disposeBag)
 
         dialog.cancelButtonDidTap
-            .subscribe(with: self, onNext: { (self, _) in
+            .subscribe(onNext: {
                 dialog.dismiss()
             })
             .disposed(by: disposeBag)
