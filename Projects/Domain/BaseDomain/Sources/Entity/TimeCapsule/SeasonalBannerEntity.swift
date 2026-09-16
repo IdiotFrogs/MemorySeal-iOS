@@ -12,10 +12,20 @@ public struct SeasonalBannerEntity {
     public let content: String
     public let season: String
     public let timeCapsuleId: Int
+    public let title: String?
+    public let imageUrl: String?
 
-    public init(content: String, season: String, timeCapsuleId: Int) {
+    public init(
+        content: String,
+        season: String,
+        timeCapsuleId: Int,
+        title: String? = nil,
+        imageUrl: String? = nil
+    ) {
         self.content = content
         self.season = season
         self.timeCapsuleId = timeCapsuleId
+        self.title = title
+        self.imageUrl = imageUrl
     }
 }

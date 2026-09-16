@@ -26,7 +26,7 @@ final class SeasonalBannerCollectionViewCell: UICollectionViewCell {
         static let headlineFontSize: CGFloat = 20
         static let ticketNameTopSpacing: CGFloat = 10
         static let ticketNameFontSize: CGFloat = 16
-        static let ticketNameWidth: CGFloat = 210
+        static let textThumbnailSpacing: CGFloat = 32
         static let thumbnailSize: CGFloat = 53
         static let thumbnailCornerRadius: CGFloat = 12
         static let thumbnailStrokeLineWidth: CGFloat = 3
@@ -197,13 +197,6 @@ final class SeasonalBannerCollectionViewCell: UICollectionViewCell {
 
     // MARK: - Decoration
 
-    private let decorationContainerView: UIView = {
-        let view = UIView()
-        view.isUserInteractionEnabled = false
-        view.clipsToBounds = true
-        return view
-    }()
-
     private let decorationTicketView: UIView = {
         let view = UIView()
         view.isUserInteractionEnabled = false
@@ -333,18 +326,17 @@ extension SeasonalBannerCollectionViewCell {
 
 extension SeasonalBannerCollectionViewCell {
     private func addSubviews() {
-        underTicketDecorationViews.forEach { decorationContainerView.addSubview($0) }
+        underTicketDecorationViews.forEach { cardView.addSubview($0) }
 
         decorationTicketView.addSubview(decorationTicketBodyView)
         decorationTicketView.addSubview(decorationTicketHeaderView)
         decorationTicketView.addSubview(ticketDecorationView)
-        decorationContainerView.addSubview(decorationTicketView)
+        cardView.addSubview(decorationTicketView)
 
-        overTicketDecorationViews.forEach { decorationContainerView.addSubview($0) }
+        overTicketDecorationViews.forEach { cardView.addSubview($0) }
 
         thumbnailView.addSubview(thumbnailImageView)
 
-        cardView.addSubview(decorationContainerView)
         cardView.addSubview(headlineLabel)
         cardView.addSubview(ticketNameLabel)
         cardView.addSubview(thumbnailView)
@@ -355,11 +347,6 @@ extension SeasonalBannerCollectionViewCell {
     private func setLayout() {
         cardView.snp.makeConstraints {
             $0.edges.equalToSuperview()
-        }
-
-        decorationContainerView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(Layout.decorationTopInset)
-            $0.leading.trailing.bottom.equalToSuperview()
         }
 
         decorationTicketHeaderView.snp.makeConstraints {
@@ -376,13 +363,15 @@ extension SeasonalBannerCollectionViewCell {
         headlineLabel.snp.makeConstraints {
             $0.top.equalToSuperview().offset(Layout.headlineTopInset)
             $0.leading.equalToSuperview().offset(Layout.contentInset)
-            $0.trailing.lessThanOrEqualTo(thumbnailView.snp.leading).offset(-Layout.contentInset)
+            $0.trailing.lessThanOrEqualTo(thumbnailView.snp.leading)
+                .offset(-Layout.textThumbnailSpacing)
         }
 
         ticketNameLabel.snp.makeConstraints {
             $0.top.equalTo(headlineLabel.snp.bottom).offset(Layout.ticketNameTopSpacing)
             $0.leading.equalToSuperview().offset(Layout.contentInset)
-            $0.width.lessThanOrEqualTo(Layout.ticketNameWidth)
+            $0.trailing.lessThanOrEqualTo(thumbnailView.snp.leading)
+                .offset(-Layout.textThumbnailSpacing)
         }
 
         thumbnailView.snp.makeConstraints {
@@ -401,7 +390,7 @@ extension SeasonalBannerCollectionViewCell {
 
 extension SeasonalBannerCollectionViewCell {
     private func layoutDecorations() {
-        let scale = decorationContainerView.bounds.width / Decoration.designCardWidth
+        let scale = cardView.bounds.width / Decoration.designCardWidth
         guard scale > 0 else { return }
 
         layoutDecorationTicket(scale: scale)
@@ -421,6 +410,7 @@ extension SeasonalBannerCollectionViewCell {
             center: CGPoint(x: ticketItem.center.x * scale, y: ticketItem.center.y * scale),
             scale: scale
         )
+
     }
 
     private func layoutDecorationTicket(scale: CGFloat) {
@@ -435,7 +425,7 @@ extension SeasonalBannerCollectionViewCell {
         decorationTicketView.center = CGPoint(
             x: (Layout.decorationTicketLeading + Layout.decorationTicketWidth / 2) * scale,
             y: (Layout.decorationTopInset + Layout.decorationTicketTop + Layout.decorationTicketHeight / 2)
-                * scale - Layout.decorationTopInset
+                * scale
         )
         decorationTicketView.transform = CGAffineTransform(
             rotationAngle: Layout.decorationTicketRotation * .pi / 180
@@ -446,7 +436,7 @@ extension SeasonalBannerCollectionViewCell {
     private func containerCenter(of item: DecorationItem, scale: CGFloat) -> CGPoint {
         CGPoint(
             x: item.center.x * scale,
-            y: (Layout.decorationTopInset + item.center.y) * scale - Layout.decorationTopInset
+            y: (Layout.decorationTopInset + item.center.y) * scale
         )
     }
 

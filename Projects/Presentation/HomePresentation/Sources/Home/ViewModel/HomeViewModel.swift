@@ -135,6 +135,19 @@ public final class HomeViewModel {
         )
     }
 
+    private func makeBannerCapsule(from banner: SeasonalBannerEntity) -> TimeCapsuleEntity {
+        return TimeCapsuleEntity(
+            timeCapsuleId: banner.timeCapsuleId,
+            title: banner.title ?? "",
+            openedAt: nil,
+            createdAt: nil,
+            timeCapsuleStatus: .opened,
+            role: .host,
+            imageUrl: banner.imageUrl,
+            stage: 0
+        )
+    }
+
     private func makeSections(
         hero: [TimeCapsuleEntity]?,
         timeTicket: TimeCapsulePageEntity?,
@@ -146,14 +159,14 @@ public final class HomeViewModel {
         let loadedCapsules = (hero ?? [])
             + [timeTicket, upcoming].compactMap { $0 }.flatMap { $0.timeCapsules }
 
-        if let banner,
-           let bannerCapsule = loadedCapsules.first(where: { $0.timeCapsuleId == banner.timeCapsuleId }) {
+        if let banner {
+            let matched = loadedCapsules.first { $0.timeCapsuleId == banner.timeCapsuleId }
             sectionModels.append(
                 HomeSectionModel(
                     kind: .banner,
                     title: banner.content,
                     showsMore: false,
-                    items: [bannerCapsule]
+                    items: [matched ?? makeBannerCapsule(from: banner)]
                 )
             )
         }
