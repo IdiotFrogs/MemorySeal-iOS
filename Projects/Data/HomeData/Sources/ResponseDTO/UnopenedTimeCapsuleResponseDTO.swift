@@ -7,6 +7,7 @@ struct UnopenedTimeCapsuleResponseDTO: Decodable {
     let title: String
     let openedAt: String?
     let mainImageUrl: String?
+    let stage: Int?
 
     var toDomain: TimeCapsuleEntity {
         return .init(
@@ -17,7 +18,7 @@ struct UnopenedTimeCapsuleResponseDTO: Decodable {
             timeCapsuleStatus: .opened,
             role: .host,
             imageUrl: mainImageUrl,
-            stage: 0
+            stage: stage ?? 0
         )
     }
 }

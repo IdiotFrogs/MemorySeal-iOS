@@ -45,19 +45,12 @@ public final class DefaultHomeRepository: HomeRepository {
     public func fetchSeasonalBanner() async throws -> SeasonalBannerEntity {
         let result = await provider.request(.fetchSeasonalBanner)
 
-        do {
-            let responseDTO = try ResultHandler.handleResult(
-                result: result,
-                responseType: SeasonalBannerResponseDTO.self,
-                errorType: HomeError.self
-            )
-            return responseDTO.toDomain
-        } catch {
-            #if DEBUG
-            return SeasonalBannerMock.entity
-            #else
-            throw error
-            #endif
-        }
+        let responseDTO = try ResultHandler.handleResult(
+            result: result,
+            responseType: SeasonalBannerResponseDTO.self,
+            errorType: HomeError.self
+        )
+
+        return responseDTO.toDomain
     }
 }
