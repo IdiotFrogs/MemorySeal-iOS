@@ -31,6 +31,7 @@ final class OpenedTicketCollectionViewCell: UICollectionViewCell {
         static let infoTopSpacing: CGFloat = 12
         static let infoHorizontalInset: CGFloat = 8
         static let infoSpacing: CGFloat = 8
+        static let titleMaxLineCount: Int = 2
         static let titleHeight: CGFloat = 35
         static let dateHeight: CGFloat = 15
         static let titleFontSize: CGFloat = 16
@@ -91,7 +92,8 @@ final class OpenedTicketCollectionViewCell: UICollectionViewCell {
         let label = UILabel()
         label.textColor = DesignSystemAsset.ColorAssests.grey5.color
         label.font = DesignSystemFontFamily.Pretendard.bold.font(size: Layout.titleFontSize)
-        label.numberOfLines = 2
+        label.numberOfLines = Layout.titleMaxLineCount
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
 
@@ -138,7 +140,7 @@ final class OpenedTicketCollectionViewCell: UICollectionViewCell {
 
 extension OpenedTicketCollectionViewCell {
     func configure(with entity: TimeCapsuleEntity) {
-        ticketTitleLabel.text = entity.title
+        applyTitle(entity.title)
         dateRangeLabel.text = makeDateRangeText(createdAt: entity.createdAt, openedAt: entity.openedAt)
         loadImage(from: entity.imageUrl)
     }
@@ -151,6 +153,22 @@ extension OpenedTicketCollectionViewCell {
 
         let openedAtText = Self.dateFormatter.string(from: openedAt)
         return "\(createdAtText) ~ \(openedAtText)"
+    }
+
+    private func applyTitle(_ title: String) {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineBreakMode = .byTruncatingTail
+        paragraphStyle.maximumLineHeight = Layout.titleHeight / CGFloat(Layout.titleMaxLineCount)
+        paragraphStyle.minimumLineHeight = Layout.titleHeight / CGFloat(Layout.titleMaxLineCount)
+
+        ticketTitleLabel.attributedText = NSAttributedString(
+            string: title,
+            attributes: [
+                .paragraphStyle: paragraphStyle,
+                .font: DesignSystemFontFamily.Pretendard.bold.font(size: Layout.titleFontSize),
+                .foregroundColor: DesignSystemAsset.ColorAssests.grey5.color
+            ]
+        )
     }
 
     private func loadImage(from urlString: String?) {
