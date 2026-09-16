@@ -28,267 +28,9 @@ final class HeroTicketCollectionViewCell: UICollectionViewCell {
         static let titleFontSize: CGFloat = 20
         static let dateFontSize: CGFloat = 14
         static let dateAlpha: CGFloat = 0.6
-    }
-
-    private enum Decoration {
         static let designCardWidth: CGFloat = 317
-
-        static let light: TicketDecorationItem = TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLight.image,
-            size: CGSize(width: 354.6, height: 324.6),
-            center: CGPoint(x: 160, y: 90)
-        )
-
-        static let vineItems: [TicketDecorationItem] = [
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf18.image,
-            size: CGSize(width: 19.667, height: 10.131),
-            center: CGPoint(x: 16.54, y: 354.36),
-            rotation: 0.0,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf17.image,
-            size: CGSize(width: 25.926, height: 13.385),
-            center: CGPoint(x: 34.75, y: 349.14),
-            rotation: 0.0,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf16.image,
-            size: CGSize(width: 30.275, height: 15.44),
-            center: CGPoint(x: 28.88, y: 289.81),
-            rotation: -53.7,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf08.image,
-            size: CGSize(width: 27.276, height: 14.054),
-            center: CGPoint(x: 288.7, y: 285.74),
-            rotation: 53.7,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf15.image,
-            size: CGSize(width: 25.936, height: 13.39),
-            center: CGPoint(x: 14.21, y: 300.27),
-            rotation: 7.36,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf07.image,
-            size: CGSize(width: 23.762, height: 12.165),
-            center: CGPoint(x: 302.12, y: 295.31),
-            rotation: -7.36,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf06.image,
-            size: CGSize(width: 24.518, height: 12.404),
-            center: CGPoint(x: 304.87, y: 331.28),
-            rotation: 21.65,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf14.image,
-            size: CGSize(width: 24.518, height: 12.404),
-            center: CGPoint(x: 270.64, y: 370.02),
-            rotation: -46.67,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf14.image,
-            size: CGSize(width: 24.518, height: 12.404),
-            center: CGPoint(x: 31.11, y: 370.02),
-            rotation: -46.67,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf05.image,
-            size: CGSize(width: 24.254, height: 12.362),
-            center: CGPoint(x: 300.16, y: 339.26),
-            rotation: 52.08,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf04.image,
-            size: CGSize(width: 24.254, height: 12.362),
-            center: CGPoint(x: 278.28, y: 375.27),
-            rotation: -77.1,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf13.image,
-            size: CGSize(width: 27.944, height: 14.282),
-            center: CGPoint(x: 113.61, y: 355.13),
-            rotation: -61.13,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf03.image,
-            size: CGSize(width: 20.652, height: 10.335),
-            center: CGPoint(x: 300.13, y: 357.87),
-            rotation: 52.08,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf03.image,
-            size: CGSize(width: 20.652, height: 10.335),
-            center: CGPoint(x: 291.95, y: 370.15),
-            rotation: 52.08,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf12.image,
-            size: CGSize(width: 26.748, height: 13.748),
-            center: CGPoint(x: 57.25, y: 369.43),
-            rotation: 37.37,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf11.image,
-            size: CGSize(width: 25.936, height: 13.39),
-            center: CGPoint(x: 15.46, y: 331.41),
-            rotation: -63.02,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf10.image,
-            size: CGSize(width: 30.877, height: 15.772),
-            center: CGPoint(x: 47.89, y: 376.42),
-            rotation: 77.1,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf08.image,
-            size: CGSize(width: 27.276, height: 14.054),
-            center: CGPoint(x: 288.7, y: 166.4),
-            rotation: 53.7,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf09.image,
-            size: CGSize(width: 27.276, height: 14.054),
-            center: CGPoint(x: 11.26, y: 168.25),
-            rotation: -6.89,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf08.image,
-            size: CGSize(width: 27.276, height: 14.054),
-            center: CGPoint(x: 18.94, y: 125.49),
-            rotation: 53.7,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf07.image,
-            size: CGSize(width: 23.762, height: 12.166),
-            center: CGPoint(x: 302.12, y: 175.93),
-            rotation: -7.36,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf07.image,
-            size: CGSize(width: 23.762, height: 12.166),
-            center: CGPoint(x: 295.59, y: 96.29),
-            rotation: -7.36,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf07.image,
-            size: CGSize(width: 23.762, height: 12.166),
-            center: CGPoint(x: 32.35, y: 135.06),
-            rotation: -7.36,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf06.image,
-            size: CGSize(width: 24.518, height: 12.404),
-            center: CGPoint(x: 35.11, y: 171.03),
-            rotation: 21.65,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf05.image,
-            size: CGSize(width: 24.254, height: 12.361),
-            center: CGPoint(x: 30.4, y: 179.05),
-            rotation: 52.08,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf04.image,
-            size: CGSize(width: 24.254, height: 12.362),
-            center: CGPoint(x: 279.61, y: 107.34),
-            rotation: -77.1,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf04.image,
-            size: CGSize(width: 24.254, height: 12.362),
-            center: CGPoint(x: 16.38, y: 146.11),
-            rotation: -77.1,
-            isMirroredX: true,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf03.image,
-            size: CGSize(width: 20.652, height: 10.335),
-            center: CGPoint(x: 299.3, y: 269.22),
-            rotation: 52.08,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf02.image,
-            size: CGSize(width: 28.064, height: 14.335),
-            center: CGPoint(x: 305.33, y: 144.13),
-            rotation: 28.28,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf02.image,
-            size: CGSize(width: 28.064, height: 14.335),
-            center: CGPoint(x: 297.95, y: 107.0),
-            rotation: 28.28,
-            isMirroredX: false,
-            isMirroredY: false
-        ),
-        TicketDecorationItem(
-            image: DesignSystemAsset.ImageAssets.heroLeaf01.image,
-            size: CGSize(width: 28.064, height: 14.335),
-            center: CGPoint(x: 304.53, y: 149.5),
-            rotation: 52.4,
-            isMirroredX: false,
-            isMirroredY: false
-        )
-        ]
+        static let lightOrigin: CGPoint = CGPoint(x: 0, y: -55)
+        static let lightSize: CGSize = CGSize(width: 320, height: 290)
     }
 
     private static let dateFormatter: DateFormatter = {
@@ -302,19 +44,10 @@ final class HeroTicketCollectionViewCell: UICollectionViewCell {
 
     private let lightImageView: UIImageView = {
         let imageView = UIImageView(image: DesignSystemAsset.ImageAssets.heroLight.image)
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .scaleToFill
         imageView.isUserInteractionEnabled = false
         return imageView
     }()
-
-    private let vineContainerView: UIView = {
-        let view = UIView()
-        view.isUserInteractionEnabled = false
-        view.clipsToBounds = false
-        return view
-    }()
-
-    private lazy var vineImageViews: [UIImageView] = Decoration.vineItems.map { $0.makeImageView() }
 
     private let ticketHeaderView: WavyStrokeView = {
         let view = WavyStrokeView(
@@ -373,6 +106,16 @@ final class HeroTicketCollectionViewCell: UICollectionViewCell {
 
     // MARK: - Stage Decoration
 
+    private let stageDecorationImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleToFill
+        imageView.isUserInteractionEnabled = false
+        imageView.isHidden = true
+        return imageView
+    }()
+
+    private var stageDecoration: TicketStageDecoration?
+
     // MARK: - Init
 
     override init(frame: CGRect) {
@@ -393,8 +136,10 @@ final class HeroTicketCollectionViewCell: UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
 
-        applyDecorations()
+        layoutLight()
 
+        guard let stageDecoration else { return }
+        stageDecorationImageView.frame = stageDecoration.frame(fittingTicketBounds: contentView.bounds)
     }
 
     override func prepareForReuse() {
@@ -402,6 +147,9 @@ final class HeroTicketCollectionViewCell: UICollectionViewCell {
 
         ticketImageView.imageView.kf.cancelDownloadTask()
         ticketImageView.image = DesignSystemAsset.ImageAssets.ticketDummyImage.image
+        stageDecoration = nil
+        stageDecorationImageView.image = nil
+        stageDecorationImageView.isHidden = true
     }
 }
 
@@ -411,6 +159,7 @@ extension HeroTicketCollectionViewCell {
     func configure(with entity: TimeCapsuleEntity) {
         ticketTitleLabel.text = entity.title
         applyCreatedAt(entity.openedAt ?? entity.createdAt)
+        applyStageDecoration(stage: entity.stage)
         loadImage(from: entity.imageUrl)
     }
 
@@ -422,6 +171,20 @@ extension HeroTicketCollectionViewCell {
 
         ticketCreatedAtLabel.isHidden = false
         ticketCreatedAtLabel.text = Self.dateFormatter.string(from: createdAt)
+    }
+
+    private func applyStageDecoration(stage: Int) {
+        stageDecoration = TicketStageDecoration(stage: stage)
+
+        guard let stageDecoration else {
+            stageDecorationImageView.image = nil
+            stageDecorationImageView.isHidden = true
+            return
+        }
+
+        stageDecorationImageView.image = stageDecoration.image
+        stageDecorationImageView.isHidden = false
+        setNeedsLayout()
     }
 
     private func loadImage(from urlString: String?) {
@@ -441,15 +204,16 @@ extension HeroTicketCollectionViewCell {
 // MARK: - Layout
 
 extension HeroTicketCollectionViewCell {
-    private func applyDecorations() {
-        let scale = contentView.bounds.width / Decoration.designCardWidth
+    private func layoutLight() {
+        let scale = contentView.bounds.width / Layout.designCardWidth
         guard scale > 0 else { return }
 
-        Decoration.light.apply(to: lightImageView, scale: scale)
-
-        zip(vineImageViews, Decoration.vineItems).forEach { imageView, item in
-            item.apply(to: imageView, scale: scale)
-        }
+        lightImageView.frame = CGRect(
+            x: Layout.lightOrigin.x * scale,
+            y: Layout.lightOrigin.y * scale,
+            width: Layout.lightSize.width * scale,
+            height: Layout.lightSize.height * scale
+        )
     }
 
     private func addSubviews() {
@@ -462,15 +226,10 @@ extension HeroTicketCollectionViewCell {
         ticketHeaderView.addSubview(headerStackView)
         contentView.addSubview(ticketHeaderView)
 
-        vineImageViews.forEach { vineContainerView.addSubview($0) }
-        contentView.addSubview(vineContainerView)
+        contentView.addSubview(stageDecorationImageView)
     }
 
     private func setLayout() {
-        vineContainerView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
-
         ticketHeaderView.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
         }
