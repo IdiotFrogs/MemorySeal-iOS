@@ -62,7 +62,7 @@ public final class HomeCoordinator {
         let homeAction = HomeViewModel.Action(
             moveToTicket: dependency.moveToTicket,
             moveToOpenCapsule: dependency.moveToOpenCapsule,
-            moveToSeeAll: { _ in }
+            moveToSeeAll: moveToSeeAll
         )
 
         let homeViewModel = homeDIContainer.makeHomeViewModel(action: homeAction)
@@ -92,6 +92,19 @@ public final class HomeCoordinator {
             [homeContainerViewController],
             animated: false
         )
+    }
+
+    private func moveToSeeAll(kind: HomeSectionKind) {
+        let action = TicketListViewModel.Action(
+            moveToBack: { [weak self] in
+                self?.navigationController.popViewController(animated: true)
+            },
+            moveToTicket: dependency.moveToTicket
+        )
+        let viewModel = homeDIContainer.makeTicketListViewModel(kind: kind, action: action)
+        let viewController = homeDIContainer.makeTicketListViewController(with: viewModel)
+
+        self.navigationController.pushViewController(viewController, animated: true)
     }
 
     private func moveToEnterTicket() {

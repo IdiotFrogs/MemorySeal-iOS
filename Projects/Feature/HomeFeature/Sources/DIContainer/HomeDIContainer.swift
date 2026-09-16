@@ -57,6 +57,21 @@ public final class HomeDIContainer {
         return HomeViewController(with: viewModel)
     }
 
+    func makeTicketListViewModel(
+        kind: HomeSectionKind,
+        action: TicketListViewModel.Action
+    ) -> TicketListViewModel {
+        return TicketListViewModel(
+            kind: kind,
+            homeUseCase: makeHomeUseCase(),
+            action: action
+        )
+    }
+
+    func makeTicketListViewController(with viewModel: TicketListViewModel) -> TicketListViewController {
+        return TicketListViewController(with: viewModel)
+    }
+
     func makeOpenedTicketViewModel(action: OpenedTicketViewModel.Action) -> OpenedTicketViewModel {
         return OpenedTicketViewModel(homeUseCase: makeHomeUseCase(), action: action)
     }
