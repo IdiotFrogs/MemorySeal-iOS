@@ -14,6 +14,34 @@ import RxCocoa
 public final class DeleteConfirmDialogView: UIView {
     private let disposeBag: DisposeBag = DisposeBag()
 
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 20)
+        label.textColor = DesignSystemAsset.ColorAssests.grey5.color
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+
+    private let captionLabel: UILabel = {
+        let label = UILabel()
+        label.font = DesignSystemFontFamily.Pretendard.regular.font(size: 14)
+        label.textColor = DesignSystemAsset.ColorAssests.grey3.color
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+
+    private let textStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.alignment = .center
+        stackView.spacing = 8
+        return stackView
+    }()
+
     private let messageLabel: UILabel = {
         let label = UILabel()
         label.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
@@ -103,7 +131,9 @@ public final class DeleteConfirmDialogView: UIView {
     private let confirmText: String
 
     public init(
+        title: String? = nil,
         message: String,
+        caption: String? = nil,
         placeholder: String,
         confirmText: String,
         cancelTitle: String,
@@ -112,12 +142,19 @@ public final class DeleteConfirmDialogView: UIView {
         self.confirmText = confirmText
         super.init(frame: .zero)
 
+        titleLabel.text = title
+        titleLabel.isHidden = title == nil
+        captionLabel.text = caption
+        captionLabel.isHidden = caption == nil
+        messageLabel.font = title == nil
+            ? DesignSystemFontFamily.Pretendard.bold.font(size: 16)
+            : DesignSystemFontFamily.Pretendard.regular.font(size: 16)
         messageLabel.text = message
         textField.placeholder = placeholder
         cancelButton.setTitle(cancelTitle, for: .normal)
         confirmButton.setTitle(confirmTitle, for: .normal)
 
-        self.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
+        self.backgroundColor = .white
         self.layer.cornerRadius = 24
         self.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
 
@@ -191,14 +228,18 @@ public final class DeleteConfirmDialogView: UIView {
     @discardableResult
     public static func show(
         on view: UIView,
+        title: String? = nil,
         message: String,
+        caption: String? = nil,
         placeholder: String,
         confirmText: String,
         cancelTitle: String,
         confirmTitle: String
     ) -> DeleteConfirmDialogView {
         let dialog = DeleteConfirmDialogView(
+            title: title,
             message: message,
+            caption: caption,
             placeholder: placeholder,
             confirmText: confirmText,
             cancelTitle: cancelTitle,
@@ -206,7 +247,8 @@ public final class DeleteConfirmDialogView: UIView {
         )
 
         let dimming = UIView()
-        dimming.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        dimming.backgroundColor = UIColor(hex: "#444444")?.withAlphaComponent(0.24)
+            ?? UIColor.black.withAlphaComponent(0.24)
         dimming.alpha = 0
         view.addSubview(dimming)
         dimming.snp.makeConstraints { $0.edges.equalToSuperview() }
@@ -292,7 +334,10 @@ public final class DeleteConfirmDialogView: UIView {
 
 extension DeleteConfirmDialogView {
     private func addSubviews() {
-        addSubview(messageLabel)
+        textStackView.addArrangedSubview(titleLabel)
+        textStackView.addArrangedSubview(messageLabel)
+        textStackView.addArrangedSubview(captionLabel)
+        addSubview(textStackView)
         addSubview(textField)
 
         cancelButtonContainer.addSubview(cancelButtonWavyBackground)
@@ -306,13 +351,13 @@ extension DeleteConfirmDialogView {
     }
 
     private func setLayout() {
-        messageLabel.snp.makeConstraints {
+        textStackView.snp.makeConstraints {
             $0.top.equalToSuperview().inset(32)
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
         textField.snp.makeConstraints {
-            $0.top.equalTo(messageLabel.snp.bottom).offset(24)
+            $0.top.equalTo(textStackView.snp.bottom).offset(24)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(48)
         }
