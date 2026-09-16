@@ -346,14 +346,13 @@ extension SectionTicketCollectionViewCell {
         ticketTitleLabel.snp.makeConstraints {
             $0.top.equalTo(visualBlockView.snp.bottom).offset(Layout.infoTopSpacing)
             $0.leading.trailing.equalToSuperview().inset(Layout.infoHorizontalInset)
-            $0.height.equalTo(Layout.titleHeight)
+            $0.height.lessThanOrEqualTo(Layout.titleHeight)
         }
 
         ticketCreatedAtLabel.snp.makeConstraints {
             $0.top.equalTo(ticketTitleLabel.snp.bottom).offset(Layout.infoSpacing)
             $0.leading.trailing.equalToSuperview().inset(Layout.infoHorizontalInset)
             $0.height.equalTo(Layout.dateHeight)
-            $0.bottom.equalToSuperview()
         }
     }
 }
