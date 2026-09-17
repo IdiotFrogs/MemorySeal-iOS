@@ -34,9 +34,9 @@ public final class HomeCoordinator {
     private let homeDIContainer: HomeDIContainer = .init()
     private let dependency: Dependency
 
-    private var hostHomeViewModel: HomeViewModel?
-    private var contributorHomeViewModel: HomeViewModel?
-    private var homeTabmanViewModel: HomeTabmanViewModel?
+    private var homeViewModel: HomeViewModel?
+    private var openedTicketViewModel: OpenedTicketViewModel?
+    private var homeContainerViewModel: HomeContainerViewModel?
 
     public init(with navigationController: UINavigationController, dependency: Dependency) {
         self.navigationController = navigationController
@@ -44,16 +44,16 @@ public final class HomeCoordinator {
     }
 
     public func refreshHome() {
-        hostHomeViewModel?.refresh()
-        contributorHomeViewModel?.refresh()
+        homeViewModel?.refresh()
+        openedTicketViewModel?.refresh()
     }
 
     public func refreshProfile() {
-        homeTabmanViewModel?.refresh()
+        homeContainerViewModel?.refresh()
     }
 
     public func start() {
-        let tabmanAction = HomeTabmanViewModel.Action(
+        let containerAction = HomeContainerViewModel.Action(
             moveToCreateTicket: dependency.moveToCreateTicket,
             moveToProfile: dependency.moveToProfile,
             moveToEnterTicket: moveToEnterTicket
@@ -61,32 +61,50 @@ public final class HomeCoordinator {
 
         let homeAction = HomeViewModel.Action(
             moveToTicket: dependency.moveToTicket,
-            moveToOpenCapsule: dependency.moveToOpenCapsule
+            moveToOpenCapsule: dependency.moveToOpenCapsule,
+            moveToSeeAll: moveToSeeAll
         )
 
-        let hostHomeViewModel = homeDIContainer.makeHomeViewModel(action: homeAction, role: .host)
-        self.hostHomeViewModel = hostHomeViewModel
-        let hostHomeViewController = homeDIContainer.makeHomeViewController(with: hostHomeViewModel)
+        let homeViewModel = homeDIContainer.makeHomeViewModel(action: homeAction)
+        self.homeViewModel = homeViewModel
+        let homeViewController = homeDIContainer.makeHomeViewController(with: homeViewModel)
 
-        let contributorHomeViewModel = homeDIContainer.makeHomeViewModel(action: homeAction, role: .contributor)
-        self.contributorHomeViewModel = contributorHomeViewModel
-        let contributorHomeViewController = homeDIContainer.makeHomeViewController(with: contributorHomeViewModel)
+        let openedTicketAction = OpenedTicketViewModel.Action(
+            moveToTicket: dependency.moveToTicket
+        )
 
-        let homeTabmanViewModel = homeDIContainer.makeHomeTabmanViewModel(action: tabmanAction)
-        self.homeTabmanViewModel = homeTabmanViewModel
-        let homeTabManViewController = homeDIContainer.makeHomeTabmanViewController(
-            with: homeTabmanViewModel,
+        let openedTicketViewModel = homeDIContainer.makeOpenedTicketViewModel(action: openedTicketAction)
+        self.openedTicketViewModel = openedTicketViewModel
+        let openedTicketViewController = homeDIContainer.makeOpenedTicketViewController(with: openedTicketViewModel)
+
+        let homeContainerViewModel = homeDIContainer.makeHomeContainerViewModel(action: containerAction)
+        self.homeContainerViewModel = homeContainerViewModel
+        let homeContainerViewController = homeDIContainer.makeHomeContainerViewController(
+            with: homeContainerViewModel,
             viewControllers: [
-                hostHomeViewController,
-                contributorHomeViewController
+                homeViewController,
+                openedTicketViewController
             ]
         )
 
         self.navigationController.navigationBar.isHidden = true
         self.navigationController.setViewControllers(
-            [homeTabManViewController],
+            [homeContainerViewController],
             animated: false
         )
+    }
+
+    private func moveToSeeAll(kind: HomeSectionKind) {
+        let action = TicketListViewModel.Action(
+            moveToBack: { [weak self] in
+                self?.navigationController.popViewController(animated: true)
+            },
+            moveToTicket: dependency.moveToTicket
+        )
+        let viewModel = homeDIContainer.makeTicketListViewModel(kind: kind, action: action)
+        let viewController = homeDIContainer.makeTicketListViewController(with: viewModel)
+
+        self.navigationController.pushViewController(viewController, animated: true)
     }
 
     private func moveToEnterTicket() {

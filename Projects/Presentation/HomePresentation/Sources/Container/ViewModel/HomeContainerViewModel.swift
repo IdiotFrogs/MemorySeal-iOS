@@ -1,5 +1,5 @@
 //
-//  HomeTabmanViewModel.swift
+//  HomeContainerViewModel.swift
 //  HomePresentation
 //
 //  Created by 선민재 on 5/30/25.
@@ -11,7 +11,7 @@ import RxCocoa
 
 import BaseDomain
 
-public final class HomeTabmanViewModel {
+public final class HomeContainerViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
     private let userUseCase: UserUseCase
 
@@ -52,7 +52,7 @@ public final class HomeTabmanViewModel {
         let profileImageUrl: Driver<String?>
     }
 
-    func transform(_ input: Input) -> Output {
+    func translation(_ input: Input) -> Output {
         Observable.merge(
             input.rxViewDidLoad.asObservable(),
             refreshRelay.asObservable()

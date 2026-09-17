@@ -141,10 +141,12 @@ public final class TicketDIContainer {
         )
     }
 
-    // MARK: - OpenedCapsuleStore
+    // MARK: - TicketDetailUseCase
 
-    func makeOpenedCapsuleStore() -> OpenedCapsuleStore {
-        return DefaultOpenedCapsuleStore()
+    func makeTicketDetailUseCase() -> TicketDetailUseCase {
+        let provider = DefaultProvider<TicketDetailTargetType>()
+        let repository = DefaultTicketDetailRepository(provider: provider)
+        return DefaultTicketDetailUseCase(ticketDetailRepository: repository)
     }
 
     // MARK: - MemoryMessages

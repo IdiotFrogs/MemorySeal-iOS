@@ -26,50 +26,58 @@ public final class HomeDIContainer {
         return DefaultUserUseCase(userRepository: repository)
     }
 
-    func makeHomeTabmanViewModel(action: HomeTabmanViewModel.Action) -> HomeTabmanViewModel {
-        return HomeTabmanViewModel(action: action, userUseCase: makeUserUseCase())
+    private func makeHomeUseCase() -> HomeUseCase {
+        let provider = DefaultProvider<HomeTargetType>()
+        let repository = DefaultHomeRepository(provider: provider)
+        return DefaultHomeUseCase(homeRepository: repository)
     }
 
-    func makeHomeTabmanViewController(
-        action: HomeTabmanViewModel.Action,
-        viewControllers: [UIViewController]
-    ) -> HomeTabmanViewController {
-        return HomeTabmanViewController(
-            viewControllers: viewControllers,
-            with: makeHomeTabmanViewModel(action: action)
-        )
+    func makeHomeContainerViewModel(action: HomeContainerViewModel.Action) -> HomeContainerViewModel {
+        return HomeContainerViewModel(action: action, userUseCase: makeUserUseCase())
     }
 
-    func makeHomeTabmanViewController(
-        with viewModel: HomeTabmanViewModel,
+    func makeHomeContainerViewController(
+        with viewModel: HomeContainerViewModel,
         viewControllers: [UIViewController]
-    ) -> HomeTabmanViewController {
-        return HomeTabmanViewController(
+    ) -> HomeContainerViewController {
+        return HomeContainerViewController(
             viewControllers: viewControllers,
             with: viewModel
         )
     }
 
-    func makeHomeViewModel(action: HomeViewModel.Action, role: TimeCapsuleRole) -> HomeViewModel {
-        let provider = DefaultProvider<HomeTargetType>()
-        let repository = DefaultHomeRepository(provider: provider)
-        let useCase = DefaultHomeUseCase(
-            homeRepository: repository,
-            openedCapsuleStore: DefaultOpenedCapsuleStore()
-        )
+    func makeHomeViewModel(action: HomeViewModel.Action) -> HomeViewModel {
         return HomeViewModel(
             action: action,
-            homeUseCase: useCase,
-            role: role
+            homeUseCase: makeHomeUseCase()
         )
-    }
-
-    func makeHomeViewController(action: HomeViewModel.Action, role: TimeCapsuleRole) -> HomeViewController {
-        return HomeViewController(with: makeHomeViewModel(action: action, role: role))
     }
 
     func makeHomeViewController(with viewModel: HomeViewModel) -> HomeViewController {
         return HomeViewController(with: viewModel)
+    }
+
+    func makeTicketListViewModel(
+        kind: HomeSectionKind,
+        action: TicketListViewModel.Action
+    ) -> TicketListViewModel {
+        return TicketListViewModel(
+            kind: kind,
+            homeUseCase: makeHomeUseCase(),
+            action: action
+        )
+    }
+
+    func makeTicketListViewController(with viewModel: TicketListViewModel) -> TicketListViewController {
+        return TicketListViewController(with: viewModel)
+    }
+
+    func makeOpenedTicketViewModel(action: OpenedTicketViewModel.Action) -> OpenedTicketViewModel {
+        return OpenedTicketViewModel(homeUseCase: makeHomeUseCase(), action: action)
+    }
+
+    func makeOpenedTicketViewController(with viewModel: OpenedTicketViewModel) -> OpenedTicketViewController {
+        return OpenedTicketViewController(with: viewModel)
     }
 
     private func makeEnterTicketViewModel(action: EnterTicketViewModel.Action) -> EnterTicketViewModel {

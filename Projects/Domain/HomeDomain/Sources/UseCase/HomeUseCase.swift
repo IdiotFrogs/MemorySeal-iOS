@@ -3,34 +3,39 @@ import Foundation
 import BaseDomain
 
 public protocol HomeUseCase {
-    func fetchMyTimeCapsules(role: TimeCapsuleRole) async throws -> [TimeCapsuleEntity]
-    func fetchOpenedTimeCapsules() async throws -> [TimeCapsuleEntity]
+    func fetchTimeCapsules(
+        status: TimeCapsuleStatus?,
+        page: Int,
+        size: Int
+    ) async throws -> TimeCapsulePageEntity
+    func fetchUnopenedTimeCapsules() async throws -> [TimeCapsuleEntity]
+    func fetchSeasonalBanner() async throws -> SeasonalBannerEntity
 }
 
 public final class DefaultHomeUseCase: HomeUseCase {
     private let homeRepository: HomeRepository
-    private let openedCapsuleStore: OpenedCapsuleStore
 
-    public init(homeRepository: HomeRepository, openedCapsuleStore: OpenedCapsuleStore) {
+    public init(homeRepository: HomeRepository) {
         self.homeRepository = homeRepository
-        self.openedCapsuleStore = openedCapsuleStore
     }
 
-    public func fetchMyTimeCapsules(role: TimeCapsuleRole) async throws -> [TimeCapsuleEntity] {
-        let allCapsules = try await homeRepository.fetchMyTimeCapsules()
-
-        return allCapsules.filter { capsule in
-            let notOpenedOrUnread = capsule.timeCapsuleStatus != .opened
-                || (capsule.timeCapsuleStatus == .opened && !openedCapsuleStore.isOpened(capsuleId: capsule.timeCapsuleId))
-            return notOpenedOrUnread && capsule.role == role
-        }
+    public func fetchTimeCapsules(
+        status: TimeCapsuleStatus?,
+        page: Int,
+        size: Int
+    ) async throws -> TimeCapsulePageEntity {
+        return try await homeRepository.fetchMyTimeCapsules(
+            status: status,
+            page: page,
+            size: size
+        )
     }
 
-    public func fetchOpenedTimeCapsules() async throws -> [TimeCapsuleEntity] {
-        let allCapsules = try await homeRepository.fetchMyTimeCapsules()
+    public func fetchUnopenedTimeCapsules() async throws -> [TimeCapsuleEntity] {
+        return try await homeRepository.fetchUnopenedTimeCapsules()
+    }
 
-        return allCapsules.filter { capsule in
-            capsule.timeCapsuleStatus == .opened
-        }
+    public func fetchSeasonalBanner() async throws -> SeasonalBannerEntity {
+        return try await homeRepository.fetchSeasonalBanner()
     }
 }

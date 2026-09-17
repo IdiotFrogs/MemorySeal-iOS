@@ -13,6 +13,7 @@ public struct TicketDetailEntity {
     public let userRole: TimeCapsuleRole
     public let myContentCount: Int
     public let myImageCount: Int
+    public let animationShown: Bool
 
     public init(
         title: String,
@@ -24,7 +25,8 @@ public struct TicketDetailEntity {
         timeCapsuleStatus: TimeCapsuleStatus,
         userRole: TimeCapsuleRole,
         myContentCount: Int,
-        myImageCount: Int
+        myImageCount: Int,
+        animationShown: Bool
     ) {
         self.title = title
         self.description = description
@@ -36,5 +38,6 @@ public struct TicketDetailEntity {
         self.userRole = userRole
         self.myContentCount = myContentCount
         self.myImageCount = myImageCount
+        self.animationShown = animationShown
     }
 }

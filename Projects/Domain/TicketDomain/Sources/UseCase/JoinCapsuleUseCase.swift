@@ -1,7 +1,7 @@
 import Foundation
 
 public protocol JoinCapsuleUseCase {
-    func join(capsuleId: Int) async throws
+    func join(capsuleId: Int) async throws -> Bool
 }
 
 public final class DefaultJoinCapsuleUseCase: JoinCapsuleUseCase {
@@ -12,7 +12,7 @@ public final class DefaultJoinCapsuleUseCase: JoinCapsuleUseCase {
         self.joinCapsuleRepository = joinCapsuleRepository
     }
 
-    public func join(capsuleId: Int) async throws {
+    public func join(capsuleId: Int) async throws -> Bool {
         return try await joinCapsuleRepository.join(capsuleId: capsuleId)
     }
 }
