@@ -3,7 +3,7 @@ import ProjectDescription
 public extension Project {
     static func makeModule(
         name: String,
-        destinations: Destinations = .iOS,
+        destinations: Destinations = [.iPhone],
         product: Product,
         organizationName: String = "MemorySeal",
         packages: [Package] = [],
