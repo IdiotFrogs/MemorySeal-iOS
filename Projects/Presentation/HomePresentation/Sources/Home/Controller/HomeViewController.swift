@@ -63,6 +63,7 @@ public final class HomeViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let rxViewWillAppear: PublishRelay<Void> = .init()
     private let didTapSeeAll: PublishRelay<HomeSectionKind> = .init()
+    private let didPullToRefresh: PublishRelay<Void> = .init()
 
     private var sections: [HomeSectionModel] = []
 
@@ -74,7 +75,15 @@ public final class HomeViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.contentInsetAdjustmentBehavior = .never
+        collectionView.alwaysBounceVertical = true
+        collectionView.refreshControl = refreshControl
         return collectionView
+    }()
+
+    private let refreshControl: UIRefreshControl = {
+        let refreshControl = UIRefreshControl()
+        refreshControl.tintColor = DesignSystemAsset.ColorAssests.grey4.color
+        return refreshControl
     }()
 
     // MARK: - Empty State
@@ -150,9 +159,19 @@ extension HomeViewController {
         let input = HomeViewModel.Input(
             rxViewWillAppear: rxViewWillAppear,
             didTapItem: collectionView.rx.itemSelected,
-            didTapSeeAll: didTapSeeAll
+            didTapSeeAll: didTapSeeAll,
+            didPullToRefresh: didPullToRefresh
         )
         let output = viewModel.translation(input)
+
+        refreshControl.rx.controlEvent(.valueChanged)
+            .bind(to: didPullToRefresh)
+            .disposed(by: disposeBag)
+
+        output.isRefreshing
+            .observe(on: MainScheduler.instance)
+            .bind(to: refreshControl.rx.isRefreshing)
+            .disposed(by: disposeBag)
 
         output.sections
             .observe(on: MainScheduler.instance)

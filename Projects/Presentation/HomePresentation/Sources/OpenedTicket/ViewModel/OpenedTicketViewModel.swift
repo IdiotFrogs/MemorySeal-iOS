@@ -19,6 +19,7 @@ public final class OpenedTicketViewModel {
 
     private enum Constant {
         static let pageSize: Int = 20
+        static let minimumRefreshDuration: TimeInterval = 1
     }
 
     public struct Action {
@@ -34,6 +35,7 @@ public final class OpenedTicketViewModel {
     private let homeUseCase: HomeUseCase
 
     private let ticketList: BehaviorRelay<[TimeCapsuleEntity]> = .init(value: [])
+    private let isRefreshing: PublishRelay<Bool> = .init()
     private let refreshRelay: PublishRelay<Void> = .init()
     private var loadGeneration: Int = 0
     private var currentPage: Int = 0
@@ -48,21 +50,24 @@ public final class OpenedTicketViewModel {
         let rxViewWillAppear: PublishRelay<Void>
         let didTapItem: ControlEvent<IndexPath>
         let didReachBottom: PublishRelay<Void>
+        let didPullToRefresh: PublishRelay<Void>
     }
 
     struct Output {
         let ticketList: BehaviorRelay<[TimeCapsuleEntity]>
+        let isRefreshing: PublishRelay<Bool>
     }
 
     func translation(_ input: Input) -> Output {
 
         Observable.merge(
-            input.rxViewWillAppear.asObservable(),
-            refreshRelay.asObservable()
+            input.rxViewWillAppear.map { _ in false },
+            refreshRelay.map { _ in false },
+            input.didPullToRefresh.map { _ in true }
         )
         .withUnretained(self)
-        .subscribe(onNext: { (self, _) in
-            self.loadFirstPage()
+        .subscribe(onNext: { (self, isPullToRefresh) in
+            self.loadFirstPage(isPullToRefresh: isPullToRefresh)
         })
         .disposed(by: disposeBag)
 
@@ -82,38 +87,54 @@ public final class OpenedTicketViewModel {
             })
             .disposed(by: disposeBag)
 
-        return Output(ticketList: ticketList)
+        return Output(ticketList: ticketList, isRefreshing: isRefreshing)
     }
 
-    private func loadFirstPage() {
+    private func loadFirstPage(isPullToRefresh: Bool = false) {
         loadGeneration += 1
         let generation = loadGeneration
         isLoading = true
 
         Task {
+            let startedAt = Date()
+
             do {
                 let page = try await self.homeUseCase.fetchTimeCapsules(
                     status: .opened,
                     page: 0,
                     size: Constant.pageSize
                 )
+
+                await self.waitMinimumRefreshDuration(from: startedAt, isPullToRefresh: isPullToRefresh)
+
                 await MainActor.run {
                     guard generation == self.loadGeneration else { return }
                     self.currentPage = page.currentPage
                     self.isLastPage = page.isLast
                     self.isLoading = false
                     self.ticketList.accept(page.timeCapsules)
+                    self.isRefreshing.accept(false)
                 }
             } catch {
+                await self.waitMinimumRefreshDuration(from: startedAt, isPullToRefresh: isPullToRefresh)
+
                 await MainActor.run {
                     guard generation == self.loadGeneration else { return }
                     self.currentPage = 0
                     self.isLastPage = true
                     self.isLoading = false
                     self.ticketList.accept([])
+                    self.isRefreshing.accept(false)
                 }
             }
         }
+    }
+
+    private func waitMinimumRefreshDuration(from startedAt: Date, isPullToRefresh: Bool) async {
+        guard isPullToRefresh else { return }
+        let remaining = Constant.minimumRefreshDuration - Date().timeIntervalSince(startedAt)
+        guard remaining > 0 else { return }
+        try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
     }
 
     private func loadNextPage() {

@@ -23,6 +23,7 @@ public final class HomeViewModel {
 
     private enum Constant {
         static let maxSectionItemCount: Int = 6
+        static let minimumRefreshDuration: TimeInterval = 1
     }
 
     public struct Action {
@@ -46,6 +47,7 @@ public final class HomeViewModel {
     private let homeUseCase: HomeUseCase
 
     private let sections: BehaviorRelay<[HomeSectionModel]> = .init(value: [])
+    private let isRefreshing: PublishRelay<Bool> = .init()
     private let refreshRelay: PublishRelay<Void> = .init()
     private var loadGeneration: Int = 0
 
@@ -57,23 +59,28 @@ public final class HomeViewModel {
         let rxViewWillAppear: PublishRelay<Void>
         let didTapItem: ControlEvent<IndexPath>
         let didTapSeeAll: PublishRelay<HomeSectionKind>
+        let didPullToRefresh: PublishRelay<Void>
     }
 
     struct Output {
         let sections: BehaviorRelay<[HomeSectionModel]>
+        let isRefreshing: PublishRelay<Bool>
     }
 
     func translation(_ input: Input) -> Output {
 
         Observable.merge(
-            input.rxViewWillAppear.asObservable(),
-            refreshRelay.asObservable()
+            input.rxViewWillAppear.map { _ in false },
+            refreshRelay.map { _ in false },
+            input.didPullToRefresh.map { _ in true }
         )
         .withUnretained(self)
-        .subscribe(onNext: { (self, _) in
+        .subscribe(onNext: { (self, isPullToRefresh) in
             self.loadGeneration += 1
             let generation = self.loadGeneration
             Task {
+                let startedAt = Date()
+
                 async let bannerResult = try? await self.homeUseCase.fetchSeasonalBanner()
                 async let heroResult = try? await self.homeUseCase.fetchUnopenedTimeCapsules()
                 async let timeTicketResult = try? await self.fetchPage(status: .beforeBuried)
@@ -83,6 +90,8 @@ public final class HomeViewModel {
                 let hero = await heroResult
                 let timeTicket = await timeTicketResult
                 let upcoming = await upcomingResult
+
+                await self.waitMinimumRefreshDuration(from: startedAt, isPullToRefresh: isPullToRefresh)
 
                 await MainActor.run {
                     guard generation == self.loadGeneration else { return }
@@ -94,6 +103,7 @@ public final class HomeViewModel {
                             banner: banner
                         )
                     )
+                    self.isRefreshing.accept(false)
                 }
             }
         })
@@ -124,7 +134,14 @@ public final class HomeViewModel {
             })
             .disposed(by: disposeBag)
 
-        return Output(sections: sections)
+        return Output(sections: sections, isRefreshing: isRefreshing)
+    }
+
+    private func waitMinimumRefreshDuration(from startedAt: Date, isPullToRefresh: Bool) async {
+        guard isPullToRefresh else { return }
+        let remaining = Constant.minimumRefreshDuration - Date().timeIntervalSince(startedAt)
+        guard remaining > 0 else { return }
+        try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
     }
 
     private func fetchPage(status: TimeCapsuleStatus) async throws -> TimeCapsulePageEntity {
