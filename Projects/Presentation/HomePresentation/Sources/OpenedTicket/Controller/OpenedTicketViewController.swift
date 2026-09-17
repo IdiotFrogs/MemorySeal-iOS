@@ -52,6 +52,7 @@ public final class OpenedTicketViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.contentInsetAdjustmentBehavior = .never
+        collectionView.isPrefetchingEnabled = true
         collectionView.register(
             OpenedTicketCollectionViewCell.self,
             forCellWithReuseIdentifier: OpenedTicketCollectionViewCell.identifier
@@ -179,11 +180,12 @@ extension OpenedTicketViewController {
         )
         let output = viewModel.translation(input)
 
-        collectionView.rx.willDisplayCell
+        collectionView.rx.prefetchItems
             .withUnretained(self)
-            .subscribe(onNext: { (self, event) in
+            .subscribe(onNext: { (self, indexPaths) in
                 let itemCount = self.collectionView.numberOfItems(inSection: 0)
-                guard event.at.item >= itemCount - Layout.prefetchThreshold else { return }
+                let threshold = itemCount - Layout.prefetchThreshold
+                guard indexPaths.contains(where: { $0.item >= threshold }) else { return }
                 self.didReachBottom.accept(())
             })
             .disposed(by: disposeBag)
