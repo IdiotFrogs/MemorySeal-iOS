@@ -20,12 +20,12 @@ let project = Project(
     targets: [
         .target(
             name: "MemorySeal",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .app,
             bundleId: "io.tuist.MemorySeal",
             infoPlist: .extendingDefault(
                 with: [
-                    "UILaunchStoryboardName": "LaunchScreen.storyboard",
+                    "UILaunchStoryboardName": "LaunchScreen",
                     "UIApplicationSceneManifest": [
                         "UIApplicationSupportsMultipleScenes": false,
                         "UISceneConfigurations": [
@@ -72,7 +72,7 @@ let project = Project(
         ),
         .target(
             name: "MemorySealTests",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .unitTests,
             bundleId: "io.tuist.MemorySealTests",
             infoPlist: .default,
@@ -82,7 +82,7 @@ let project = Project(
         ),
         .target(
             name: "MemorySealUITests",
-            destinations: .iOS,
+            destinations: [.iPhone],
             product: .uiTests,
             bundleId: "io.tuist.MemorySealUITests",
             infoPlist: .default,
