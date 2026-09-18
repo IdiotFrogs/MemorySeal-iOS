@@ -16,6 +16,8 @@ public final class HomeFloatingButton: UIButton {
     private enum Layout {
         static let iconSize: CGFloat = 24
         static let borderWidth: CGFloat = 3
+        static let waveAmplitude: CGFloat = 1.6
+        static let waveSpacing: CGFloat = 4.5
     }
 
     public var status: FloatingButtonStatus = .closed {
@@ -36,6 +38,8 @@ public final class HomeFloatingButton: UIButton {
             strokeColor: DesignSystemAsset.ColorAssests.grey5.color,
             lineWidth: Layout.borderWidth
         )
+        view.waveAmplitude = Layout.waveAmplitude
+        view.waveSpacing = Layout.waveSpacing
         view.isUserInteractionEnabled = false
         return view
     }()

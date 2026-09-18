@@ -19,6 +19,7 @@ public final class OpenedTicketViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
     private let rxViewWillAppear: PublishRelay<Void> = .init()
     private let didReachBottom: PublishRelay<Void> = .init()
+    private let didPullToRefresh: PublishRelay<Void> = .init()
 
     private enum Layout {
         static let itemHorizontalInset: CGFloat = 20
@@ -52,11 +53,20 @@ public final class OpenedTicketViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.showsVerticalScrollIndicator = false
         collectionView.contentInsetAdjustmentBehavior = .never
+        collectionView.isPrefetchingEnabled = true
+        collectionView.alwaysBounceVertical = true
+        collectionView.refreshControl = refreshControl
         collectionView.register(
             OpenedTicketCollectionViewCell.self,
             forCellWithReuseIdentifier: OpenedTicketCollectionViewCell.identifier
         )
         return collectionView
+    }()
+
+    private let refreshControl: UIRefreshControl = {
+        let refreshControl = UIRefreshControl()
+        refreshControl.tintColor = DesignSystemAsset.ColorAssests.grey4.color
+        return refreshControl
     }()
 
     private let emptyStateView: UIView = UIView()
@@ -175,15 +185,26 @@ extension OpenedTicketViewController {
         let input = OpenedTicketViewModel.Input(
             rxViewWillAppear: rxViewWillAppear,
             didTapItem: collectionView.rx.itemSelected,
-            didReachBottom: didReachBottom
+            didReachBottom: didReachBottom,
+            didPullToRefresh: didPullToRefresh
         )
         let output = viewModel.translation(input)
 
-        collectionView.rx.willDisplayCell
+        refreshControl.rx.controlEvent(.valueChanged)
+            .bind(to: didPullToRefresh)
+            .disposed(by: disposeBag)
+
+        output.isRefreshing
+            .observe(on: MainScheduler.instance)
+            .bind(to: refreshControl.rx.isRefreshing)
+            .disposed(by: disposeBag)
+
+        collectionView.rx.prefetchItems
             .withUnretained(self)
-            .subscribe(onNext: { (self, event) in
+            .subscribe(onNext: { (self, indexPaths) in
                 let itemCount = self.collectionView.numberOfItems(inSection: 0)
-                guard event.at.item >= itemCount - Layout.prefetchThreshold else { return }
+                let threshold = itemCount - Layout.prefetchThreshold
+                guard indexPaths.contains(where: { $0.item >= threshold }) else { return }
                 self.didReachBottom.accept(())
             })
             .disposed(by: disposeBag)
