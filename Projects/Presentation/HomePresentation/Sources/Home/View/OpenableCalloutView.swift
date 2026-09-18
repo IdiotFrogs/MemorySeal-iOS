@@ -18,6 +18,8 @@ final class OpenableCalloutView: UIView {
         static let borderWidth: CGFloat = 3
         static let contentInset: CGFloat = 12
         static let titleFontSize: CGFloat = 16
+        static let waveAmplitude: CGFloat = 1.2
+        static let waveSpacing: CGFloat = 4.5
     }
 
     private enum Text {
@@ -25,6 +27,19 @@ final class OpenableCalloutView: UIView {
     }
 
     // MARK: - Views
+
+    private let wavyBackgroundView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: .white,
+            strokeColor: DesignSystemAsset.ColorAssests.grey5.color,
+            lineWidth: Layout.borderWidth
+        )
+        view.waveAmplitude = Layout.waveAmplitude
+        view.waveSpacing = Layout.waveSpacing
+        view.strokeAlignment = .inside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
 
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -52,7 +67,7 @@ final class OpenableCalloutView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
 
-        layer.cornerRadius = bounds.height / 2
+        wavyBackgroundView.waveCornerRadius = bounds.height / 2
     }
 }
 
@@ -60,18 +75,20 @@ final class OpenableCalloutView: UIView {
 
 extension OpenableCalloutView {
     private func setInitialValues() {
-        backgroundColor = .white
-        layer.borderWidth = Layout.borderWidth
-        layer.borderColor = DesignSystemAsset.ColorAssests.grey5.color.cgColor
-        layer.cornerCurve = .continuous
-        clipsToBounds = true
+        backgroundColor = .clear
+        clipsToBounds = false
     }
 
     private func addSubviews() {
+        addSubview(wavyBackgroundView)
         addSubview(titleLabel)
     }
 
     private func setLayout() {
+        wavyBackgroundView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
         titleLabel.snp.makeConstraints {
             $0.edges.equalToSuperview().inset(Layout.contentInset)
         }
