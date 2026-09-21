@@ -39,6 +39,12 @@ public final class MyTicketMessagesViewController: TabmanViewController {
     private let listViewControllers: [UIViewController]
     private let disposeBag: DisposeBag = DisposeBag()
 
+    private enum Text {
+        static let saveFailureTitle: String = "저장하지 못했어요"
+        static let saveFailureMessage: String = "작성한 내용은 그대로 두었어요. 다시 시도해 주세요."
+        static let confirm: String = "확인"
+    }
+
     // MARK: - UI
 
     private let navigationView: MemorySealNavigationView = {
@@ -119,6 +125,7 @@ public final class MyTicketMessagesViewController: TabmanViewController {
         configureNavigationButtons()
         configureChildSelectionMode()
         bindButton()
+        bindViewModel()
 
         viewModel.fetchContents()
 
@@ -202,6 +209,14 @@ extension MyTicketMessagesViewController {
 // MARK: - Binding
 
 extension MyTicketMessagesViewController {
+    private func bindViewModel() {
+        viewModel.textSaveFailureSignal
+            .emit(with: self, onNext: { (self, text) in
+                self.restoreFailedDraft(text)
+            })
+            .disposed(by: disposeBag)
+    }
+
     private func bindButton() {
         navigationView.backButtonDidTap
             .withUnretained(self)
@@ -249,8 +264,8 @@ extension MyTicketMessagesViewController {
 // MARK: - BottomSheet
 
 extension MyTicketMessagesViewController {
-    private func presentMessageInput() {
-        let sheet = MessageInputBottomSheet()
+    private func presentMessageInput(initialText: String = "") {
+        let sheet = MessageInputBottomSheet(initialText: initialText)
         sheet.didSubmitText
             .withUnretained(self)
             .subscribe(onNext: { (self, text) in
@@ -258,6 +273,29 @@ extension MyTicketMessagesViewController {
             })
             .disposed(by: disposeBag)
         present(sheet, animated: true)
+    }
+
+    private func restoreFailedDraft(_ text: String) {
+        let showAlert = { [weak self] in
+            guard let self else { return }
+            let alert = UIAlertController(
+                title: Text.saveFailureTitle,
+                message: Text.saveFailureMessage,
+                preferredStyle: .alert
+            )
+            alert.addAction(
+                UIAlertAction(title: Text.confirm, style: .default) { [weak self] _ in
+                    self?.presentMessageInput(initialText: text)
+                }
+            )
+            self.present(alert, animated: true)
+        }
+
+        if let presentedViewController {
+            presentedViewController.dismiss(animated: true) { showAlert() }
+        } else {
+            showAlert()
+        }
     }
 }
 

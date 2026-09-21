@@ -23,6 +23,11 @@ public final class MyTicketMessagesViewModel {
     private let capsuleId: Int
     private let capsuleContentUseCase: CapsuleContentUseCase
     private let contents: BehaviorRelay<[CapsuleContent]> = BehaviorRelay(value: [])
+    private let textSaveFailure: PublishRelay<String> = PublishRelay()
+
+    public var textSaveFailureSignal: Signal<String> {
+        return textSaveFailure.asSignal()
+    }
 
     // MARK: - Init
 
@@ -93,7 +98,9 @@ public final class MyTicketMessagesViewModel {
                     self.contents.accept(self.contents.value + [created])
                 }
             } catch {
-                print("createTextContent error:", error)
+                await MainActor.run {
+                    self.textSaveFailure.accept(text)
+                }
             }
         }
     }
