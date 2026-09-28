@@ -5,6 +5,7 @@ public protocol CapsuleContentUseCase {
     func fetchMyContents(capsuleId: Int) async throws -> [CapsuleContent]
     func createText(capsuleId: Int, content: String) async throws -> CapsuleContent
     func createPhotos(capsuleId: Int, images: [Data]) async throws -> CapsuleContent
+    func updateText(contentId: Int, content: String) async throws -> CapsuleContent
     func delete(contentIds: [Int], fileIds: [Int]) async throws
 }
 
@@ -38,6 +39,10 @@ public final class DefaultCapsuleContentUseCase: CapsuleContentUseCase {
 
     public func createPhotos(capsuleId: Int, images: [Data]) async throws -> CapsuleContent {
         return try await capsuleContentRepository.createPhotoContent(capsuleId: capsuleId, images: images)
+    }
+
+    public func updateText(contentId: Int, content: String) async throws -> CapsuleContent {
+        return try await capsuleContentRepository.updateTextContent(contentId: contentId, content: content)
     }
 
     public func delete(contentIds: [Int], fileIds: [Int]) async throws {

@@ -118,6 +118,25 @@ public final class MyTicketMessagesViewModel {
         }
     }
 
+    // MARK: - Update
+
+    public func updateTextContent(contentId: Int, content: String) {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let updated = try await capsuleContentUseCase.updateText(contentId: contentId, content: content)
+                await MainActor.run {
+                    let newContents = self.contents.value.map { item -> CapsuleContent in
+                        return item.id == updated.id ? updated : item
+                    }
+                    self.contents.accept(newContents)
+                }
+            } catch {
+                print("updateTextContent error:", error)
+            }
+        }
+    }
+
     // MARK: - Delete
 
     public func deleteTextContents(_ ids: Set<Int>) {
