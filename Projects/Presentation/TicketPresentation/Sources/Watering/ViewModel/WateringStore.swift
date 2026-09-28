@@ -152,7 +152,7 @@ final class WateringStore {
         }
     }
 
-    private func refresh() {
+    func refresh() {
         loadGeneration += 1
         nextPage = Page.first
         isLastPage = false

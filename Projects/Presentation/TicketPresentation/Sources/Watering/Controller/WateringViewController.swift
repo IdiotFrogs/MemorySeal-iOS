@@ -10,6 +10,7 @@ public final class WateringViewController: UIViewController {
     // MARK: - Properties
 
     private let viewModel: WateringViewModel
+    private var hasAppeared: Bool = false
     private let rxViewDidLoad: PublishRelay<Void> = .init()
     private let prefetchItems: PublishRelay<[IndexPath]> = .init()
     private let disposeBag: DisposeBag = DisposeBag()
@@ -140,6 +141,14 @@ public final class WateringViewController: UIViewController {
         setLayout()
         bindViewModel()
         rxViewDidLoad.accept(())
+    }
+
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if hasAppeared {
+            viewModel.refresh()
+        }
+        hasAppeared = true
     }
 
     public override func viewDidLayoutSubviews() {

@@ -43,6 +43,12 @@ public final class WateringViewModel {
         )
     }
 
+    // MARK: - Refresh
+
+    public func refresh() {
+        store.refresh()
+    }
+
     // MARK: - Input / Output
 
     struct Input {
