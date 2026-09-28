@@ -44,6 +44,11 @@ public final class ProfileViewModel {
 
     private let userInfo: BehaviorRelay<UserInfoEntity?> = .init(value: nil)
     private let refreshRelay: PublishRelay<Void> = .init()
+    private let withdrawalFailure: PublishRelay<Void> = .init()
+
+    public var withdrawalFailureSignal: Signal<Void> {
+        return withdrawalFailure.asSignal()
+    }
 
     public func refresh() {
         refreshRelay.accept(())
@@ -146,9 +151,15 @@ extension ProfileViewModel {
     private func requestDeleteAccount() {
         Task { [weak self] in
             guard let self else { return }
-            try? await self.userUseCase.deleteAccount()
-            await MainActor.run { [weak self] in
-                self?.action.didWithdraw()
+            do {
+                try await self.userUseCase.deleteAccount()
+                await MainActor.run { [weak self] in
+                    self?.action.didWithdraw()
+                }
+            } catch {
+                await MainActor.run { [weak self] in
+                    self?.withdrawalFailure.accept(())
+                }
             }
         }
     }
