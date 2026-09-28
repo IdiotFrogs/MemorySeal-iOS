@@ -3,6 +3,8 @@ import FirebaseCore
 import FirebaseMessaging
 import GoogleSignIn
 
+import BaseData
+
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -53,7 +55,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 extension AppDelegate: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         guard let fcmToken = fcmToken else { return }
-        print("🔑 FCM Token: \(fcmToken)")
-        // TODO: 서버에 FCM 토큰 전송
+
+        let keyChainStorage: KeyChainStorage = DefaultKeyChainStorage()
+
+        keyChainStorage.add(value: fcmToken, forKey: .fcmToken)
     }
 }
