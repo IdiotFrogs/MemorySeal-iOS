@@ -337,8 +337,8 @@ extension MemoryMessagesViewModel {
             switch content {
             case .text(_, let text):
                 return MemoryMessage(content: .text(text), isMine: isMine)
-            case .photo(_, let imageUrls):
-                return MemoryMessage(content: .photo(imageUrls: imageUrls), isMine: isMine)
+            case .photo:
+                return MemoryMessage(content: .photo(imageUrls: content.imageUrls), isMine: isMine)
             }
         }
         return MemoryConversation(participant: participant, isMine: isMine, messages: messages)

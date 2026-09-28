@@ -97,8 +97,8 @@ extension MyMessagesPreviewViewModel {
         switch content {
         case .text(_, let text):
             return .text(text)
-        case .photo(_, let imageUrls):
-            return .photo(imageUrls: imageUrls)
+        case .photo:
+            return .photo(imageUrls: content.imageUrls)
         }
     }
 }

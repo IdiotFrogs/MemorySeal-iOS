@@ -8,7 +8,7 @@ public enum CapsuleContentTargetType {
     case fetchMyCapsuleContents(capsuleId: Int)
     case createTextContent(capsuleId: Int, content: String)
     case createPhotoContent(capsuleId: Int, images: [Data])
-    case deleteContent(contentId: Int)
+    case deleteContents(contentIds: [Int], fileIds: [Int])
 }
 
 extension CapsuleContentTargetType: BaseTargetType {
@@ -21,8 +21,8 @@ extension CapsuleContentTargetType: BaseTargetType {
         case .createTextContent(let capsuleId, _),
              .createPhotoContent(let capsuleId, _):
             return "/api/time-capsule-content/\(capsuleId)"
-        case .deleteContent(let contentId):
-            return "/api/time-capsule-content/\(contentId)"
+        case .deleteContents:
+            return "/api/time-capsule-content"
         }
     }
 
@@ -32,7 +32,7 @@ extension CapsuleContentTargetType: BaseTargetType {
             return .get
         case .createTextContent, .createPhotoContent:
             return .post
-        case .deleteContent:
+        case .deleteContents:
             return .delete
         }
     }
@@ -67,8 +67,19 @@ extension CapsuleContentTargetType: BaseTargetType {
             }
             return .uploadMultipart(parts)
 
-        case .deleteContent:
-            return .requestPlain
+        case .deleteContents(let contentIds, let fileIds):
+            var parameters: [String: Any] = ["contentIds": contentIds]
+            if !fileIds.isEmpty {
+                parameters["fileIds"] = fileIds
+            }
+            return .requestParameters(
+                parameters: parameters,
+                encoding: URLEncoding(
+                    destination: .queryString,
+                    arrayEncoding: .noBrackets,
+                    boolEncoding: .numeric
+                )
+            )
         }
     }
 
@@ -78,7 +89,7 @@ extension CapsuleContentTargetType: BaseTargetType {
 
     public var isNeededAccessToken: Bool {
         switch self {
-        case .fetchCapsuleContents, .fetchMyCapsuleContents, .createTextContent, .createPhotoContent, .deleteContent:
+        case .fetchCapsuleContents, .fetchMyCapsuleContents, .createTextContent, .createPhotoContent, .deleteContents:
             return true
         }
     }

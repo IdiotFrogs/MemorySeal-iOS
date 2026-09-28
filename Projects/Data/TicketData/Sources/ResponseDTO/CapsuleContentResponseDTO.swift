@@ -44,7 +44,10 @@ struct CapsuleContentResponseDTO: Decodable {
         if let content = content, !content.isEmpty {
             return .text(id: contentId, content: content)
         } else {
-            return .photo(id: contentId, imageUrls: attachedFileUrls ?? [])
+            return .photo(
+                id: contentId,
+                files: (attachedFileUrls ?? []).map { CapsuleContentFile(id: nil, url: $0) }
+            )
         }
     }
 }
@@ -58,7 +61,10 @@ struct CreateCapsuleContentResponseDTO: Decodable {
         if let content = content, !content.isEmpty {
             return .text(id: contentId, content: content)
         } else {
-            return .photo(id: contentId, imageUrls: attachedFileUrls ?? [])
+            return .photo(
+                id: contentId,
+                files: (attachedFileUrls ?? []).map { CapsuleContentFile(id: nil, url: $0) }
+            )
         }
     }
 }

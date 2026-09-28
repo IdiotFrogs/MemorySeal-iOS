@@ -74,8 +74,8 @@ public final class DefaultCapsuleContentRepository: CapsuleContentRepository {
         return responseDTO.toDomain
     }
 
-    public func deleteContent(contentId: Int) async throws {
-        let result = await provider.request(.deleteContent(contentId: contentId))
+    public func deleteContents(contentIds: [Int], fileIds: [Int]) async throws {
+        let result = await provider.request(.deleteContents(contentIds: contentIds, fileIds: fileIds))
 
         try ResultHandler.handleResult(
             result: result,
