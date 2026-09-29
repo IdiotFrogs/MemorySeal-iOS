@@ -74,8 +74,20 @@ public final class DefaultCapsuleContentRepository: CapsuleContentRepository {
         return responseDTO.toDomain
     }
 
-    public func deleteContent(contentId: Int) async throws {
-        let result = await provider.request(.deleteContent(contentId: contentId))
+    public func updateTextContent(contentId: Int, content: String) async throws -> CapsuleContent {
+        let result = await provider.request(.updateTextContent(contentId: contentId, content: content))
+
+        let responseDTO = try ResultHandler.handleResult(
+            result: result,
+            responseType: CreateCapsuleContentResponseDTO.self,
+            errorType: CapsuleContentError.self
+        )
+
+        return responseDTO.toDomain
+    }
+
+    public func deleteContents(contentIds: [Int], fileIds: [Int]) async throws {
+        let result = await provider.request(.deleteContents(contentIds: contentIds, fileIds: fileIds))
 
         try ResultHandler.handleResult(
             result: result,

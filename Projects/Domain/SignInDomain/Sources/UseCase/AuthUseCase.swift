@@ -33,6 +33,8 @@ public final class DefaultAuthUseCase: AuthUseCase {
     public func executeSignIn(idToken: String, authorizationCode: String?, type: SignInType) async throws -> Bool {
         try await authRepository.fetchSignIn(idToken: idToken, authorizationCode: authorizationCode, type: type)
 
+        _ = try? await authRepository.updateFCMToken()
+
         let userInfo = try await userRepository.fetchUserInfo()
 
         return userInfo.isOnboarding
@@ -43,6 +45,8 @@ public final class DefaultAuthUseCase: AuthUseCase {
         guard authRepository.hasAccessToken() else {
             throw AutoSignInError.noToken
         }
+
+        _ = try? await authRepository.updateFCMToken()
 
         let userInfo = try await userRepository.fetchUserInfo()
 

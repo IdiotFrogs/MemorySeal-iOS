@@ -291,7 +291,7 @@ extension MyTicketMessageListViewController {
             let sheet = MessageInputBottomSheet(initialText: text)
             sheet.didSubmitText
                 .subscribe(onNext: { [weak self] newText in
-                    self?.viewModel.createTextContent(newText)
+                    self?.viewModel.updateTextContent(contentId: content.id, content: newText)
                 })
                 .disposed(by: self.disposeBag)
             self.present(sheet, animated: true)

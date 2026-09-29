@@ -191,6 +191,12 @@ extension ProfileViewController {
                 }
             })
             .disposed(by: disposeBag)
+
+        viewModel.withdrawalFailureSignal
+            .emit(with: self, onNext: { (self, _) in
+                ToastView.show(on: self.view, message: "회원 탈퇴에 실패했습니다. 다시 시도해주세요.", position: .top)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func bindButtons() {

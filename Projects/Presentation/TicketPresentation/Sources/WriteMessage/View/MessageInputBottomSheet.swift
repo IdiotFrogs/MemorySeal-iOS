@@ -114,6 +114,7 @@ public final class MessageInputBottomSheet: UIViewController {
             textView.text = initialText
             placeholderLabel.isHidden = true
         }
+        updateSaveButtonState()
     }
 
     public override func viewDidAppear(_ animated: Bool) {
@@ -253,5 +254,25 @@ extension MessageInputBottomSheet {
             .map { !$0.isEmpty }
             .bind(to: placeholderLabel.rx.isHidden)
             .disposed(by: disposeBag)
+
+        textView.rx.text.orEmpty
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.updateSaveButtonState()
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func updateSaveButtonState() {
+        let trimmed = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isEnabled = !trimmed.isEmpty
+        saveButton.isEnabled = isEnabled
+        if isEnabled {
+            saveButton.setTitleColor(.white, for: .normal)
+            saveButton.backgroundColor = DesignSystemAsset.ColorAssests.primaryNormal.color
+        } else {
+            saveButton.setTitleColor(UIColor(red: 132/255, green: 181/255, blue: 145/255, alpha: 1.0), for: .normal)
+            saveButton.backgroundColor = DesignSystemAsset.ColorAssests.primaryLight.color
+        }
     }
 }

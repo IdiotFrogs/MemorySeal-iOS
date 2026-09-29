@@ -18,6 +18,7 @@ public final class SignUpViewController: UIViewController {
 
     private let disposeBag: DisposeBag = DisposeBag()
     private let imageSelectedRelay: PublishRelay<UIImage> = .init()
+    private var nicknameWavyLayer: WavyStrokeLayer?
 
     public let viewModel: SignUpViewModel
 
@@ -39,21 +40,46 @@ public final class SignUpViewController: UIViewController {
         return label
     }()
 
+    private let profileContainerView = UIView()
+
     private let userProfileImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = DesignSystemAsset.ImageAssets.userDefaultProfileImage.image
-        imageView.layer.cornerRadius = 64
-        imageView.layer.masksToBounds = true
+        imageView.layer.cornerRadius = 60
+        imageView.clipsToBounds = true
+        imageView.backgroundColor = DesignSystemAsset.ColorAssests.grey1.color
+        imageView.contentMode = .scaleAspectFit
         return imageView
     }()
 
-    private let editProfileButton: UIButton = {
-        let button = UIButton()
-        button.layer.cornerRadius = 20
-        button.backgroundColor = DesignSystemAsset.ColorAssests.backgroundNormal.color
-        button.setImage(DesignSystemAsset.ImageAssets.editIcon.image, for: .normal)
-        return button
+    private let photoPlaceholderImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.photoIcon.image.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = DesignSystemAsset.ColorAssests.grey3.color
+        imageView.contentMode = .scaleAspectFit
+        return imageView
     }()
+
+    private let editBadgeWavyView: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.grey5.color,
+            strokeColor: DesignSystemAsset.ColorAssests.grey5.color,
+            lineWidth: 2
+        )
+        view.waveCornerRadius = 20
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
+    private let editPencilImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = DesignSystemAsset.ImageAssets.editPencilIcon.image.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = .white
+        imageView.contentMode = .scaleAspectFit
+        imageView.isUserInteractionEnabled = false
+        return imageView
+    }()
+
+    private let editProfileButton = UIButton()
 
     private let nickNameLabel: UILabel = {
         let label = UILabel()
@@ -69,9 +95,6 @@ public final class SignUpViewController: UIViewController {
         textField.textColor = DesignSystemAsset.ColorAssests.grey5.color
         textField.font = DesignSystemFontFamily.Pretendard.regular.font(size: 16)
         textField.placeholder = "별명을 입력해주세요."
-        textField.layer.cornerRadius = 12
-        textField.layer.borderWidth = 1
-        textField.layer.borderColor = DesignSystemAsset.ColorAssests.grey2.color.cgColor
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
         textField.leftViewMode = .always
         textField.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 12, height: 0))
@@ -83,13 +106,24 @@ public final class SignUpViewController: UIViewController {
         return textField
     }()
 
+    private let doneButtonWavyBackground: WavyStrokeView = {
+        let view = WavyStrokeView(
+            fillColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            strokeColor: DesignSystemAsset.ColorAssests.primaryNormal.color,
+            lineWidth: 3
+        )
+        view.waveCornerRadius = 12
+        view.strokeAlignment = .outside
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
     private let doneButton: UIButton = {
         let button = UIButton()
         button.setTitle("이 프로필로 할게요!", for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = DesignSystemFontFamily.Pretendard.bold.font(size: 16)
-        button.backgroundColor = DesignSystemAsset.ColorAssests.primaryDark.color
-        button.layer.cornerRadius = 12
+        button.backgroundColor = .clear
         return button
     }()
 
@@ -123,9 +157,32 @@ public final class SignUpViewController: UIViewController {
 
         self.addSubViews()
         self.setLayout()
+        self.setupWavyStroke()
         self.bindViewModel()
         self.observeKeyboardHeight()
         self.setTextFieldDelegate()
+    }
+
+    public override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        syncWavyStrokeLayer(nicknameWavyLayer, to: nickNameTextField.bounds)
+    }
+
+    private func setupWavyStroke() {
+        nicknameWavyLayer = nickNameTextField.addWavyStrokeLayer(
+            strokeColor: DesignSystemAsset.ColorAssests.grey2.color,
+            lineWidth: 3,
+            cornerRadius: 12,
+            alignment: .outside
+        )
+    }
+
+    private func syncWavyStrokeLayer(_ layer: WavyStrokeLayer?, to bounds: CGRect) {
+        guard let layer else { return }
+        if layer.frame != bounds {
+            layer.frame = bounds
+        }
+        layer.setNeedsPathRefresh()
     }
 
     public override func viewDidDisappear(_ animated: Bool) {
@@ -154,6 +211,7 @@ extension SignUpViewController {
             .withUnretained(self)
             .subscribe(onNext: { (self, image) in
                 self.userProfileImageView.image = image
+                self.photoPlaceholderImageView.isHidden = true
             })
             .disposed(by: disposeBag)
 
@@ -236,7 +294,7 @@ extension SignUpViewController: PHPickerViewControllerDelegate {
         provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
             guard let self, let image = object as? UIImage else { return }
             DispatchQueue.main.async {
-                self.imageSelectedRelay.accept(image)
+                self.imageSelectedRelay.accept(image.squareCropped(maxDimension: 1024))
             }
         }
     }
@@ -246,10 +304,15 @@ extension SignUpViewController {
     private func addSubViews() {
         view.addSubview(navigationBarBackButton)
         view.addSubview(titleLabel)
-        view.addSubview(userProfileImageView)
-        view.addSubview(editProfileButton)
+        view.addSubview(profileContainerView)
+        profileContainerView.addSubview(userProfileImageView)
+        userProfileImageView.addSubview(photoPlaceholderImageView)
+        profileContainerView.addSubview(editBadgeWavyView)
+        editBadgeWavyView.addSubview(editPencilImageView)
+        profileContainerView.addSubview(editProfileButton)
         view.addSubview(nickNameLabel)
         view.addSubview(nickNameTextField)
+        view.addSubview(doneButtonWavyBackground)
         view.addSubview(doneButton)
         view.addSubview(helpTextIcon)
         view.addSubview(helpTextLabel)
@@ -267,20 +330,39 @@ extension SignUpViewController {
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
-        userProfileImageView.snp.makeConstraints {
+        profileContainerView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(19)
             $0.centerX.equalToSuperview()
             $0.width.height.equalTo(128)
         }
 
-        editProfileButton.snp.makeConstraints {
-            $0.bottom.equalTo(userProfileImageView.snp.bottom).offset(4)
-            $0.trailing.equalTo(userProfileImageView.snp.trailing).offset(4)
+        userProfileImageView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(4)
+            $0.centerX.equalToSuperview()
+            $0.width.height.equalTo(120)
+        }
+
+        photoPlaceholderImageView.snp.makeConstraints {
+            $0.center.equalToSuperview()
+            $0.width.height.equalTo(44)
+        }
+
+        editBadgeWavyView.snp.makeConstraints {
+            $0.trailing.bottom.equalToSuperview()
             $0.width.height.equalTo(40)
         }
 
+        editPencilImageView.snp.makeConstraints {
+            $0.center.equalToSuperview()
+            $0.width.height.equalTo(20)
+        }
+
+        editProfileButton.snp.makeConstraints {
+            $0.edges.equalTo(editBadgeWavyView)
+        }
+
         nickNameLabel.snp.makeConstraints {
-            $0.top.equalTo(userProfileImageView.snp.bottom).offset(24)
+            $0.top.equalTo(profileContainerView.snp.bottom).offset(24)
             $0.leading.trailing.equalToSuperview().inset(20)
         }
 
@@ -294,6 +376,10 @@ extension SignUpViewController {
             $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).inset(24)
             $0.leading.trailing.equalToSuperview().inset(20)
             $0.height.equalTo(48)
+        }
+
+        doneButtonWavyBackground.snp.makeConstraints {
+            $0.edges.equalTo(doneButton)
         }
 
         helpTextIcon.snp.makeConstraints {
@@ -315,7 +401,12 @@ extension SignUpViewController {
             $0.height.equalTo(48)
         }
 
-        doneButton.layer.cornerRadius = 0
+        doneButtonWavyBackground.snp.remakeConstraints {
+            $0.top.leading.trailing.equalTo(doneButton)
+            $0.bottom.equalTo(doneButton).offset(12)
+        }
+
+        doneButtonWavyBackground.waveCornerRadius = 0
     }
 
     private func keyboardWillHide() {
@@ -325,7 +416,11 @@ extension SignUpViewController {
             $0.height.equalTo(48)
         }
 
-        doneButton.layer.cornerRadius = 12
+        doneButtonWavyBackground.snp.remakeConstraints {
+            $0.edges.equalTo(doneButton)
+        }
+
+        doneButtonWavyBackground.waveCornerRadius = 12
     }
 }
 

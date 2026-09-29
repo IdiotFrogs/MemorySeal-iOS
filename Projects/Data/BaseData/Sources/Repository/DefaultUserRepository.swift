@@ -65,7 +65,13 @@ public final class DefaultUserRepository: UserRepository {
     }
 
     public func deleteAccount() async throws {
-        _ = await provider.request(.deleteAccount)
+        let result = await provider.request(.deleteAccount)
+
+        try ResultHandler.handleResult(
+            result: result,
+            errorType: DeleteAccountError.self
+        )
+
         _ = keyChainStorage.delete(key: .accessToken)
         _ = keyChainStorage.delete(key: .refreshToken)
         userDefaultStorage.remove(forKey: .userId)

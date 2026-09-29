@@ -15,6 +15,7 @@ import SignInDomain
 public enum AuthTargetType {
     case signIn(_ requestDTO: SignInRequestDTO, type: SignInType)
     case logout
+    case updateFCMToken(fcmToken: String)
 }
 
 extension AuthTargetType: BaseTargetType {
@@ -29,6 +30,8 @@ extension AuthTargetType: BaseTargetType {
             }
         case .logout:
             return "/auth/logout"
+        case .updateFCMToken:
+            return "/auth/fcm-token"
         }
     }
 
@@ -38,6 +41,8 @@ extension AuthTargetType: BaseTargetType {
             return .post
         case .logout:
             return .delete
+        case .updateFCMToken:
+            return .put
         }
     }
 
@@ -47,6 +52,11 @@ extension AuthTargetType: BaseTargetType {
             return .requestJSONEncodable(requestDTO)
         case .logout:
             return .requestPlain
+        case let .updateFCMToken(fcmToken):
+            return .requestParameters(
+                parameters: ["fcmToken": fcmToken],
+                encoding: URLEncoding.queryString
+            )
         }
     }
 
@@ -56,6 +66,8 @@ extension AuthTargetType: BaseTargetType {
             return nil
         case .logout:
             return nil
+        case .updateFCMToken:
+            return nil
         }
     }
 
@@ -64,6 +76,8 @@ extension AuthTargetType: BaseTargetType {
         case .signIn:
             return false
         case .logout:
+            return true
+        case .updateFCMToken:
             return true
         }
     }

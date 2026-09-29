@@ -34,7 +34,11 @@ public final class AuthCoordinator {
         let splashDependency = SplashCoordinator.Dependency(
             moveToSignIn: moveToSignInCoordinator,
             moveToHome: dependency.authDidFinish,
-            moveToSignUp: moveToSignUpCoordinator
+            moveToSignUp: { [weak self] in
+                guard let self else { return }
+                self.moveToSignInCoordinator()
+                self.moveToSignUpCoordinator()
+            }
         )
         let coordinator = SplashCoordinator(with: navigationController, dependency: splashDependency)
         splashCoordinator = coordinator

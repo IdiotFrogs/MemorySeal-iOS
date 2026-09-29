@@ -5,7 +5,7 @@ import TicketDomain
 
 struct TicketDetailResponseDTO: Decodable {
     let title: String
-    let description: String
+    let description: String?
     let createdAt: String
     let buriedAt: String?
     let openedAt: String?
@@ -19,7 +19,7 @@ struct TicketDetailResponseDTO: Decodable {
     var toDomain: TicketDetailEntity {
         return .init(
             title: title,
-            description: description,
+            description: description ?? "",
             createdAt: DateFormatter.serverDateTime.date(from: createdAt) ?? Date(),
             buriedAt: buriedAt.flatMap { DateFormatter.serverDate.date(from: $0) },
             openedAt: openedAt.flatMap { DateFormatter.serverDate.date(from: $0) },

@@ -23,6 +23,11 @@ public final class MyTicketMessagesViewModel {
     private let capsuleId: Int
     private let capsuleContentUseCase: CapsuleContentUseCase
     private let contents: BehaviorRelay<[CapsuleContent]> = BehaviorRelay(value: [])
+    private let textSaveFailure: PublishRelay<String> = PublishRelay()
+
+    public var textSaveFailureSignal: Signal<String> {
+        return textSaveFailure.asSignal()
+    }
 
     // MARK: - Init
 
@@ -74,10 +79,7 @@ public final class MyTicketMessagesViewModel {
     public func photoImageUrls() -> Driver<[String]> {
         return contents
             .map { items in
-                items.flatMap { item -> [String] in
-                    if case .photo(_, let imageUrls) = item { return imageUrls }
-                    return []
-                }
+                items.flatMap { $0.imageUrls }
             }
             .asDriver(onErrorJustReturn: [])
     }
@@ -93,7 +95,9 @@ public final class MyTicketMessagesViewModel {
                     self.contents.accept(self.contents.value + [created])
                 }
             } catch {
-                print("createTextContent error:", error)
+                await MainActor.run {
+                    self.textSaveFailure.accept(text)
+                }
             }
         }
     }
@@ -103,12 +107,32 @@ public final class MyTicketMessagesViewModel {
         Task { [weak self] in
             guard let self else { return }
             do {
-                let created = try await capsuleContentUseCase.createPhotos(capsuleId: capsuleId, images: images)
+                _ = try await capsuleContentUseCase.createPhotos(capsuleId: capsuleId, images: images)
+                let result = try await capsuleContentUseCase.fetchMyContents(capsuleId: capsuleId)
                 await MainActor.run {
-                    self.contents.accept(self.contents.value + [created])
+                    self.contents.accept(result)
                 }
             } catch {
                 print("createPhotoContent error:", error)
+            }
+        }
+    }
+
+    // MARK: - Update
+
+    public func updateTextContent(contentId: Int, content: String) {
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let updated = try await capsuleContentUseCase.updateText(contentId: contentId, content: content)
+                await MainActor.run {
+                    let newContents = self.contents.value.map { item -> CapsuleContent in
+                        return item.id == updated.id ? updated : item
+                    }
+                    self.contents.accept(newContents)
+                }
+            } catch {
+                print("updateTextContent error:", error)
             }
         }
     }
@@ -120,9 +144,7 @@ public final class MyTicketMessagesViewModel {
         Task { [weak self] in
             guard let self else { return }
             do {
-                for id in ids {
-                    try await capsuleContentUseCase.delete(contentId: id)
-                }
+                try await capsuleContentUseCase.delete(contentIds: Array(ids), fileIds: [])
                 await MainActor.run {
                     let remaining = self.contents.value.filter { item in
                         if case .text(let id, _) = item {
@@ -140,25 +162,26 @@ public final class MyTicketMessagesViewModel {
 
     public func deletePhotoUrls(_ urls: Set<String>) {
         guard !urls.isEmpty else { return }
-        let contentIds: Set<Int> = Set(contents.value.compactMap { item -> Int? in
-            if case .photo(let id, let imageUrls) = item {
-                return imageUrls.contains(where: { urls.contains($0) }) ? id : nil
-            }
-            return nil
-        })
+        var contentIds: [Int] = []
+        var fileIds: [Int] = []
+        for item in contents.value {
+            guard case .photo(let id, let files) = item else { continue }
+            let selectedFiles = files.filter { urls.contains($0.url) }
+            guard !selectedFiles.isEmpty else { continue }
+            contentIds.append(id)
+            fileIds.append(contentsOf: selectedFiles.compactMap { $0.id })
+        }
         guard !contentIds.isEmpty else { return }
         Task { [weak self] in
             guard let self else { return }
             do {
-                for id in contentIds {
-                    try await capsuleContentUseCase.delete(contentId: id)
-                }
+                try await capsuleContentUseCase.delete(contentIds: contentIds, fileIds: fileIds)
                 await MainActor.run {
-                    let remaining = self.contents.value.filter { item in
-                        if case .photo(let id, _) = item {
-                            return !contentIds.contains(id)
-                        }
-                        return true
+                    let remaining = self.contents.value.compactMap { item -> CapsuleContent? in
+                        guard case .photo(let id, let files) = item else { return item }
+                        let keptFiles = files.filter { !urls.contains($0.url) }
+                        guard !keptFiles.isEmpty else { return nil }
+                        return .photo(id: id, files: keptFiles)
                     }
                     self.contents.accept(remaining)
                 }

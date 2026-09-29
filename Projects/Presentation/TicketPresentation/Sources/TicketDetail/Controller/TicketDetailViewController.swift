@@ -44,6 +44,7 @@ public final class TicketDetailViewController: UIViewController {
     }
 
     private let viewModel: TicketDetailViewModel
+    private var hasAppeared: Bool = false
     private var ticketDetail: TicketDetailEntity?
     private var collaborators: [CollaboratorEntity] = []
     private var memberCount: Int = 0
@@ -133,6 +134,14 @@ public final class TicketDetailViewController: UIViewController {
         self.bindButtons()
 
         self.rxViewDidLoad.accept(())
+    }
+
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if hasAppeared {
+            viewModel.refresh()
+        }
+        hasAppeared = true
     }
 
     public override func viewDidLayoutSubviews() {

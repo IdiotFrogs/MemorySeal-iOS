@@ -376,10 +376,10 @@ extension EditProfileViewController: UIImagePickerControllerDelegate, UINavigati
         picker.dismiss(animated: true)
 
         let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage
-        guard let image,
-              let imageData = image.jpegData(compressionQuality: 0.8) else { return }
+        guard let croppedImage = image?.squareCropped(maxDimension: 1024),
+              let imageData = croppedImage.jpegData(compressionQuality: 0.8) else { return }
 
-        userProfileImageView.image = image
+        userProfileImageView.image = croppedImage
         photoPlaceholderImageView.isHidden = true
         selectedProfileImage.accept(imageData)
         resetProfileImage.accept(false)

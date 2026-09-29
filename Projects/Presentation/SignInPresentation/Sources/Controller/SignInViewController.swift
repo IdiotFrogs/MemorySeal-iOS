@@ -194,14 +194,14 @@ extension SignInViewController {
             $0.height.equalTo(300)
         }
         
-        appleSignInButton.snp.makeConstraints {
+        googleSignInButton.snp.makeConstraints {
             $0.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-24)
             $0.left.right.equalToSuperview().inset(20)
             $0.height.equalTo(48)
         }
-        
-        googleSignInButton.snp.makeConstraints {
-            $0.bottom.equalTo(appleSignInButton.snp.top).offset(-16)
+
+        appleSignInButton.snp.makeConstraints {
+            $0.bottom.equalTo(googleSignInButton.snp.top).offset(-16)
             $0.left.right.equalToSuperview().inset(20)
             $0.height.equalTo(48)
         }

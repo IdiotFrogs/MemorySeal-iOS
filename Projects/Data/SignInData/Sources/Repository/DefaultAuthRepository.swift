@@ -53,6 +53,17 @@ public final class DefaultAuthRepository: AuthRepository {
         )
     }
 
+    public func updateFCMToken() async throws {
+        guard let fcmToken: String = keyChainStorage.read(forKey: .fcmToken) else { return }
+
+        let result = await authProvider.request(.updateFCMToken(fcmToken: fcmToken))
+
+        try ResultHandler.handleResult(
+            result: result,
+            errorType: AuthError.self
+        )
+    }
+
     public func logout() async throws {
         let result = await authProvider.request(.logout)
 
