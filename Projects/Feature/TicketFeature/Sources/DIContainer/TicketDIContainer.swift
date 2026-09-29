@@ -69,7 +69,7 @@ public final class TicketDIContainer {
 
     // MARK: - BuryTicket
 
-    private func makeBuryTicketViewModel(action: BuryTicketViewModel.Action, capsuleId: Int) -> BuryTicketViewModel {
+    private func makeBuryTicketViewModel(action: BuryTicketViewModel.Action, capsuleId: Int, createdAt: Date?) -> BuryTicketViewModel {
         let calendarUseCase = DefaultCalendarUseCase()
         let provider = DefaultProvider<BuryTicketTargetType>()
         let repository = DefaultBuryTicketRepository(provider: provider)
@@ -77,13 +77,14 @@ public final class TicketDIContainer {
         return BuryTicketViewModel(
             action: action,
             capsuleId: capsuleId,
+            createdAt: createdAt,
             calendarUseCase: calendarUseCase,
             buryTicketUseCase: buryTicketUseCase
         )
     }
 
-    func makeBuryTicketViewController(action: BuryTicketViewModel.Action, capsuleId: Int) -> BuryTicketViewController {
-        return BuryTicketViewController(with: makeBuryTicketViewModel(action: action, capsuleId: capsuleId))
+    func makeBuryTicketViewController(action: BuryTicketViewModel.Action, capsuleId: Int, createdAt: Date?) -> BuryTicketViewController {
+        return BuryTicketViewController(with: makeBuryTicketViewModel(action: action, capsuleId: capsuleId, createdAt: createdAt))
     }
 
     // MARK: - Watering

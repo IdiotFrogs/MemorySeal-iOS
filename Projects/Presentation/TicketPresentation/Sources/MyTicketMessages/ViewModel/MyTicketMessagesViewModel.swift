@@ -4,6 +4,7 @@ import RxCocoa
 import RxRelay
 
 import TicketDomain
+import ThridPartyLib
 
 public final class MyTicketMessagesViewModel {
 
@@ -93,6 +94,7 @@ public final class MyTicketMessagesViewModel {
                 let created = try await capsuleContentUseCase.createText(capsuleId: capsuleId, content: text)
                 await MainActor.run {
                     self.contents.accept(self.contents.value + [created])
+                    AnalyticsLogger.log(.addMessage(type: .text))
                 }
             } catch {
                 await MainActor.run {
@@ -111,6 +113,7 @@ public final class MyTicketMessagesViewModel {
                 let result = try await capsuleContentUseCase.fetchMyContents(capsuleId: capsuleId)
                 await MainActor.run {
                     self.contents.accept(result)
+                    AnalyticsLogger.log(.addMessage(type: .image))
                 }
             } catch {
                 print("createPhotoContent error:", error)

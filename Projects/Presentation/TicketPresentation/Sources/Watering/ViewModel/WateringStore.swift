@@ -3,6 +3,7 @@ import RxSwift
 import RxCocoa
 
 import TicketDomain
+import ThridPartyLib
 
 final class WateringStore {
     private enum Page {
@@ -94,6 +95,7 @@ final class WateringStore {
                 try await self.wateringUseCase.water(capsuleId: self.capsuleId)
                 await MainActor.run {
                     self.isWatering = false
+                    AnalyticsLogger.log(.wateringTicket(stage: self.summary.value?.stage ?? 0))
                     self.refresh()
                 }
             } catch {
