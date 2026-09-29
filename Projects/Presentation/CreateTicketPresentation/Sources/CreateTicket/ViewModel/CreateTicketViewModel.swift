@@ -12,6 +12,7 @@ import RxCocoa
 
 import CreateTicketDomain
 import DesignSystem
+import ThridPartyLib
 
 public final class CreateTicketViewModel {
     public struct Action {
@@ -136,6 +137,7 @@ extension CreateTicketViewModel {
                 await minimumDisplay.value
                 await MainActor.run {
                     isLoading.accept(false)
+                    AnalyticsLogger.log(.createTicket)
                     self.action.didCreateTicket(capsuleId)
                 }
             } catch {

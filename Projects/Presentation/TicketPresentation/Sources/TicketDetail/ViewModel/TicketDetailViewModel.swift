@@ -12,6 +12,7 @@ import RxCocoa
 
 import BaseDomain
 import TicketDomain
+import ThridPartyLib
 
 public final class TicketDetailViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
@@ -48,6 +49,11 @@ public final class TicketDetailViewModel {
     private let addMemberUseCase: AddMemberUseCase
 
     private let ticketDetail: BehaviorRelay<TicketDetailEntity?> = .init(value: nil)
+    private var hasLoggedOpenedVisit: Bool = false
+
+    public var currentDetail: TicketDetailEntity? {
+        return ticketDetail.value
+    }
     private let collaborators: BehaviorRelay<[CollaboratorEntity]> = .init(value: [])
     private let memberCount: BehaviorRelay<Int> = .init(value: 0)
     private let errorToast: PublishRelay<String> = .init()
@@ -183,6 +189,10 @@ extension TicketDetailViewModel {
                 let detail = try await self.ticketDetailUseCase.fetchDetail(capsuleId: self.capsuleId)
                 await MainActor.run {
                     self.ticketDetail.accept(detail)
+                    if detail.timeCapsuleStatus == .opened, !self.hasLoggedOpenedVisit {
+                        self.hasLoggedOpenedVisit = true
+                        AnalyticsLogger.log(.visitOpenedTicket)
+                    }
                 }
             } catch {
                 await MainActor.run {

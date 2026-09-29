@@ -20,6 +20,7 @@ let project = Project.makeModule(
         .SPM.Lottie,
         .SPM.Tabman,
         .SPM.GoogleSignIn,
-        .SPM.FirebaseMessaging
+        .SPM.FirebaseMessaging,
+        .SPM.FirebaseAnalytics
     ]
 )

@@ -4,6 +4,7 @@ import FirebaseMessaging
 import GoogleSignIn
 
 import BaseData
+import ThridPartyLib
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -21,6 +22,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         #if DEBUG
         if UITestLaunchSupport.isEnabled { return true }
         #endif
+
+        VisitedScreenLogger.enable()
 
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
         UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { _, _ in }

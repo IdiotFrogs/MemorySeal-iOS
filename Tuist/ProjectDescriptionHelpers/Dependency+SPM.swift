@@ -21,4 +21,5 @@ public extension TargetDependency.SPM {
     static let Tabman = TargetDependency.external(name: "Tabman")
     static let GoogleSignIn = TargetDependency.external(name: "GoogleSignIn")
     static let FirebaseMessaging = TargetDependency.external(name: "FirebaseMessaging")
+    static let FirebaseAnalytics = TargetDependency.external(name: "FirebaseAnalytics")
 }

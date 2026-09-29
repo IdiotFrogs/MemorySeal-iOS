@@ -4,6 +4,7 @@ import TicketPresentation
 import BaseData
 import BaseDomain
 import TicketDomain
+import ThridPartyLib
 
 public final class TicketCoordinator {
     private let navigationController: UINavigationController
@@ -70,10 +71,24 @@ public final class TicketCoordinator {
                 if animationShown {
                     self.start()
                 } else {
+                    self.logOpenTicket(openedAt: detail?.openedAt)
                     self.startOpenIntro()
                 }
             }
         }
+    }
+
+    private func logOpenTicket(openedAt: Date?) {
+        let calendar = Calendar.current
+        let openedDay = openedAt.flatMap {
+            calendar.dateComponents(
+                [.day],
+                from: calendar.startOfDay(for: $0),
+                to: calendar.startOfDay(for: Date())
+            ).day
+        } ?? 0
+
+        AnalyticsLogger.log(.openTicket(openedDay: openedDay))
     }
 
     public func startOpenIntro() {
@@ -146,7 +161,8 @@ public final class TicketCoordinator {
         )
         let viewController = ticketDIContainer.makeBuryTicketViewController(
             action: buryAction,
-            capsuleId: capsuleId
+            capsuleId: capsuleId,
+            createdAt: ticketDetailViewModel?.currentDetail?.createdAt
         )
         self.navigationController.present(viewController, animated: true)
     }

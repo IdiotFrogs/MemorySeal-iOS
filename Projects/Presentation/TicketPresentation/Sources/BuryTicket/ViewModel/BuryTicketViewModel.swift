@@ -5,6 +5,7 @@ import RxCocoa
 
 import TicketDomain
 import DesignSystem
+import ThridPartyLib
 
 public final class BuryTicketViewModel {
     private let disposeBag: DisposeBag = DisposeBag()
@@ -25,6 +26,7 @@ public final class BuryTicketViewModel {
     public let action: Action
 
     private let capsuleId: Int
+    private let createdAt: Date?
     private let calendarUseCase: CalendarUseCase
     private let buryTicketUseCase: BuryTicketUseCase
 
@@ -35,11 +37,13 @@ public final class BuryTicketViewModel {
     public init(
         action: Action,
         capsuleId: Int,
+        createdAt: Date?,
         calendarUseCase: CalendarUseCase,
         buryTicketUseCase: BuryTicketUseCase
     ) {
         self.action = action
         self.capsuleId = capsuleId
+        self.createdAt = createdAt
         self.calendarUseCase = calendarUseCase
         self.buryTicketUseCase = buryTicketUseCase
     }
@@ -123,6 +127,7 @@ public final class BuryTicketViewModel {
                         )
                         await MainActor.run {
                             isLoading.accept(false)
+                            self.logBuriedTicket(openedAt: date)
                             self.action.didBuryTicket()
                         }
                     } catch {
@@ -158,5 +163,20 @@ extension BuryTicketViewModel {
         let calendarDates: [CalendarDateEntity] = calendarUseCase.generateCalendarDates(for: date)
         self.calendarDates.accept(calendarDates)
         self.currentMonth.accept(date)
+    }
+
+    private func logBuriedTicket(openedAt: Date) {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        let createdDay = createdAt.flatMap {
+            calendar.dateComponents([.day], from: calendar.startOfDay(for: $0), to: today).day
+        } ?? 0
+        let buriedDay = calendar.dateComponents(
+            [.day],
+            from: today,
+            to: calendar.startOfDay(for: openedAt)
+        ).day ?? 0
+
+        AnalyticsLogger.log(.buriedTicket(createdDay: createdDay, buriedDay: buriedDay))
     }
 }
