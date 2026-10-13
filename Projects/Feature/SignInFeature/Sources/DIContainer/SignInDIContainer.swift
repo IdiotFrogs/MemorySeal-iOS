@@ -16,8 +16,8 @@ import BaseData
 import BaseDomain
 
 public final class SignInDIContainer {
-    private func makeAuthProvdier() -> MoyaProvider<AuthTargetType> {
-        return MoyaProvider<AuthTargetType>()
+    private func makeAuthProvdier() -> DefaultProvider<AuthTargetType> {
+        return DefaultProvider<AuthTargetType>()
     }
     
     private func makeUserProvdier() -> DefaultProvider<UserTargetType> {
