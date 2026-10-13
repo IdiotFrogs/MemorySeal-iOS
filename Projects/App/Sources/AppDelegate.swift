@@ -58,8 +58,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 extension AppDelegate: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         guard let fcmToken = fcmToken else { return }
-        
-        print("🧊 fcm \(fcmToken)")
 
         FCMTokenRegistrar.shared.register(fcmToken: fcmToken)
     }
