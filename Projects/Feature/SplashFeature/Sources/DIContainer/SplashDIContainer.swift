@@ -16,8 +16,8 @@ import BaseData
 import BaseDomain
 
 public final class SplashDIContainer {
-    private func makeAuthProvider() -> MoyaProvider<AuthTargetType> {
-        return MoyaProvider<AuthTargetType>()
+    private func makeAuthProvider() -> DefaultProvider<AuthTargetType> {
+        return DefaultProvider<AuthTargetType>()
     }
 
     private func makeUserProvider() -> DefaultProvider<UserTargetType> {

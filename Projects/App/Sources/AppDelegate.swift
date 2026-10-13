@@ -3,7 +3,7 @@ import FirebaseCore
 import FirebaseMessaging
 import GoogleSignIn
 
-import BaseData
+import SignInFeature
 import ThridPartyLib
 
 @main
@@ -59,8 +59,6 @@ extension AppDelegate: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         guard let fcmToken = fcmToken else { return }
 
-        let keyChainStorage: KeyChainStorage = DefaultKeyChainStorage()
-
-        keyChainStorage.add(value: fcmToken, forKey: .fcmToken)
+        FCMTokenRegistrar.shared.register(fcmToken: fcmToken)
     }
 }
