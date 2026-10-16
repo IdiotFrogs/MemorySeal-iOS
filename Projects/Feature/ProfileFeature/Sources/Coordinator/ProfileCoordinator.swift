@@ -11,6 +11,10 @@ import UIKit
 import ProfilePresentation
 
 public final class ProfileCoordinator {
+    private enum Terms {
+        static let urlString: String = "https://memoryseal.notion.site/3bc0cafca58580009a02f1fc5968ab63"
+    }
+
     public struct Dependency {
         public let moveToBack: () -> Void
         public let didLogout: () -> Void
@@ -79,6 +83,15 @@ public final class ProfileCoordinator {
     }
 
     private func moveToTermsOfService() {
-        // TODO: Navigate to Terms of Service
+        guard let url = URL(string: Terms.urlString) else { return }
+
+        let viewController = profileDIContainer.makeTermsOfServiceViewController(
+            url: url,
+            moveToBack: popViewController
+        )
+        self.navigationController.pushViewController(
+            viewController,
+            animated: true
+        )
     }
 }
