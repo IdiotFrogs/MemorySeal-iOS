@@ -215,8 +215,20 @@ public final class TicketDIContainer {
         return MyTicketMessagesViewModel(
             action: action,
             capsuleId: capsuleId,
-            capsuleContentUseCase: useCase
+            capsuleContentUseCase: useCase,
+            userUseCase: makeUserUseCase()
         )
+    }
+
+    // MARK: - UserUseCase
+
+    private func makeUserUseCase() -> UserUseCase {
+        let repository = DefaultUserRepository(
+            provider: DefaultProvider<UserTargetType>(),
+            userDefaultStorage: DefaultUserDefaultStorage(),
+            keyChainStorage: DefaultKeyChainStorage()
+        )
+        return DefaultUserUseCase(userRepository: repository)
     }
 
     // MARK: - MyMessagesPreview
@@ -235,7 +247,8 @@ public final class TicketDIContainer {
         return MyMessagesPreviewViewModel(
             action: action,
             capsuleId: capsuleId,
-            capsuleContentUseCase: useCase
+            capsuleContentUseCase: useCase,
+            userUseCase: makeUserUseCase()
         )
     }
 

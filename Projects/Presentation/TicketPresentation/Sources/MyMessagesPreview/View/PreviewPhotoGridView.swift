@@ -6,6 +6,12 @@ import DesignSystem
 
 final class PreviewPhotoGridView: UIView {
 
+    // MARK: - Properties
+
+    var onPhotoTap: ((Int) -> Void)?
+
+    private var photoImageViews: [UIImageView] = []
+
     // MARK: - UI
 
     private let verticalStack: UIStackView = {
@@ -35,8 +41,14 @@ final class PreviewPhotoGridView: UIView {
 
     // MARK: - Configure
 
+    func imageView(at index: Int) -> UIImageView? {
+        guard photoImageViews.indices.contains(index) else { return nil }
+        return photoImageViews[index]
+    }
+
     func configure(imageUrls: [String]) {
         verticalStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        photoImageViews.removeAll()
 
         var index = 0
         while index < imageUrls.count {
@@ -58,9 +70,22 @@ final class PreviewPhotoGridView: UIView {
                 if let url = URL(string: imageUrls[offset]) {
                     imageView.kf.setImage(with: url)
                 }
+                imageView.isUserInteractionEnabled = true
+                imageView.tag = offset
+                imageView.addGestureRecognizer(
+                    UITapGestureRecognizer(target: self, action: #selector(handlePhotoTap(_:)))
+                )
+                photoImageViews.append(imageView)
                 rowStack.addArrangedSubview(imageView)
             }
             index += 2
         }
+    }
+
+    // MARK: - Action
+
+    @objc private func handlePhotoTap(_ sender: UITapGestureRecognizer) {
+        guard let index = sender.view?.tag else { return }
+        onPhotoTap?(index)
     }
 }

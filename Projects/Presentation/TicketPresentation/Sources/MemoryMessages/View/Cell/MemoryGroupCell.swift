@@ -8,6 +8,10 @@ final class MemoryGroupCell: UITableViewCell {
 
     static let identifier = String(describing: MemoryGroupCell.self)
 
+    // MARK: - Properties
+
+    var onPhotoTap: ((_ imageUrls: [String], _ index: Int, _ source: PhotoDetailTransitionSource) -> Void)?
+
     // MARK: - UI
 
     private let avatarImageView: UIImageView = {
@@ -88,6 +92,10 @@ final class MemoryGroupCell: UITableViewCell {
             case .photo(let imageUrls):
                 let gridView = MemoryPhotoGridView()
                 gridView.configure(imageUrls: imageUrls)
+                gridView.onPhotoTap = { [weak self, weak gridView] index in
+                    let source = PhotoDetailTransitionSource { gridView?.imageView(at: $0) }
+                    self?.onPhotoTap?(imageUrls, index, source)
+                }
                 contentStack.addArrangedSubview(gridView)
                 gridView.snp.makeConstraints {
                     $0.width.equalTo(MemoryMessageMetrics.contentColumnWidth)

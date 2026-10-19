@@ -8,6 +8,10 @@ import DesignSystem
 
 public final class MessagePhotoCardCell: UICollectionViewCell {
 
+    var photoImageView: UIImageView {
+        return thumbnailImageView
+    }
+
     private let thumbnailImageView: UIImageView = {
         let view = UIImageView()
         view.backgroundColor = DesignSystemAsset.ColorAssests.primaryLight.color
