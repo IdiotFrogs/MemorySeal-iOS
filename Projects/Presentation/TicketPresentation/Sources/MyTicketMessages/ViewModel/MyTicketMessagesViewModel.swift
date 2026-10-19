@@ -3,6 +3,7 @@ import RxSwift
 import RxCocoa
 import RxRelay
 
+import BaseDomain
 import TicketDomain
 import ThridPartyLib
 
@@ -23,11 +24,17 @@ public final class MyTicketMessagesViewModel {
     private let action: Action
     private let capsuleId: Int
     private let capsuleContentUseCase: CapsuleContentUseCase
+    private let userUseCase: UserUseCase
     private let contents: BehaviorRelay<[CapsuleContent]> = BehaviorRelay(value: [])
     private let textSaveFailure: PublishRelay<String> = PublishRelay()
+    private let myNickname: BehaviorRelay<String> = BehaviorRelay(value: "")
 
     public var textSaveFailureSignal: Signal<String> {
         return textSaveFailure.asSignal()
+    }
+
+    public var ownerNickname: String {
+        return myNickname.value
     }
 
     // MARK: - Init
@@ -35,11 +42,13 @@ public final class MyTicketMessagesViewModel {
     public init(
         action: Action,
         capsuleId: Int,
-        capsuleContentUseCase: CapsuleContentUseCase
+        capsuleContentUseCase: CapsuleContentUseCase,
+        userUseCase: UserUseCase
     ) {
         self.action = action
         self.capsuleId = capsuleId
         self.capsuleContentUseCase = capsuleContentUseCase
+        self.userUseCase = userUseCase
     }
 
     // MARK: - Preview
@@ -60,6 +69,16 @@ public final class MyTicketMessagesViewModel {
                 }
             } catch {
                 print("fetchContents error:", error)
+            }
+        }
+    }
+
+    public func fetchMyNickname() {
+        Task { [weak self] in
+            guard let self else { return }
+            guard let userInfo = try? await userUseCase.fetchUserInfo() else { return }
+            await MainActor.run {
+                self.myNickname.accept(userInfo.nickname)
             }
         }
     }

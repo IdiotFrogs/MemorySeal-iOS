@@ -299,14 +299,29 @@ extension MyTicketMessageListViewController {
         present(modal, animated: true)
     }
 
-    private func showPhotoPreview() {
-        let alert = UIAlertController(
-            title: "사진 미리보기",
-            message: nil,
-            preferredStyle: .alert
+    private func showPhotoDetail(startIndex: Int) {
+        guard !photoUrls.isEmpty else { return }
+
+        let transitionSource = PhotoDetailTransitionSource { [weak self] index in
+            guard let self else { return nil }
+            let indexPath = IndexPath(item: index, section: 0)
+
+            if self.collectionView.cellForItem(at: indexPath) == nil {
+                self.collectionView.scrollToItem(at: indexPath, at: .centeredVertically, animated: false)
+                self.collectionView.layoutIfNeeded()
+            }
+
+            let cell = self.collectionView.cellForItem(at: indexPath) as? MessagePhotoCardCell
+            return cell?.photoImageView
+        }
+
+        let viewController = PhotoDetailViewController(
+            imageUrls: photoUrls,
+            startIndex: startIndex,
+            ownerNickname: viewModel.ownerNickname,
+            transitionSource: transitionSource
         )
-        alert.addAction(UIAlertAction(title: "닫기", style: .default))
-        present(alert, animated: true)
+        present(viewController, animated: true)
     }
 }
 
@@ -344,7 +359,7 @@ extension MyTicketMessageListViewController: UICollectionViewDelegate {
                 collectionView.reloadItems(at: [indexPath])
                 return
             }
-            showPhotoPreview()
+            showPhotoDetail(startIndex: indexPath.item)
         }
     }
 }
