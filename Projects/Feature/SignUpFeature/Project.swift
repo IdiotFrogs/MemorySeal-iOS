@@ -13,6 +13,7 @@ let project = Project.makeModule(
     product: .staticFramework,
     dependencies: [
         .Presentation.SignUpPresentation,
-        .Data.SignUpData
+        .Data.SignUpData,
+        .Data.BaseData
     ]
 )

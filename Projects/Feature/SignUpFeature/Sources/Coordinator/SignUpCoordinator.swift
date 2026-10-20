@@ -8,6 +8,8 @@
 import UIKit
 
 import SignUpPresentation
+import BaseDomain
+import BaseData
 
 public final class SignUpCoordinator {
     public struct Dependency {
@@ -20,6 +22,7 @@ public final class SignUpCoordinator {
 
     private let navigationController: UINavigationController
     private let signUpDIContainer: SignUpDIContainer = SignUpDIContainer()
+    private let tutorialStore: TutorialStore = DefaultTutorialStore()
     private let dependency: Dependency
 
     public init(with navigationController: UINavigationController, dependency: Dependency) {
@@ -28,8 +31,13 @@ public final class SignUpCoordinator {
     }
 
     public func start() {
+        let tutorialStore = self.tutorialStore
+        let moveToHome = dependency.moveToHome
         let vmAction = SignUpViewModel.Action(
-            moveToHome: dependency.moveToHome
+            moveToHome: {
+                tutorialStore.markPending()
+                moveToHome()
+            }
         )
         let signUpViewController = signUpDIContainer.makeSignUpViewController(action: vmAction)
 

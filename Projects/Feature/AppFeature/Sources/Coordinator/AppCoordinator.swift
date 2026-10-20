@@ -9,12 +9,16 @@ import UIKit
 
 import AuthFeature
 import MainFeature
+import TutorialFeature
 import BaseDomain
+import BaseData
 
 public final class AppCoordinator {
     private let navigationController: UINavigationController
     private var authCoordinator: AuthCoordinator?
     private var mainCoordinator: MainCoordinator?
+    private var tutorialCoordinator: TutorialCoordinator?
+    private let tutorialStore: TutorialStore = DefaultTutorialStore()
     private var pendingDestination: LandingDestination?
 
     public init(
@@ -40,7 +44,7 @@ public final class AppCoordinator {
         let dependency = AuthCoordinator.Dependency(
             authDidFinish: { [weak self] in
                 self?.authCoordinator = nil
-                self?.moveToMainCoordinator()
+                self?.moveToTutorialCoordinatorIfNeeded()
             }
         )
         let coordinator = AuthCoordinator(with: navigationController, dependency: dependency)
@@ -48,10 +52,30 @@ public final class AppCoordinator {
         coordinator.start()
     }
 
+    private func moveToTutorialCoordinatorIfNeeded() {
+        guard tutorialStore.isPending() else {
+            moveToMainCoordinator()
+            return
+        }
+
+        let dependency = TutorialCoordinator.Dependency(
+            tutorialDidFinish: { [weak self] in
+                guard let self else { return }
+                self.tutorialStore.clearPending()
+                self.tutorialCoordinator = nil
+                self.moveToMainCoordinator()
+            }
+        )
+        let coordinator = TutorialCoordinator(with: navigationController, dependency: dependency)
+        tutorialCoordinator = coordinator
+        coordinator.start()
+    }
+
     private func moveToMainCoordinator() {
         let dependency = MainCoordinator.Dependency(
             didRequestLogout: { [weak self] in
                 self?.mainCoordinator = nil
+                self?.tutorialStore.clearPending()
                 self?.moveToAuthCoordinator()
             }
         )

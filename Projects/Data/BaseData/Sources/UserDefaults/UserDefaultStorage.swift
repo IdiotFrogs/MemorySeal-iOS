@@ -10,6 +10,7 @@ import Foundation
 
 public enum UserDefaultsKeys: String {
     case userId
+    case tutorialPending
 }
 
 public protocol UserDefaultStorage {
