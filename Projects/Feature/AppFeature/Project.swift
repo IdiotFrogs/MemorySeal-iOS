@@ -13,6 +13,8 @@ let project = Project.makeModule(
     product: .staticFramework,
     dependencies: [
         .Feature.AuthFeature,
-        .Feature.MainFeature
+        .Feature.MainFeature,
+        .Feature.TutorialFeature,
+        .Data.BaseData
     ]
 )
