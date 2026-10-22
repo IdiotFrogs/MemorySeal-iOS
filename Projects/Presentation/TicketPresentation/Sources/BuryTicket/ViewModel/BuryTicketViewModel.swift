@@ -133,7 +133,9 @@ public final class BuryTicketViewModel {
                     } catch {
                         await MainActor.run {
                             isLoading.accept(false)
-                            errorMessage.accept("티켓을 묻는 중 오류가 발생했습니다.")
+                            errorMessage.accept(
+                                (error as? BuryTicketError ?? .defaultError).localizedDescription
+                            )
                         }
                     }
                 }
