@@ -24,6 +24,7 @@ public final class EditProfileViewController: UIViewController {
 
     private var nicknameWavyLayer: WavyStrokeLayer?
     private let maximumNicknameLength: Int = 16
+    private var isImageBottomSheetPending: Bool = false
 
     // MARK: - Navigation
 
@@ -190,6 +191,15 @@ extension EditProfileViewController {
         editImageButton.rx.tap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
+                self.requestImageBottomSheet()
+            })
+            .disposed(by: disposeBag)
+
+        NotificationCenter.default.rx.notification(UIResponder.keyboardDidHideNotification)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                guard self.isImageBottomSheetPending else { return }
+                self.isImageBottomSheetPending = false
                 self.imageBottomSheetView.show()
             })
             .disposed(by: disposeBag)
@@ -263,6 +273,16 @@ extension EditProfileViewController {
             )
         )
         return result
+    }
+
+    private func requestImageBottomSheet() {
+        guard nicknameTextField.isFirstResponder else {
+            imageBottomSheetView.show()
+            return
+        }
+
+        isImageBottomSheetPending = true
+        view.endEditing(true)
     }
 
     private func applyDefaultProfileImage() {
