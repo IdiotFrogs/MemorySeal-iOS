@@ -19,19 +19,37 @@ public final class MyMessagesPreviewViewModel {
     private let action: Action
     private let capsuleId: Int
     private let capsuleContentUseCase: CapsuleContentUseCase
+    private let userUseCase: UserUseCase
 
     private let contentsRelay: BehaviorRelay<[PreviewMessageContent]> = .init(value: [])
     private let isLoadingRelay: BehaviorRelay<Bool> = .init(value: false)
     private let errorRelay: PublishRelay<Void> = .init()
+    private let myNickname: BehaviorRelay<String> = .init(value: "")
+
+    public var ownerNickname: String {
+        return myNickname.value
+    }
 
     public init(
         action: Action,
         capsuleId: Int,
-        capsuleContentUseCase: CapsuleContentUseCase
+        capsuleContentUseCase: CapsuleContentUseCase,
+        userUseCase: UserUseCase
     ) {
         self.action = action
         self.capsuleId = capsuleId
         self.capsuleContentUseCase = capsuleContentUseCase
+        self.userUseCase = userUseCase
+    }
+
+    public func fetchMyNickname() {
+        Task { [weak self] in
+            guard let self else { return }
+            guard let userInfo = try? await userUseCase.fetchUserInfo() else { return }
+            await MainActor.run {
+                self.myNickname.accept(userInfo.nickname)
+            }
+        }
     }
 
     struct Input {

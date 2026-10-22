@@ -122,6 +122,7 @@ public final class MyMessagesPreviewViewController: UIViewController {
         bindViewModel()
 
         rxViewDidLoad.accept(())
+        viewModel.fetchMyNickname()
     }
 
     public override func viewDidLayoutSubviews() {
@@ -301,7 +302,30 @@ extension MyMessagesPreviewViewController: UITableViewDataSource {
                 return UITableViewCell()
             }
             cell.configure(imageUrls: imageUrls)
+            cell.onPhotoTap = { [weak self] index, source in
+                self?.showPhotoDetail(
+                    imageUrls: imageUrls,
+                    startIndex: index,
+                    transitionSource: source
+                )
+            }
             return cell
         }
+    }
+
+    private func showPhotoDetail(
+        imageUrls: [String],
+        startIndex: Int,
+        transitionSource: PhotoDetailTransitionSource
+    ) {
+        guard !imageUrls.isEmpty else { return }
+
+        let viewController = PhotoDetailViewController(
+            imageUrls: imageUrls,
+            startIndex: startIndex,
+            ownerNickname: viewModel.ownerNickname,
+            transitionSource: transitionSource
+        )
+        present(viewController, animated: true)
     }
 }

@@ -298,8 +298,34 @@ extension MemoryMessagesViewController: UITableViewDataSource {
             withIdentifier: MemoryGroupCell.identifier,
             for: indexPath
         ) as? MemoryGroupCell ?? MemoryGroupCell()
-        cell.configure(group: groups[indexPath.section])
+        let group = groups[indexPath.section]
+        cell.configure(group: group)
+        cell.onPhotoTap = { [weak self] imageUrls, index, source in
+            self?.showPhotoDetail(
+                imageUrls: imageUrls,
+                startIndex: index,
+                ownerNickname: group.participant.name,
+                transitionSource: source
+            )
+        }
         return cell
+    }
+
+    private func showPhotoDetail(
+        imageUrls: [String],
+        startIndex: Int,
+        ownerNickname: String,
+        transitionSource: PhotoDetailTransitionSource
+    ) {
+        guard !imageUrls.isEmpty else { return }
+
+        let viewController = PhotoDetailViewController(
+            imageUrls: imageUrls,
+            startIndex: startIndex,
+            ownerNickname: ownerNickname,
+            transitionSource: transitionSource
+        )
+        present(viewController, animated: true)
     }
 }
 

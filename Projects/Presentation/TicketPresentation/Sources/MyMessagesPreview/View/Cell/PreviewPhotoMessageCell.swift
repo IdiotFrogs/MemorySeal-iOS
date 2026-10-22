@@ -7,6 +7,10 @@ final class PreviewPhotoMessageCell: UITableViewCell {
 
     static let identifier = String(describing: PreviewPhotoMessageCell.self)
 
+    // MARK: - Properties
+
+    var onPhotoTap: ((_ index: Int, _ source: PhotoDetailTransitionSource) -> Void)?
+
     // MARK: - UI
 
     private let photoGridView: PreviewPhotoGridView = PreviewPhotoGridView()
@@ -30,6 +34,13 @@ final class PreviewPhotoMessageCell: UITableViewCell {
 
     func configure(imageUrls: [String]) {
         photoGridView.configure(imageUrls: imageUrls)
+        photoGridView.onPhotoTap = { [weak self] index in
+            guard let self else { return }
+            let source = PhotoDetailTransitionSource { [weak gridView = self.photoGridView] in
+                gridView?.imageView(at: $0)
+            }
+            self.onPhotoTap?(index, source)
+        }
     }
 }
 

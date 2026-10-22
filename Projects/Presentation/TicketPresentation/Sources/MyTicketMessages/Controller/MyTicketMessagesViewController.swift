@@ -128,6 +128,7 @@ public final class MyTicketMessagesViewController: TabmanViewController {
         bindViewModel()
 
         viewModel.fetchContents()
+        viewModel.fetchMyNickname()
 
         addBar(
             tabManBar,
