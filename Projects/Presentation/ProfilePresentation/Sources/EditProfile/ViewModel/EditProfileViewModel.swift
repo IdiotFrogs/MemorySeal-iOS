@@ -87,7 +87,7 @@ public final class EditProfileViewModel {
                 let imageChanged = imageData != nil
 
                 guard nicknameChanged || imageChanged || resetProfileImage else {
-                    self.saveErrorRelay.accept("이미 사용 중인 별명입니다.")
+                    self.action.moveToBack()
                     return
                 }
 
@@ -116,7 +116,14 @@ extension EditProfileViewModel {
                     self.action.didEditProfile()
                     self.action.moveToBack()
                 }
-            } catch {}
+            } catch {
+                let message = (error as? EditProfileError)?.errorDescription
+                    ?? EditProfileError.defaultError.errorDescription
+
+                await MainActor.run {
+                    self.saveErrorRelay.accept(message ?? "")
+                }
+            }
         }
     }
 }

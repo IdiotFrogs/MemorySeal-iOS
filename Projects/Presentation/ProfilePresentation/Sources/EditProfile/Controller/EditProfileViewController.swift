@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import PhotosUI
 import SnapKit
 import RxSwift
 import RxCocoa
@@ -23,6 +24,7 @@ public final class EditProfileViewController: UIViewController {
 
     private var nicknameWavyLayer: WavyStrokeLayer?
     private let maximumNicknameLength: Int = 16
+    private var isImageBottomSheetPending: Bool = false
 
     // MARK: - Navigation
 
@@ -189,6 +191,15 @@ extension EditProfileViewController {
         editImageButton.rx.tap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
+                self.requestImageBottomSheet()
+            })
+            .disposed(by: disposeBag)
+
+        NotificationCenter.default.rx.notification(UIResponder.keyboardDidHideNotification)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                guard self.isImageBottomSheetPending else { return }
+                self.isImageBottomSheetPending = false
                 self.imageBottomSheetView.show()
             })
             .disposed(by: disposeBag)
@@ -264,6 +275,16 @@ extension EditProfileViewController {
         return result
     }
 
+    private func requestImageBottomSheet() {
+        guard nicknameTextField.isFirstResponder else {
+            imageBottomSheetView.show()
+            return
+        }
+
+        isImageBottomSheetPending = true
+        view.endEditing(true)
+    }
+
     private func applyDefaultProfileImage() {
         userProfileImageView.image = nil
         photoPlaceholderImageView.isHidden = false
@@ -272,9 +293,11 @@ extension EditProfileViewController {
     }
 
     private func presentImagePicker() {
-        let picker = UIImagePickerController()
-        picker.sourceType = .photoLibrary
-        picker.allowsEditing = true
+        var config = PHPickerConfiguration()
+        config.selectionLimit = 1
+        config.filter = .images
+
+        let picker = PHPickerViewController(configuration: config)
         picker.delegate = self
         present(picker, animated: true)
     }
@@ -366,26 +389,27 @@ extension EditProfileViewController {
     }
 }
 
-// MARK: - UIImagePickerControllerDelegate
+// MARK: - PHPickerViewControllerDelegate
 
-extension EditProfileViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    public func imagePickerController(
-        _ picker: UIImagePickerController,
-        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
-    ) {
+extension EditProfileViewController: PHPickerViewControllerDelegate {
+    public func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
 
-        let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage
-        guard let croppedImage = image?.squareCropped(maxDimension: 1024),
-              let imageData = croppedImage.jpegData(compressionQuality: 0.8) else { return }
+        guard let provider = results.first?.itemProvider,
+              provider.canLoadObject(ofClass: UIImage.self) else { return }
 
-        userProfileImageView.image = croppedImage
-        photoPlaceholderImageView.isHidden = true
-        selectedProfileImage.accept(imageData)
-        resetProfileImage.accept(false)
-    }
+        provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
+            guard let self, let image = object as? UIImage else { return }
 
-    public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true)
+            let croppedImage = image.squareCropped(maxDimension: 1024)
+            guard let imageData = croppedImage.jpegData(compressionQuality: 0.8) else { return }
+
+            DispatchQueue.main.async {
+                self.userProfileImageView.image = croppedImage
+                self.photoPlaceholderImageView.isHidden = true
+                self.selectedProfileImage.accept(imageData)
+                self.resetProfileImage.accept(false)
+            }
+        }
     }
 }

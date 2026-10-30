@@ -69,7 +69,8 @@ public final class SignUpViewModel {
                 self.requestSignUp(
                     nickname: nickname,
                     profileImage: self.selectedImage?.jpegData(compressionQuality: 0.8),
-                    isLoading: isLoading
+                    isLoading: isLoading,
+                    validationResult: validationResult
                 )
             })
             .disposed(by: disposeBag)
@@ -101,7 +102,8 @@ extension SignUpViewModel {
     private func requestSignUp(
         nickname: String,
         profileImage: Data?,
-        isLoading: BehaviorRelay<Bool>
+        isLoading: BehaviorRelay<Bool>,
+        validationResult: PublishRelay<(isPassed: Bool, helpText: String?)>
     ) {
         isLoading.accept(true)
 
@@ -113,8 +115,12 @@ extension SignUpViewModel {
                     action.moveToHome()
                 }
             } catch {
+                let message = (error as? SignUpError)?.errorDescription
+                    ?? SignUpError.defaultError.errorDescription
+
                 await MainActor.run {
                     isLoading.accept(false)
+                    validationResult.accept((false, message))
                 }
             }
         }
