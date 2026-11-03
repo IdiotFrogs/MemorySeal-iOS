@@ -25,6 +25,7 @@ public final class AppCoordinator {
         with navigationController: UINavigationController
     ) {
         self.navigationController = navigationController
+        observeSessionExpiration()
     }
 
     public func start(destination: LandingDestination? = nil) {
@@ -84,6 +85,26 @@ public final class AppCoordinator {
         coordinator.start()
 
         consumePendingDestination()
+    }
+
+    private func observeSessionExpiration() {
+        NotificationCenter.default.addObserver(
+            forName: .sessionDidExpire,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleSessionExpiration()
+        }
+    }
+
+    private func handleSessionExpiration() {
+        guard mainCoordinator != nil || tutorialCoordinator != nil else { return }
+        mainCoordinator = nil
+        tutorialCoordinator = nil
+        pendingDestination = nil
+        tutorialStore.clearPending()
+        navigationController.dismiss(animated: false)
+        moveToAuthCoordinator()
     }
 
     private func consumePendingDestination() {
