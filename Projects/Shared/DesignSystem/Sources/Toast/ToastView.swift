@@ -14,6 +14,11 @@ public enum ToastPosition {
     case bottom
 }
 
+public enum ToastStyle {
+    case success
+    case error
+}
+
 public final class ToastView: UIView {
     // MARK: - UI
     private let blurView: UIVisualEffectView = {
@@ -43,8 +48,6 @@ public final class ToastView: UIView {
 
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(systemName: "checkmark.circle.fill")
-        imageView.tintColor = UIColor(red: 52/255, green: 120/255, blue: 246/255, alpha: 1.0)
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
@@ -66,7 +69,7 @@ public final class ToastView: UIView {
     }()
 
     // MARK: - Init
-    private init(message: String) {
+    private init(message: String, style: ToastStyle) {
         super.init(frame: .zero)
 
         self.backgroundColor = .clear
@@ -80,10 +83,27 @@ public final class ToastView: UIView {
         blurView.contentView.addSubview(colorOverlay)
 
         messageLabel.text = message
+        applyStyle(style)
 
         addSubviews()
         setLayout()
         setupWavyStroke()
+    }
+
+    private func applyStyle(_ style: ToastStyle) {
+        switch style {
+        case .success:
+            iconImageView.image = UIImage(systemName: "checkmark.circle.fill")
+            iconImageView.tintColor = UIColor(red: 52/255, green: 120/255, blue: 246/255, alpha: 1.0)
+        case .error:
+            iconImageView.image = UIImage(
+                systemName: "xmark.circle.fill",
+                withConfiguration: UIImage.SymbolConfiguration(paletteColors: [
+                    .white,
+                    DesignSystemAsset.ColorAssests.systemRed.color
+                ])
+            )
+        }
     }
 
     private func setupWavyStroke() {
@@ -155,11 +175,12 @@ public final class ToastView: UIView {
     public static func show(
         on view: UIView,
         message: String,
+        style: ToastStyle = .success,
         position: ToastPosition = .bottom
     ) -> ToastView {
         view.subviews.compactMap { $0 as? ToastView }.forEach { $0.removeFromSuperview() }
 
-        let toast = ToastView(message: message)
+        let toast = ToastView(message: message, style: style)
         view.addSubview(toast)
 
         toast.snp.makeConstraints {

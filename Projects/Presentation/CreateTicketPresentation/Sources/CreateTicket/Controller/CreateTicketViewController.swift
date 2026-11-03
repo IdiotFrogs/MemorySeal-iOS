@@ -203,6 +203,12 @@ extension CreateTicketViewController {
                 self.setLoading(isLoading)
             }
             .disposed(by: disposeBag)
+
+        output.errorMessage
+            .emit(with: self, onNext: { (self, message) in
+                ToastView.show(on: self.view, message: message, style: .error)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func applyCreateButtonState(enabled: Bool) {

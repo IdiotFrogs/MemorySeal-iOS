@@ -54,10 +54,12 @@ public final class CreateTicketViewModel {
     struct Output {
         let isLoading: BehaviorRelay<Bool>
         let canCreate: Driver<Bool>
+        let errorMessage: Signal<String>
     }
 
     func transform(_ input: Input) -> Output {
         let isLoading = BehaviorRelay<Bool>(value: false)
+        let errorMessage = PublishRelay<String>()
         let imageSelectedRelay = BehaviorRelay<Bool>(value: false)
 
         input.navigationViewBackButtonDidTap
@@ -90,7 +92,8 @@ public final class CreateTicketViewModel {
                     title: title,
                     description: desc,
                     mainImage: imageData,
-                    isLoading: isLoading
+                    isLoading: isLoading,
+                    errorMessage: errorMessage
                 )
             })
             .disposed(by: disposeBag)
@@ -110,7 +113,8 @@ public final class CreateTicketViewModel {
 
         return Output(
             isLoading: isLoading,
-            canCreate: canCreate
+            canCreate: canCreate,
+            errorMessage: errorMessage.asSignal()
         )
     }
 }
@@ -120,7 +124,8 @@ extension CreateTicketViewModel {
         title: String,
         description: String?,
         mainImage: Data,
-        isLoading: BehaviorRelay<Bool>
+        isLoading: BehaviorRelay<Bool>,
+        errorMessage: PublishRelay<String>
     ) {
         isLoading.accept(true)
         Task {
@@ -144,6 +149,7 @@ extension CreateTicketViewModel {
                 await minimumDisplay.value
                 await MainActor.run {
                     isLoading.accept(false)
+                    errorMessage.accept("티켓 생성에 실패했습니다. 다시 시도해주세요.")
                 }
             }
         }

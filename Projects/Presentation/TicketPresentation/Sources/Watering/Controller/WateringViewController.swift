@@ -279,7 +279,7 @@ extension WateringViewController {
 
         output.errorToast
             .emit(with: self, onNext: { (self, message) in
-                ToastView.show(on: self.view, message: message)
+                ToastView.show(on: self.view, message: message, style: .error)
             })
             .disposed(by: disposeBag)
     }

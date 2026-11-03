@@ -216,6 +216,12 @@ extension MyTicketMessagesViewController {
                 self.restoreFailedDraft(text)
             })
             .disposed(by: disposeBag)
+
+        viewModel.errorMessageSignal
+            .emit(with: self, onNext: { (self, message) in
+                ToastView.show(on: self.view, message: message, style: .error)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func bindButton() {

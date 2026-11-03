@@ -27,10 +27,15 @@ public final class MyTicketMessagesViewModel {
     private let userUseCase: UserUseCase
     private let contents: BehaviorRelay<[CapsuleContent]> = BehaviorRelay(value: [])
     private let textSaveFailure: PublishRelay<String> = PublishRelay()
+    private let errorMessage: PublishRelay<String> = PublishRelay()
     private let myNickname: BehaviorRelay<String> = BehaviorRelay(value: "")
 
     public var textSaveFailureSignal: Signal<String> {
         return textSaveFailure.asSignal()
+    }
+
+    public var errorMessageSignal: Signal<String> {
+        return errorMessage.asSignal()
     }
 
     public var ownerNickname: String {
@@ -68,7 +73,9 @@ public final class MyTicketMessagesViewModel {
                     self.contents.accept(result)
                 }
             } catch {
-                print("fetchContents error:", error)
+                await MainActor.run {
+                    self.errorMessage.accept("메시지를 불러오지 못했습니다.")
+                }
             }
         }
     }
@@ -135,7 +142,9 @@ public final class MyTicketMessagesViewModel {
                     AnalyticsLogger.log(.addMessage(type: .image))
                 }
             } catch {
-                print("createPhotoContent error:", error)
+                await MainActor.run {
+                    self.errorMessage.accept("사진 저장에 실패했습니다.")
+                }
             }
         }
     }
@@ -154,7 +163,9 @@ public final class MyTicketMessagesViewModel {
                     self.contents.accept(newContents)
                 }
             } catch {
-                print("updateTextContent error:", error)
+                await MainActor.run {
+                    self.errorMessage.accept("메시지 수정에 실패했습니다.")
+                }
             }
         }
     }
@@ -177,7 +188,9 @@ public final class MyTicketMessagesViewModel {
                     self.contents.accept(remaining)
                 }
             } catch {
-                print("deleteTextContents error:", error)
+                await MainActor.run {
+                    self.errorMessage.accept("메시지 삭제에 실패했습니다.")
+                }
             }
         }
     }
@@ -208,7 +221,9 @@ public final class MyTicketMessagesViewModel {
                     self.contents.accept(remaining)
                 }
             } catch {
-                print("deletePhotoUrls error:", error)
+                await MainActor.run {
+                    self.errorMessage.accept("사진 삭제에 실패했습니다.")
+                }
             }
         }
     }
