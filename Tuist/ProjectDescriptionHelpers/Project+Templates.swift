@@ -1,9 +1,14 @@
 import ProjectDescription
 
+public extension DeploymentTargets {
+    static let memorySeal: DeploymentTargets = .iOS("18.0")
+}
+
 public extension Project {
     static func makeModule(
         name: String,
         destinations: Destinations = [.iPhone],
+        deploymentTargets: DeploymentTargets = .memorySeal,
         product: Product,
         organizationName: String = "MemorySeal",
         packages: [Package] = [],
@@ -25,6 +30,7 @@ public extension Project {
             destinations: destinations,
             product: product,
             bundleId: "\(organizationName).\(name)",
+            deploymentTargets: deploymentTargets,
             infoPlist: infoPlist,
             sources: sources,
             resources: resources,
@@ -36,6 +42,7 @@ public extension Project {
             destinations: destinations,
             product: .unitTests,
             bundleId: "\(organizationName).\(name)Tests",
+            deploymentTargets: deploymentTargets,
             infoPlist: .default,
             sources: ["Tests/**"],
             dependencies: [.target(name: name)]

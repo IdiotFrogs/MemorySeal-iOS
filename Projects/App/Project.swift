@@ -23,6 +23,7 @@ let project = Project(
             destinations: [.iPhone],
             product: .app,
             bundleId: "io.tuist.MemorySeal",
+            deploymentTargets: .memorySeal,
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchStoryboardName": "LaunchScreen",
@@ -75,6 +76,7 @@ let project = Project(
             destinations: [.iPhone],
             product: .unitTests,
             bundleId: "io.tuist.MemorySealTests",
+            deploymentTargets: .memorySeal,
             infoPlist: .default,
             sources: ["Tests/**"],
             resources: [],
@@ -85,6 +87,7 @@ let project = Project(
             destinations: [.iPhone],
             product: .uiTests,
             bundleId: "io.tuist.MemorySealUITests",
+            deploymentTargets: .memorySeal,
             infoPlist: .default,
             sources: ["UITests/**"],
             resources: [],
