@@ -3,15 +3,16 @@ import Foundation
 import TicketDomain
 
 struct CapsuleContentListResponseDTO: Decodable {
-    let content: [CapsuleContentGroupResponseDTO]
+    let content: [CapsuleContentGroupResponseDTO]?
     let last: Bool?
     let number: Int?
     let totalElements: Int?
     let totalPages: Int?
 
     var toDomain: CapsuleContentGroupPageEntity {
+        let content = content ?? []
         return .init(
-            groups: content.map { $0.toDomain },
+            groups: content.compactMap { $0.toDomain },
             currentPage: number ?? 0,
             isLast: last ?? true,
             totalElements: totalElements ?? content.count
@@ -20,17 +21,18 @@ struct CapsuleContentListResponseDTO: Decodable {
 }
 
 struct CapsuleContentGroupResponseDTO: Decodable {
-    let userId: Int
-    let nickname: String
-    let profileImageUrl: String
-    let capsuleContents: [CapsuleContentResponseDTO]
+    let userId: Int?
+    let nickname: String?
+    let profileImageUrl: String?
+    let capsuleContents: [CapsuleContentResponseDTO]?
 
-    var toDomain: CapsuleContentGroupEntity {
+    var toDomain: CapsuleContentGroupEntity? {
+        guard let userId else { return nil }
         return .init(
             userId: userId,
-            nickname: nickname,
-            profileImageUrl: profileImageUrl,
-            contents: capsuleContents.map { $0.toDomain }
+            nickname: nickname ?? "",
+            profileImageUrl: profileImageUrl ?? "",
+            contents: (capsuleContents ?? []).map { $0.toDomain }
         )
     }
 }

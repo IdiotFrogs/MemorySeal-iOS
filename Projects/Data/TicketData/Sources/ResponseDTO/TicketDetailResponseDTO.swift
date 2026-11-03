@@ -20,7 +20,7 @@ struct TicketDetailResponseDTO: Decodable {
         return .init(
             title: title,
             description: description ?? "",
-            createdAt: DateFormatter.serverDateTime.date(from: createdAt) ?? Date(),
+            createdAt: DateFormatter.serverDate.date(from: createdAt) ?? Date(),
             buriedAt: buriedAt.flatMap { DateFormatter.serverDate.date(from: $0) },
             openedAt: openedAt.flatMap { DateFormatter.serverDate.date(from: $0) },
             mainImageUrl: mainImageUrl,
