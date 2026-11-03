@@ -8,7 +8,7 @@
 
 - **Tuist** 로 프로젝트 생성 (`tuist generate` 실행 후 작업)
 - 메인 타겟: `MemorySeal`
-- 배포 대상: iOS 16+
+- 배포 대상: iOS 18+
 
 ## 아키텍처: Clean Architecture + MVVM-C + Feature Modules
 
