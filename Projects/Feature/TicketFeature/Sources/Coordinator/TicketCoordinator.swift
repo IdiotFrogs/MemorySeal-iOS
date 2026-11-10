@@ -5,6 +5,7 @@ import BaseData
 import BaseDomain
 import TicketDomain
 import ThridPartyLib
+import DesignSystem
 
 public final class TicketCoordinator {
     private let navigationController: UINavigationController
@@ -13,6 +14,7 @@ public final class TicketCoordinator {
     private let ticketDetailUseCase: TicketDetailUseCase
     private var ticketImageUrl: String?
     private var ticketDetailViewModel: TicketDetailViewModel?
+    private weak var ticketDetailViewController: TicketDetailViewController?
 
     public init(
         with navigationController: UINavigationController,
@@ -47,14 +49,37 @@ public final class TicketCoordinator {
             moveToMyTicketMessages: moveToMyTicketMessages,
             moveToBuryTicket: moveToBuryTicket,
             moveToWatering: moveToWatering,
-            moveToMemoryMessages: startMemoryMessages
+            moveToMemoryMessages: startMemoryMessages,
+            moveToBackWithError: { [weak self] message in
+                self?.moveToBack(showing: message)
+            }
         )
         let viewModel = ticketDIContainer.makeTicketDetailViewModel(
             action: ticketDetailAction,
             capsuleId: capsuleId
         )
         self.ticketDetailViewModel = viewModel
-        return ticketDIContainer.makeTicketDetailViewController(with: viewModel)
+        let viewController = ticketDIContainer.makeTicketDetailViewController(with: viewModel)
+        self.ticketDetailViewController = viewController
+        return viewController
+    }
+
+    private func moveToBack(showing message: String) {
+        if let transitionCoordinator = navigationController.transitionCoordinator {
+            transitionCoordinator.animate(alongsideTransition: nil) { [weak self] _ in
+                self?.moveToBack(showing: message)
+            }
+            return
+        }
+
+        let viewControllers = navigationController.viewControllers
+        guard let ticketDetailViewController,
+              let index = viewControllers.firstIndex(of: ticketDetailViewController),
+              index > 0 else { return }
+
+        let previousViewController = viewControllers[index - 1]
+        navigationController.popToViewController(previousViewController, animated: true)
+        ToastView.show(on: previousViewController.view, message: message, style: .error)
     }
 
     // MARK: - OpenFlow
