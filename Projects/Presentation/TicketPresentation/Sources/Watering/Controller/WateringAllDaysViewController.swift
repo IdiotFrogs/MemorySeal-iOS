@@ -177,6 +177,7 @@ extension WateringAllDaysViewController {
         output.progressRatio
             .drive(with: self, onNext: { (self, ratio) in
                 self.progressView.setProgress(ratio)
+                guard self.view.window != nil else { return }
                 UIView.animate(withDuration: 0.3) {
                     self.view.layoutIfNeeded()
                 }

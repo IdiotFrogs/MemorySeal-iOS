@@ -122,12 +122,12 @@ extension SignUpViewModel {
             } catch SignUpError.duplicateNickname {
                 await MainActor.run {
                     isLoading.accept(false)
-                    validationResult.accept((false, "이미 사용 중인 별명입니다."))
+                    validationResult.accept((false, SignUpError.duplicateNickname.errorDescription))
                 }
             } catch {
                 await MainActor.run {
                     isLoading.accept(false)
-                    errorMessage.accept("회원가입에 실패했습니다. 다시 시도해주세요.")
+                    errorMessage.accept(SignUpError.defaultError.errorDescription ?? "")
                 }
             }
         }
