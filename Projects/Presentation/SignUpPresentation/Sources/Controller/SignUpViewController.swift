@@ -233,6 +233,12 @@ extension SignUpViewController {
             })
             .disposed(by: disposeBag)
 
+        output.errorMessage
+            .emit(with: self, onNext: { (self, message) in
+                ToastView.show(on: self.view, message: message, style: .error, position: .top)
+            })
+            .disposed(by: disposeBag)
+
         navigationBarBackButton.rx.tap
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in

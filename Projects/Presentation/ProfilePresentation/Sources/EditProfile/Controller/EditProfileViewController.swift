@@ -231,6 +231,12 @@ extension EditProfileViewController {
                 self.showNicknameError(message, isTextInvalid: false)
             })
             .disposed(by: disposeBag)
+
+        output.saveFailure
+            .emit(with: self, onNext: { (self, message) in
+                ToastView.show(on: self.view, message: message, style: .error, position: .top)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func showNicknameError(_ message: String, isTextInvalid: Bool) {

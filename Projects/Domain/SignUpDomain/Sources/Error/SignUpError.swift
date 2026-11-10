@@ -10,8 +10,14 @@ import BaseDomain
 
 public enum SignUpError: DomainError {
     case defaultError
+    case duplicateNickname
 
     public init(errorResponse: BaseDomain.ErrorResponseEntity) {
-        self = .defaultError
+        switch errorResponse.error {
+        case "DUPLICATE_NICKNAME":
+            self = .duplicateNickname
+        default:
+            self = .defaultError
+        }
     }
 }

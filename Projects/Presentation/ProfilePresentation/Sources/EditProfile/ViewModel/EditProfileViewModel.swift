@@ -36,6 +36,7 @@ public final class EditProfileViewModel {
     public let action: Action
 
     private let saveErrorRelay: PublishRelay<String> = .init()
+    private let saveFailureRelay: PublishRelay<String> = .init()
 
     public init(
         userUseCase: UserUseCase,
@@ -59,6 +60,7 @@ public final class EditProfileViewModel {
 
     struct Output {
         let saveError: Signal<String>
+        let saveFailure: Signal<String>
     }
 
     func translation(_ input: Input) -> Output {
@@ -99,7 +101,10 @@ public final class EditProfileViewModel {
             })
             .disposed(by: disposeBag)
 
-        return Output(saveError: saveErrorRelay.asSignal())
+        return Output(
+            saveError: saveErrorRelay.asSignal(),
+            saveFailure: saveFailureRelay.asSignal()
+        )
     }
 }
 
@@ -116,7 +121,11 @@ extension EditProfileViewModel {
                     self.action.didEditProfile()
                     self.action.moveToBack()
                 }
-            } catch {}
+            } catch EditProfileError.duplicateNickname {
+                self.saveErrorRelay.accept("이미 사용 중인 별명입니다.")
+            } catch {
+                self.saveFailureRelay.accept("프로필 수정에 실패했습니다. 다시 시도해주세요.")
+            }
         }
     }
 }

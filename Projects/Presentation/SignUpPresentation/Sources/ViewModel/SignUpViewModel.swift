@@ -42,12 +42,14 @@ public final class SignUpViewModel {
         let profileImage: PublishRelay<UIImage>
         let validationResult: PublishRelay<(isPassed: Bool, helpText: String?)>
         let isLoading: BehaviorRelay<Bool>
+        let errorMessage: Signal<String>
     }
 
     func transform(_ input: Input) -> Output {
         let profileImage = PublishRelay<UIImage>()
         let validationResult = PublishRelay<(isPassed: Bool, helpText: String?)>()
         let isLoading = BehaviorRelay<Bool>(value: false)
+        let errorMessage = PublishRelay<String>()
 
         input.imageSelected
             .withUnretained(self)
@@ -69,7 +71,9 @@ public final class SignUpViewModel {
                 self.requestSignUp(
                     nickname: nickname,
                     profileImage: self.selectedImage?.jpegData(compressionQuality: 0.8),
-                    isLoading: isLoading
+                    isLoading: isLoading,
+                    validationResult: validationResult,
+                    errorMessage: errorMessage
                 )
             })
             .disposed(by: disposeBag)
@@ -77,7 +81,8 @@ public final class SignUpViewModel {
         return Output(
             profileImage: profileImage,
             validationResult: validationResult,
-            isLoading: isLoading
+            isLoading: isLoading,
+            errorMessage: errorMessage.asSignal()
         )
     }
 }
@@ -101,7 +106,9 @@ extension SignUpViewModel {
     private func requestSignUp(
         nickname: String,
         profileImage: Data?,
-        isLoading: BehaviorRelay<Bool>
+        isLoading: BehaviorRelay<Bool>,
+        validationResult: PublishRelay<(isPassed: Bool, helpText: String?)>,
+        errorMessage: PublishRelay<String>
     ) {
         isLoading.accept(true)
 
@@ -112,9 +119,15 @@ extension SignUpViewModel {
                     isLoading.accept(false)
                     action.moveToHome()
                 }
+            } catch SignUpError.duplicateNickname {
+                await MainActor.run {
+                    isLoading.accept(false)
+                    validationResult.accept((false, "이미 사용 중인 별명입니다."))
+                }
             } catch {
                 await MainActor.run {
                     isLoading.accept(false)
+                    errorMessage.accept("회원가입에 실패했습니다. 다시 시도해주세요.")
                 }
             }
         }
