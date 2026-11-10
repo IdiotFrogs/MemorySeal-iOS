@@ -25,6 +25,7 @@ public final class EditProfileViewController: UIViewController {
     private var nicknameWavyLayer: WavyStrokeLayer?
     private let maximumNicknameLength: Int = 16
     private var isImageBottomSheetPending: Bool = false
+    private var isKeyboardVisible: Bool = false
 
     // MARK: - Navigation
 
@@ -195,9 +196,17 @@ extension EditProfileViewController {
             })
             .disposed(by: disposeBag)
 
+        NotificationCenter.default.rx.notification(UIResponder.keyboardDidShowNotification)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                self.isKeyboardVisible = true
+            })
+            .disposed(by: disposeBag)
+
         NotificationCenter.default.rx.notification(UIResponder.keyboardDidHideNotification)
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
+                self.isKeyboardVisible = false
                 guard self.isImageBottomSheetPending else { return }
                 self.isImageBottomSheetPending = false
                 self.imageBottomSheetView.show()
@@ -276,7 +285,8 @@ extension EditProfileViewController {
     }
 
     private func requestImageBottomSheet() {
-        guard nicknameTextField.isFirstResponder else {
+        guard nicknameTextField.isFirstResponder, isKeyboardVisible else {
+            view.endEditing(true)
             imageBottomSheetView.show()
             return
         }
@@ -398,13 +408,16 @@ extension EditProfileViewController: PHPickerViewControllerDelegate {
         guard let provider = results.first?.itemProvider,
               provider.canLoadObject(ofClass: UIImage.self) else { return }
 
-        provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
-            guard let self, let image = object as? UIImage else { return }
+        saveButton.isEnabled = false
 
-            let croppedImage = image.squareCropped(maxDimension: 1024)
-            guard let imageData = croppedImage.jpegData(compressionQuality: 0.8) else { return }
+        provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
+            let croppedImage = (object as? UIImage)?.squareCropped(maxDimension: 1024)
+            let imageData = croppedImage?.jpegData(compressionQuality: 0.8)
 
             DispatchQueue.main.async {
+                guard let self else { return }
+                self.saveButton.isEnabled = true
+                guard let croppedImage, let imageData else { return }
                 self.userProfileImageView.image = croppedImage
                 self.photoPlaceholderImageView.isHidden = true
                 self.selectedProfileImage.accept(imageData)

@@ -83,7 +83,12 @@ public final class EditProfileViewModel {
                     return
                 }
 
-                let nicknameChanged = nicknameText != self.nickname && !nicknameText.isEmpty
+                guard nicknameText.trimmingCharacters(in: .whitespaces).isEmpty == false else {
+                    self.saveErrorRelay.accept("최소 1글자에서 \(self.maximumNicknameLength)글자까지 입력할 수 있습니다.")
+                    return
+                }
+
+                let nicknameChanged = nicknameText != self.nickname
                 let imageChanged = imageData != nil
 
                 guard nicknameChanged || imageChanged || resetProfileImage else {
