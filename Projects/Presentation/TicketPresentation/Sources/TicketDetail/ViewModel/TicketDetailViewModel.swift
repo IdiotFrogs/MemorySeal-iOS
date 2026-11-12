@@ -199,7 +199,11 @@ extension TicketDetailViewModel {
                 }
             } catch {
                 await MainActor.run {
-                    self.action.moveToBackWithError("티켓 정보를 불러올 수 없습니다")
+                    if self.ticketDetail.value == nil {
+                        self.action.moveToBackWithError("티켓 정보를 불러올 수 없습니다")
+                    } else {
+                        self.errorToast.accept("티켓 정보를 불러올 수 없습니다")
+                    }
                 }
             }
         }
