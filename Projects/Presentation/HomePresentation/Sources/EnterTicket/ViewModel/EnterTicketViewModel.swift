@@ -48,7 +48,6 @@ public final class EnterTicketViewModel {
                     do {
                         let capsuleId = try await self.enterTicketUseCase.joinRequest(code: code)
                         await MainActor.run {
-                            self.isRequesting.accept(false)
                             self.action.didJoinTicket(capsuleId)
                         }
                     } catch let error {
