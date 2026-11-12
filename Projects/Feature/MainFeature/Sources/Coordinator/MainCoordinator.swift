@@ -140,7 +140,14 @@ public final class MainCoordinator {
     }
 
     private func showInviteUnavailableToast() {
-        guard let view = navigationController.topViewController?.view else { return }
+        var visibleViewController: UIViewController = navigationController
+        while let presentedViewController = visibleViewController.presentedViewController {
+            visibleViewController = presentedViewController
+        }
+        let targetViewController = visibleViewController === navigationController
+            ? navigationController.topViewController
+            : visibleViewController
+        guard let view = targetViewController?.view else { return }
         ToastView.show(on: view, message: "참여할 수 없는 티켓입니다.", style: .error)
     }
 }
