@@ -72,3 +72,6 @@ Tuist/.build
 
 ### OMC ###
 .omc/
+### Secrets ###
+.env
+Projects/App/Resources/GoogleService-Info.plist
