@@ -251,6 +251,12 @@ extension EditProfileViewController {
                 self.showNicknameError(message, isTextInvalid: false)
             })
             .disposed(by: disposeBag)
+
+        output.saveFailure
+            .emit(with: self, onNext: { (self, message) in
+                ToastView.show(on: self.view, message: message, style: .error, position: .top)
+            })
+            .disposed(by: disposeBag)
     }
 
     private func showNicknameError(_ message: String, isTextInvalid: Bool) {
@@ -423,6 +429,7 @@ extension EditProfileViewController: PHPickerViewControllerDelegate {
                     ToastView.show(
                         on: self.view,
                         message: "이미지를 불러오지 못했습니다. 다시 선택해주세요.",
+                        style: .error,
                         position: .top
                     )
                     return

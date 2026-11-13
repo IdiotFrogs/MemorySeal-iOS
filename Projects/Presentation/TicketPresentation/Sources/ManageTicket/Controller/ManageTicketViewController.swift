@@ -95,6 +95,12 @@ extension ManageTicketViewController {
                 self.showHostCannotLeaveDialog()
             }
             .disposed(by: disposeBag)
+
+        output.errorToast
+            .emit(with: self) { (self, message) in
+                ToastView.show(on: self.view, message: message, style: .error)
+            }
+            .disposed(by: disposeBag)
     }
 
     private func showHostCannotLeaveDialog() {

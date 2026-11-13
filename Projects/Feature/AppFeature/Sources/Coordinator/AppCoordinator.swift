@@ -6,12 +6,14 @@
 //
 
 import UIKit
+import RxSwift
 
 import AuthFeature
 import MainFeature
 import TutorialFeature
 import BaseDomain
 import BaseData
+import DesignSystem
 
 public final class AppCoordinator {
     private let navigationController: UINavigationController
@@ -20,11 +22,13 @@ public final class AppCoordinator {
     private var tutorialCoordinator: TutorialCoordinator?
     private let tutorialStore: TutorialStore = DefaultTutorialStore()
     private var pendingDestination: LandingDestination?
+    private let disposeBag: DisposeBag = DisposeBag()
 
     public init(
         with navigationController: UINavigationController
     ) {
         self.navigationController = navigationController
+        observeSessionExpiration()
     }
 
     public func start(destination: LandingDestination? = nil) {
@@ -84,6 +88,41 @@ public final class AppCoordinator {
         coordinator.start()
 
         consumePendingDestination()
+    }
+
+    private func observeSessionExpiration() {
+        NotificationCenter.default.addObserver(
+            forName: .sessionDidExpire,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleSessionExpiration()
+        }
+    }
+
+    private func handleSessionExpiration() {
+        guard mainCoordinator != nil || tutorialCoordinator != nil else { return }
+        mainCoordinator = nil
+        tutorialCoordinator = nil
+        pendingDestination = nil
+        tutorialStore.clearPending()
+        navigationController.dismiss(animated: false)
+        showSessionExpiredDialog()
+    }
+
+    private func showSessionExpiredDialog() {
+        let dialog = DialogView.show(
+            on: navigationController.view,
+            title: "로그인이 만료되었습니다.\n다시 로그인해 주세요.",
+            confirmTitle: "확인"
+        )
+
+        dialog.confirmButtonDidTap
+            .subscribe(onNext: { [weak self, weak dialog] in
+                dialog?.dismiss()
+                self?.moveToAuthCoordinator()
+            })
+            .disposed(by: disposeBag)
     }
 
     private func consumePendingDestination() {

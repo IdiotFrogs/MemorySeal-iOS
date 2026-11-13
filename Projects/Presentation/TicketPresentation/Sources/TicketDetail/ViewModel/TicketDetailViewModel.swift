@@ -24,6 +24,7 @@ public final class TicketDetailViewModel {
         public let moveToBuryTicket: () -> Void
         public let moveToWatering: () -> Void
         public let moveToMemoryMessages: () -> Void
+        public let moveToBackWithError: (_ message: String) -> Void
 
         public init(
             moveToAddMember: @escaping () -> Void,
@@ -31,7 +32,8 @@ public final class TicketDetailViewModel {
             moveToMyTicketMessages: @escaping () -> Void,
             moveToBuryTicket: @escaping () -> Void,
             moveToWatering: @escaping () -> Void,
-            moveToMemoryMessages: @escaping () -> Void
+            moveToMemoryMessages: @escaping () -> Void,
+            moveToBackWithError: @escaping (_ message: String) -> Void
         ) {
             self.moveToAddMember = moveToAddMember
             self.moveToManageTicket = moveToManageTicket
@@ -39,6 +41,7 @@ public final class TicketDetailViewModel {
             self.moveToBuryTicket = moveToBuryTicket
             self.moveToWatering = moveToWatering
             self.moveToMemoryMessages = moveToMemoryMessages
+            self.moveToBackWithError = moveToBackWithError
         }
     }
 
@@ -196,7 +199,11 @@ extension TicketDetailViewModel {
                 }
             } catch {
                 await MainActor.run {
-                    self.errorToast.accept("티켓 정보를 불러올 수 없습니다")
+                    if self.ticketDetail.value == nil {
+                        self.action.moveToBackWithError("티켓 정보를 불러올 수 없습니다")
+                    } else {
+                        self.errorToast.accept("티켓 정보를 불러올 수 없습니다")
+                    }
                 }
             }
         }

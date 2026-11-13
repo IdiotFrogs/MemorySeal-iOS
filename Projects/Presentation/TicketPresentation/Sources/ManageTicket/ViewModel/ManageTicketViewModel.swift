@@ -58,14 +58,12 @@ public final class ManageTicketViewModel {
     }
 
     struct Output {
-        let deleteResult: Driver<Bool>
-        let leaveResult: Driver<Bool>
+        let errorToast: Signal<String>
         let hostCannotLeave: Signal<Void>
     }
 
     func transform(_ input: Input) -> Output {
-        let deleteResult = PublishRelay<Bool>()
-        let leaveResult = PublishRelay<Bool>()
+        let errorToast = PublishRelay<String>()
         let hostCannotLeave = PublishRelay<Void>()
 
         input.didTapMember
@@ -82,12 +80,11 @@ public final class ManageTicketViewModel {
                     do {
                         try await self.manageTicketUseCase.deleteTimeCapsule(capsuleId: self.capsuleId)
                         await MainActor.run {
-                            deleteResult.accept(true)
                             self.action.didDeleteTimeCapsule()
                         }
                     } catch {
                         await MainActor.run {
-                            deleteResult.accept(false)
+                            errorToast.accept("티켓 삭제에 실패했습니다. 다시 시도해주세요.")
                         }
                     }
                 }
@@ -101,22 +98,15 @@ public final class ManageTicketViewModel {
                     do {
                         try await self.manageTicketUseCase.leaveTimeCapsule(capsuleId: self.capsuleId)
                         await MainActor.run {
-                            leaveResult.accept(true)
                             self.action.didLeaveTimeCapsule()
                         }
-                    } catch let error as ManageTicketError {
+                    } catch ManageTicketError.hostCannotLeave {
                         await MainActor.run {
-                            switch error {
-                            case .hostCannotLeave:
-                                hostCannotLeave.accept(())
-                            case .defaultError:
-                                break
-                            }
-                            leaveResult.accept(false)
+                            hostCannotLeave.accept(())
                         }
                     } catch {
                         await MainActor.run {
-                            leaveResult.accept(false)
+                            errorToast.accept("티켓 나가기에 실패했습니다. 다시 시도해주세요.")
                         }
                     }
                 }
@@ -124,8 +114,7 @@ public final class ManageTicketViewModel {
             .disposed(by: disposeBag)
 
         return Output(
-            deleteResult: deleteResult.asDriver(onErrorJustReturn: false),
-            leaveResult: leaveResult.asDriver(onErrorJustReturn: false),
+            errorToast: errorToast.asSignal(),
             hostCannotLeave: hostCannotLeave.asSignal()
         )
     }

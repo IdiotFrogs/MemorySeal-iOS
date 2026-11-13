@@ -14,6 +14,7 @@ import CreateTicketFeature
 import TicketFeature
 import BaseDomain
 import TicketDomain
+import DesignSystem
 
 public final class MainCoordinator {
     public struct Dependency {
@@ -119,6 +120,10 @@ public final class MainCoordinator {
 
     private func route(_ resolution: LandingResolution) {
         if case .none = resolution { return }
+        if case .inviteUnavailable = resolution {
+            showInviteUnavailableToast()
+            return
+        }
 
         navigationController.popToRootViewController(animated: false)
 
@@ -129,8 +134,20 @@ public final class MainCoordinator {
             moveToOpenCapsuleCoordinator(capsuleId: capsuleId)
         case .ticketDetail(let capsuleId):
             moveToTicketCoordinator(capsuleId: capsuleId)
-        case .none:
+        case .inviteUnavailable, .none:
             break
         }
+    }
+
+    private func showInviteUnavailableToast() {
+        var visibleViewController: UIViewController = navigationController
+        while let presentedViewController = visibleViewController.presentedViewController {
+            visibleViewController = presentedViewController
+        }
+        let targetViewController = visibleViewController === navigationController
+            ? navigationController.topViewController
+            : visibleViewController
+        guard let view = targetViewController?.view else { return }
+        ToastView.show(on: view, message: "참여할 수 없는 티켓입니다.", style: .error)
     }
 }

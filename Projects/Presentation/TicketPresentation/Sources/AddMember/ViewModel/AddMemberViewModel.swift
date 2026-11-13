@@ -283,6 +283,10 @@ public final class AddMemberViewModel {
                             delegateHostSuccess.accept(())
                             loadMembers(true)
                         }
+                    } catch AddMemberError.cannotDelegateToWithdrawnUser {
+                        await MainActor.run {
+                            errorToast.accept("탈퇴한 사용자에게는 방장을 위임할 수 없습니다")
+                        }
                     } catch {
                         await MainActor.run {
                             errorToast.accept("방장 위임에 실패했습니다")

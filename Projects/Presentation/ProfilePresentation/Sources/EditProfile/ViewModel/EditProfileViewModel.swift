@@ -36,6 +36,7 @@ public final class EditProfileViewModel {
     public let action: Action
 
     private let saveErrorRelay: PublishRelay<String> = .init()
+    private let saveFailureRelay: PublishRelay<String> = .init()
 
     public init(
         userUseCase: UserUseCase,
@@ -59,6 +60,7 @@ public final class EditProfileViewModel {
 
     struct Output {
         let saveError: Signal<String>
+        let saveFailure: Signal<String>
     }
 
     func translation(_ input: Input) -> Output {
@@ -104,7 +106,10 @@ public final class EditProfileViewModel {
             })
             .disposed(by: disposeBag)
 
-        return Output(saveError: saveErrorRelay.asSignal())
+        return Output(
+            saveError: saveErrorRelay.asSignal(),
+            saveFailure: saveFailureRelay.asSignal()
+        )
     }
 }
 
@@ -121,12 +126,13 @@ extension EditProfileViewModel {
                     self.action.didEditProfile()
                     self.action.moveToBack()
                 }
-            } catch {
-                let message = (error as? EditProfileError)?.errorDescription
-                    ?? EditProfileError.defaultError.errorDescription
-
+            } catch EditProfileError.duplicateNickname {
                 await MainActor.run {
-                    self.saveErrorRelay.accept(message ?? "")
+                    self.saveErrorRelay.accept(EditProfileError.duplicateNickname.errorDescription ?? "")
+                }
+            } catch {
+                await MainActor.run {
+                    self.saveFailureRelay.accept(EditProfileError.defaultError.errorDescription ?? "")
                 }
             }
         }

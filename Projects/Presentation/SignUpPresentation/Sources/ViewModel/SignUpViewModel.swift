@@ -42,12 +42,14 @@ public final class SignUpViewModel {
         let profileImage: PublishRelay<UIImage>
         let validationResult: PublishRelay<(isPassed: Bool, helpText: String?)>
         let isLoading: BehaviorRelay<Bool>
+        let errorMessage: Signal<String>
     }
 
     func transform(_ input: Input) -> Output {
         let profileImage = PublishRelay<UIImage>()
         let validationResult = PublishRelay<(isPassed: Bool, helpText: String?)>()
         let isLoading = BehaviorRelay<Bool>(value: false)
+        let errorMessage = PublishRelay<String>()
 
         input.imageSelected
             .withUnretained(self)
@@ -70,7 +72,8 @@ public final class SignUpViewModel {
                     nickname: nickname,
                     profileImage: self.selectedImage?.jpegData(compressionQuality: 0.8),
                     isLoading: isLoading,
-                    validationResult: validationResult
+                    validationResult: validationResult,
+                    errorMessage: errorMessage
                 )
             })
             .disposed(by: disposeBag)
@@ -78,7 +81,8 @@ public final class SignUpViewModel {
         return Output(
             profileImage: profileImage,
             validationResult: validationResult,
-            isLoading: isLoading
+            isLoading: isLoading,
+            errorMessage: errorMessage.asSignal()
         )
     }
 }
@@ -103,7 +107,8 @@ extension SignUpViewModel {
         nickname: String,
         profileImage: Data?,
         isLoading: BehaviorRelay<Bool>,
-        validationResult: PublishRelay<(isPassed: Bool, helpText: String?)>
+        validationResult: PublishRelay<(isPassed: Bool, helpText: String?)>,
+        errorMessage: PublishRelay<String>
     ) {
         isLoading.accept(true)
 
@@ -114,13 +119,15 @@ extension SignUpViewModel {
                     isLoading.accept(false)
                     action.moveToHome()
                 }
-            } catch {
-                let message = (error as? SignUpError)?.errorDescription
-                    ?? SignUpError.defaultError.errorDescription
-
+            } catch SignUpError.duplicateNickname {
                 await MainActor.run {
                     isLoading.accept(false)
-                    validationResult.accept((false, message))
+                    validationResult.accept((false, SignUpError.duplicateNickname.errorDescription))
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading.accept(false)
+                    errorMessage.accept(SignUpError.defaultError.errorDescription ?? "")
                 }
             }
         }

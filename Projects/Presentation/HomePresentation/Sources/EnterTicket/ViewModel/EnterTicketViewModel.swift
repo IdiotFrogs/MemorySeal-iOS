@@ -25,6 +25,7 @@ public final class EnterTicketViewModel {
     public let action: Action
 
     private let enterTicketUseCase: EnterTicketUseCase
+    private let isRequesting: BehaviorRelay<Bool> = .init(value: false)
 
     struct Input {
         let didTapEnterButton: PublishRelay<String>
@@ -39,7 +40,9 @@ public final class EnterTicketViewModel {
 
         input.didTapEnterButton
             .withUnretained(self)
+            .filter { (self, _) in !self.isRequesting.value }
             .subscribe(onNext: { (self, code) in
+                self.isRequesting.accept(true)
                 Task { [weak self] in
                     guard let self else { return }
                     do {
@@ -49,6 +52,7 @@ public final class EnterTicketViewModel {
                         }
                     } catch let error {
                         await MainActor.run {
+                            self.isRequesting.accept(false)
                             joinError.accept(error.localizedDescription)
                         }
                     }

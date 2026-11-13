@@ -41,7 +41,7 @@ public final class DefaultLandingUseCase: LandingUseCase {
             if (try? await joinCapsuleUseCase.join(capsuleId: capsuleId)) != nil {
                 return .ticketDetail(capsuleId: capsuleId)
             }
-            guard await isAccessible(capsuleId: capsuleId) else { return .none }
+            guard await isAccessible(capsuleId: capsuleId) else { return .inviteUnavailable }
             return .ticketDetail(capsuleId: capsuleId)
         }
     }

@@ -203,14 +203,8 @@ extension EnterTicketViewController {
                     on: self.view,
                     title: "합류 실패",
                     message: message,
-                    cancelTitle: "닫기",
                     confirmTitle: "확인"
                 )
-                dialog.cancelButtonDidTap
-                    .subscribe(onNext: { _ in
-                        dialog.dismiss()
-                    })
-                    .disposed(by: self.disposeBag)
                 dialog.confirmButtonDidTap
                     .subscribe(onNext: { _ in
                         dialog.dismiss()

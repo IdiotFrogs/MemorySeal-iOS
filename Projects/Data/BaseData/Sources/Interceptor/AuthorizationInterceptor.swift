@@ -20,14 +20,17 @@ final class AuthorizationInterceptor: RequestInterceptor, @unchecked Sendable {
     private let retryLimit: Int = 3
     private let tokenRefresher: TokenRefresher
     private let keyChainStorage: KeyChainStorage
+    private let userDefaultStorage: UserDefaultStorage
     private let refreshCoordinator: TokenRefreshCoordinator = TokenRefreshCoordinator()
 
     private init(
         tokenRefresher: TokenRefresher = DefaultTokenRefresher(),
-        keyChainStorage: KeyChainStorage = DefaultKeyChainStorage()
+        keyChainStorage: KeyChainStorage = DefaultKeyChainStorage(),
+        userDefaultStorage: UserDefaultStorage = DefaultUserDefaultStorage()
     ) {
         self.tokenRefresher = tokenRefresher
         self.keyChainStorage = keyChainStorage
+        self.userDefaultStorage = userDefaultStorage
     }
 
     // MARK: - Adapt
@@ -80,7 +83,8 @@ final class AuthorizationInterceptor: RequestInterceptor, @unchecked Sendable {
                     try await self.refreshAccessToken()
                 }
                 completion(.retry)
-            } catch RefreshError.tokenExpired {
+            } catch is RefreshError {
+                self.expireSession()
                 completion(.doNotRetryWithError(error))
             } catch let error {
                 completion(.doNotRetryWithError(error))
@@ -91,6 +95,15 @@ final class AuthorizationInterceptor: RequestInterceptor, @unchecked Sendable {
     private func currentAuthorizationHeader() -> String? {
         guard let accessToken: String = keyChainStorage.read(forKey: .accessToken) else { return nil }
         return "Bearer \(accessToken)"
+    }
+
+    private func expireSession() {
+        _ = keyChainStorage.delete(key: .accessToken)
+        _ = keyChainStorage.delete(key: .refreshToken)
+        userDefaultStorage.remove(forKey: .userId)
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: .sessionDidExpire, object: nil)
+        }
     }
 
     private func refreshAccessToken() async throws {

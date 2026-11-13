@@ -28,6 +28,7 @@ public final class CreateTicketViewController: UIViewController {
     private let disposeBag: DisposeBag = DisposeBag()
 
     private let imageSelectedRelay: PublishRelay<UIImage> = .init()
+    private let maximumTitleLength: Int = 20
 
     private var loadingView: CreateTicketLoadingView?
 
@@ -154,6 +155,7 @@ public final class CreateTicketViewController: UIViewController {
         self.bindSView()
         self.bindTextView()
         self.bindTextFieldFocus()
+        self.bindTitleLengthLimit()
         self.bindImagePicker()
     }
 
@@ -202,6 +204,12 @@ extension CreateTicketViewController {
             .drive(with: self) { (self, isLoading) in
                 self.setLoading(isLoading)
             }
+            .disposed(by: disposeBag)
+
+        output.errorMessage
+            .emit(with: self, onNext: { (self, message) in
+                ToastView.show(on: self.view, message: message, style: .error)
+            })
             .disposed(by: disposeBag)
     }
 
@@ -254,6 +262,20 @@ extension CreateTicketViewController {
             .subscribe(onNext: { (self, _) in
                 self.descriptionTextView.invalidateIntrinsicContentSize()
                 self.view.layoutIfNeeded()
+            })
+            .disposed(by: disposeBag)
+    }
+
+    private func bindTitleLengthLimit() {
+        ticketTitleTextField.rx.controlEvent(.editingChanged)
+            .withUnretained(self)
+            .subscribe(onNext: { (self, _) in
+                let textField = self.ticketTitleTextField
+                guard textField.markedTextRange == nil,
+                      let text = textField.text,
+                      text.count > self.maximumTitleLength else { return }
+                textField.text = String(text.prefix(self.maximumTitleLength))
+                textField.sendActions(for: .editingChanged)
             })
             .disposed(by: disposeBag)
     }

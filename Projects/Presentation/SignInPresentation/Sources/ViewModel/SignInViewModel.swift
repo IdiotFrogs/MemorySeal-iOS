@@ -38,10 +38,12 @@ public final class SignInViewModel {
     
     struct Output {
         let isLoading: BehaviorRelay<Bool>
+        let errorMessage: Signal<String>
     }
 
     func translation(_ input: Input) -> Output {
         let isLoading = BehaviorRelay<Bool>(value: false)
+        let errorMessage = PublishRelay<String>()
 
         input.appleAuthorizationCompleted
             .withUnretained(self)
@@ -50,7 +52,8 @@ public final class SignInViewModel {
                     idToken: element.idToken,
                     authorizationCode: element.authorizationCode,
                     type: .apple,
-                    isLoading: isLoading
+                    isLoading: isLoading,
+                    errorMessage: errorMessage
                 )
             })
             .disposed(by: disposeBag)
@@ -61,12 +64,16 @@ public final class SignInViewModel {
                     idToken: idToken,
                     authorizationCode: nil,
                     type: .google,
-                    isLoading: isLoading
+                    isLoading: isLoading,
+                    errorMessage: errorMessage
                 )
             })
             .disposed(by: disposeBag)
 
-        return Output(isLoading: isLoading)
+        return Output(
+            isLoading: isLoading,
+            errorMessage: errorMessage.asSignal()
+        )
     }
 }
 
@@ -75,7 +82,8 @@ extension SignInViewModel {
         idToken: String,
         authorizationCode: String?,
         type: SignInType,
-        isLoading: BehaviorRelay<Bool>
+        isLoading: BehaviorRelay<Bool>,
+        errorMessage: PublishRelay<String>
     ) {
         isLoading.accept(true)
         Task {
@@ -101,6 +109,7 @@ extension SignInViewModel {
                 await minimumDisplay.value
                 await MainActor.run {
                     isLoading.accept(false)
+                    errorMessage.accept("로그인에 실패했습니다. 다시 시도해주세요.")
                 }
             }
         }

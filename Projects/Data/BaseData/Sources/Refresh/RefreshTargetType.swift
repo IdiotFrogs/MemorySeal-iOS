@@ -39,7 +39,7 @@ extension RefreshTargetType: BaseTargetType {
     public var headers: [String : String]? {
         switch self {
         case let .refreshAccessToken(refreshToken):
-            return ["Authorization": refreshToken]
+            return ["RefreshToken": refreshToken]
         }
     }
     

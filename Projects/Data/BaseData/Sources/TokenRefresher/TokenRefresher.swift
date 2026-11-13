@@ -20,12 +20,22 @@ final class DefaultTokenRefresher: TokenRefresher {
         
         let result = await authProvider.request(.refreshAccessToken(refreshToken: refreshToken))
         
-        let response = try ResultHandler.handleResult(
-            result: result,
-            responseType: RefreshResponseDTO.self,
-            errorType: RefreshError.self
-        )
-        
-        return response
+        do {
+            return try ResultHandler.handleResult(
+                result: result,
+                responseType: RefreshResponseDTO.self,
+                errorType: RefreshError.self
+            )
+        } catch let error as RefreshError {
+            throw error
+        } catch {
+            guard case .success(let response) = result,
+                  isRejected(statusCode: response.statusCode) else { throw error }
+            throw RefreshError.defaultError
+        }
+    }
+
+    private func isRejected(statusCode: Int) -> Bool {
+        return (400..<500).contains(statusCode) || statusCode == 500
     }
 }
