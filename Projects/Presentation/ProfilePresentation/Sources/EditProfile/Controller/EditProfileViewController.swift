@@ -196,7 +196,7 @@ extension EditProfileViewController {
             })
             .disposed(by: disposeBag)
 
-        NotificationCenter.default.rx.notification(UIResponder.keyboardDidShowNotification)
+        NotificationCenter.default.rx.notification(UIResponder.keyboardWillShowNotification)
             .withUnretained(self)
             .subscribe(onNext: { (self, _) in
                 self.isKeyboardVisible = true
@@ -415,6 +415,7 @@ extension EditProfileViewController: PHPickerViewControllerDelegate {
               provider.canLoadObject(ofClass: UIImage.self) else { return }
 
         saveButton.isEnabled = false
+        editImageButton.isEnabled = false
 
         provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
             let croppedImage = (object as? UIImage)?.squareCropped(maxDimension: 1024)
@@ -423,7 +424,16 @@ extension EditProfileViewController: PHPickerViewControllerDelegate {
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.saveButton.isEnabled = true
-                guard let croppedImage, let imageData else { return }
+                self.editImageButton.isEnabled = true
+                guard let croppedImage, let imageData else {
+                    ToastView.show(
+                        on: self.view,
+                        message: "이미지를 불러오지 못했습니다. 다시 선택해주세요.",
+                        style: .error,
+                        position: .top
+                    )
+                    return
+                }
                 self.userProfileImageView.image = croppedImage
                 self.photoPlaceholderImageView.isHidden = true
                 self.selectedProfileImage.accept(imageData)
