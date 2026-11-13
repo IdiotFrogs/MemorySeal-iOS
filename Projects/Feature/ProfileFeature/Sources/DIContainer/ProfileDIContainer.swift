@@ -96,4 +96,13 @@ public final class ProfileDIContainer {
     ) -> EditProfileViewController {
         return EditProfileViewController(with: makeEditProfileViewModel(action: action, nickname: nickname, profileImageUrl: profileImageUrl))
     }
+
+    // MARK: - TermsOfService
+
+    public func makeTermsOfServiceViewController(
+        url: URL,
+        moveToBack: @escaping () -> Void
+    ) -> TermsOfServiceViewController {
+        return TermsOfServiceViewController(url: url, moveToBack: moveToBack)
+    }
 }

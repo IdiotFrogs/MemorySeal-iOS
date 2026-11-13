@@ -83,11 +83,16 @@ public final class EditProfileViewModel {
                     return
                 }
 
-                let nicknameChanged = nicknameText != self.nickname && !nicknameText.isEmpty
+                guard nicknameText.trimmingCharacters(in: .whitespaces).isEmpty == false else {
+                    self.saveErrorRelay.accept("최소 1글자에서 \(self.maximumNicknameLength)글자까지 입력할 수 있습니다.")
+                    return
+                }
+
+                let nicknameChanged = nicknameText != self.nickname
                 let imageChanged = imageData != nil
 
                 guard nicknameChanged || imageChanged || resetProfileImage else {
-                    self.saveErrorRelay.accept("이미 사용 중인 별명입니다.")
+                    self.action.moveToBack()
                     return
                 }
 
@@ -116,7 +121,14 @@ extension EditProfileViewModel {
                     self.action.didEditProfile()
                     self.action.moveToBack()
                 }
-            } catch {}
+            } catch {
+                let message = (error as? EditProfileError)?.errorDescription
+                    ?? EditProfileError.defaultError.errorDescription
+
+                await MainActor.run {
+                    self.saveErrorRelay.accept(message ?? "")
+                }
+            }
         }
     }
 }
