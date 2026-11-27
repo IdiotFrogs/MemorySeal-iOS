@@ -74,4 +74,4 @@ Tuist/.build
 .omc/
 ### Secrets ###
 .env
-Projects/App/Resources/GoogleService-Info.plist
+Projects/App/Resources/Firebase/
